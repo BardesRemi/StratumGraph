@@ -1,5 +1,4 @@
 require('./style.css');
-require('./toto.js');
 
 /**
  * TODO 

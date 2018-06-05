@@ -1,5 +1,4 @@
 require('./style.css');
-require('./toto.js');
 
 const favicon = require('./assets/favicon.png');
 let link = document.createElement('link');
