@@ -1,4 +1,27 @@
 require('./style.css');
+let colors = require('./color.js');
+
+        //////////////////////////////////////////////////
+        //       List of differents color Scaling       //
+        //////////////////////////////////////////////////
+    
+    let magentaScale = colors.oneColor("magentaScale");
+    let heatScale    = colors.oneColor("heatScale");
+    let btcScale     = colors.oneColor("btcScale");
+    let ocsScale     = colors.oneColor("ocsScale");
+    let rainbowScale = colors.oneColor("rainbowScale");
+    let locsScale    = colors.oneColor("locsScale");
+    let btyScale     = colors.oneColor("btyScale");
+    let lingreyScale = colors.oneColor("lingreyScale");
+    let rScale       = colors.oneColor("rScale");
+    let gScale       = colors.oneColor("gScale");
+    let bScale       = colors.oneColor("bScale");
+    let xScale       = colors.oneColor("xScale");
+
+
+        //////////////////////////////////////////////////
+        //                     Init                     //
+        //////////////////////////////////////////////////
 
 const favicon = require('./assets/favicon.png');
 let link = document.createElement('link');
@@ -7,10 +30,19 @@ link.rel = 'shortcut icon';
 link.href = favicon;
 document.head.appendChild(link);
 
-function Test(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end){
+
+        //////////////////////////////////////////////////
+        //       Graph Classes (via a constructor)      //
+        //////////////////////////////////////////////////
+
+function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end){
   //attributes
   this.basecut = basecut;
-  this.ZOOM = ZOOM; // scaleY will be calculated from ZOOM
+  // scaleY will be calculated from ZOOM
+  if(ZOOM > 15.0)
+    this.ZOOM = 15.0;
+  else
+    this.ZOOM = ZOOM;
   this.add = add;
   this.tabledata = tabledata;
   this.timepos = timepos;
@@ -22,6 +54,8 @@ function Test(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end){
   this.timer = null;
   this.maxs;
   this.mins;
+  this.maxlvl= 0;
+  this.minlvl= 0;
 
 
   //canvas generation
@@ -65,18 +99,22 @@ function Test(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end){
     }
     console.log("scaleY = " + scaleY);
 
-     var polystack   = new Array();
-     var locPolylist = new Array(); // polygons are built in local array so they can be sorted according to multiplier mul
+    var polystack   = new Array();
+    var locPolylist = new Array(); // polygons are built in local array so they can be sorted according to multiplier mul
 
-     var valcut   = (this.basecut-min)/(max-min)*scaleY;
-     var levelcut = Math.ceil(valcut);
-     if (this.basecut==min             && this.baselineType=="Stratum") levelcut=-1;
-     if (this.basecut==Math.min(0,min) && this.baselineType=="Stratum0") levelcut=-1;
+    var valcut   = (this.basecut-min)/(max-min)*scaleY;
+    var levelcut = Math.ceil(valcut);
+    if (this.basecut==min             && this.baselineType=="Stratum") levelcut=-1;
+    if (this.basecut==Math.min(0,min) && this.baselineType=="Stratum0") levelcut=-1;
 
-     var val0 = ((this.tabledata[this.start]-this.basecut)*mul)*scaleY/(max-min);
-     console.log("val0 at the beginning = " + val0);
-     var n0   = Math.floor(val0); // index of bands at beginning
-     console.log("n0 at the beginning = " + n0);
+    var val0 = ((this.tabledata[this.start]-this.basecut)*mul)*scaleY/(max-min);
+    var n0   = Math.floor(val0); // index of bands at beginning
+
+    //generation of maxlvl and minlvl
+    if(optim && n0+1 > this.maxlvl)
+      this.maxlvl=n0+1;
+    else if(optim && n0 < this.minlvl)
+      this.minlvl = n0;
 
     // create the/all background polygon
     if (n0>0){
@@ -130,6 +168,12 @@ function Test(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end){
 
       var val = ((this.tabledata[i]-this.basecut)*mul)*scaleY/(max-min);
       var n   = Math.floor(val); // band index
+
+      //generation of maxlvl and minlvl
+      if(optim && n+1 > this.maxlvl)
+        this.maxlvl=n+1;
+      else if(optim && n < this.minlvl)
+        this.minlvl = n;
 
       if (n==n0 ){ 
           // staying at the same level
@@ -347,6 +391,29 @@ function Test(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end){
     return 0;
   }
 
+  /*this.setColor = function(optim){
+    if(optim){
+      if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
+        for(let g in this.pols){
+
+        }
+      }
+      else if(this.baselineType == "Horizon"){
+        for(let g in this.pols){
+          
+        }
+      }
+    }
+    else{
+      if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
+        for(let g in this.polsfill)
+      }
+      else if(this.baselineType == "Horizon"){
+
+      }
+    }
+  }*/
+
 
   //Draw the graph in his canvas
   this.draw = function(optim){
@@ -446,6 +513,11 @@ function Test(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end){
   }
 }
 
+
+        //////////////////////////////////////////////////
+        //          Creation of multiple Graphs         //
+        //////////////////////////////////////////////////
+
 let data = new Float32Array(256);
 let time = new Float32Array(256);
 for (let i=0; i<256; i++){
@@ -459,8 +531,8 @@ var initHeight = 32;
 var timer=null;
 let BASELINE = 30;
 
-var test1 = new Test(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255);
-var test2 = new Test(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255);
+var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255);
+var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255);
 test1.init();
 test2.init();
 console.log(Object.values(test1));
