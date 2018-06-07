@@ -6,8 +6,8 @@ let colors = require('./color.js');
         //////////////////////////////////////////////////
     
     let magentaScale = colors.oneColor("magentaScale");
-    let heatScale    = colors.oneColor("heatScale");
-    let btcScale     = colors.oneColor("btcScale");
+    let heatScale    = colors.oneColor("heatScale"); //stratum graph > 0
+    let btcScale     = colors.oneColor("btcScale");  //stratum graph < 0
     let ocsScale     = colors.oneColor("ocsScale");
     let rainbowScale = colors.oneColor("rainbowScale");
     let locsScale    = colors.oneColor("locsScale");
@@ -36,13 +36,16 @@ document.head.appendChild(link);
         //////////////////////////////////////////////////
 
 function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end){
+  const maxZOOM = 15.0;
   //attributes
   this.basecut = basecut;
-  // scaleY will be calculated from ZOOM
-  if(ZOOM > 15.0)
-    this.ZOOM = 15.0;
+  this.baselvl;
+  if(ZOOM > maxZOOM)
+    this.ZOOM = maxZOOM;
   else
     this.ZOOM = ZOOM;
+  this.scaleYpos;
+  this.scaleYneg;
   this.add = add;
   this.tabledata = tabledata;
   this.timepos = timepos;
@@ -54,15 +57,14 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
   this.timer = null;
   this.maxs;
   this.mins;
-  this.maxlvl= 0;
-  this.minlvl= 0;
+  this.maxlvl= 1;
+  this.minlvl= 1;
 
 
   //canvas generation
   this.can = document.createElement('canvas');
     this.can.width = '1000';
     this.can.height = this.initHeight;
-    console.log(this.can);
 
   this.getmins = function(){
     let mint = this.tabledata[0];
@@ -80,41 +82,51 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
     return this.tabledata[maxt];
   }
 
-  this.computePolygons = function(optim,mul,min,max){
-    // no positive polygon when basecut is so high
-    if (mul==1 && this.basecut==max) {return new Array();}
-    // no negative polygon when basecut is so low
-    if (mul==-1 && this.basecut==min) {return new Array();}
-
-    let scaleY = 0.0
+  this.getBaselvl = function(){
     if(this.baselineType == "Stratum" || this.baselineType == "Stratum0")
-      scaleY = this.ZOOM;
+      return this.mins;
+          
     else {
       if(this.baselineType == "Horizon"){
-        if(mul > 0)
-          scaleY = this.ZOOM*(this.maxs-this.basecut)/(this.maxs-this.mins);
-        else
-          scaleY = this.ZOOM*(this.basecut-this.mins)/(this.maxs-this.mins);
-       }
+      return this.basecut;
+      }
+      else
+        console.log("WARNING : unhandle BaseLineType : " + this.BaseLineType);
     }
-    console.log("scaleY = " + scaleY);
+    return 0;
+  }
 
+  this.computePolygons = function(basecut,optim,mul,min,max){
+    // no positive polygon when basecut is so high
+    if (mul==1 && basecut==max) {return new Array();}
+    // no negative polygon when basecut is so low
+    if (mul==-1 && basecut==min) {return new Array();}
+
+    let scaleY
+    if(mul==1)
+      scaleY=this.scaleYpos;
+    else
+      scaleY=this.scaleYneg;
     var polystack   = new Array();
     var locPolylist = new Array(); // polygons are built in local array so they can be sorted according to multiplier mul
 
-    var valcut   = (this.basecut-min)/(max-min)*scaleY;
+    var valcut   = (basecut-min)/(max-min)*scaleY;
     var levelcut = Math.ceil(valcut);
-    if (this.basecut==min             && this.baselineType=="Stratum") levelcut=-1;
-    if (this.basecut==Math.min(0,min) && this.baselineType=="Stratum0") levelcut=-1;
+    if (basecut==min             && this.baselineType=="Stratum") levelcut=-1;
+    if (basecut==Math.min(0,min) && this.baselineType=="Stratum0") levelcut=-1;
 
-    var val0 = ((this.tabledata[this.start]-this.basecut)*mul)*scaleY/(max-min);
+    var val0 = ((this.tabledata[this.start]-basecut)*mul)*scaleY/(max-min);
     var n0   = Math.floor(val0); // index of bands at beginning
 
     //generation of maxlvl and minlvl
     if(optim && n0+1 > this.maxlvl)
       this.maxlvl=n0+1;
-    else if(optim && n0 < this.minlvl)
-      this.minlvl = n0;
+    else if(optim && n0 < this.minlvl){
+      if(n0<0)
+        this.minlvl = n0;
+      else
+        this.minlvl = n0+1;
+    }
 
     // create the/all background polygon
     if (n0>0){
@@ -166,14 +178,18 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
       }
       var t   = this.timepos[i];
 
-      var val = ((this.tabledata[i]-this.basecut)*mul)*scaleY/(max-min);
+      var val = ((this.tabledata[i]-basecut)*mul)*scaleY/(max-min);
       var n   = Math.floor(val); // band index
 
       //generation of maxlvl and minlvl
       if(optim && n+1 > this.maxlvl)
         this.maxlvl=n+1;
-      else if(optim && n < this.minlvl)
-        this.minlvl = n;
+      else if(optim && n < this.minlvl){
+        if(n<0)
+          this.minlvl = n;
+        else
+          this.minlvl = n+1;
+      }
 
       if (n==n0 ){ 
           // staying at the same level
@@ -372,18 +388,67 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
     return locPolylist;
   }
 
+  //associate a texture for each polygon depending on there level, and the baseline
+  this.setColor = function(poly){
+    let copy = poly;
+    if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
+      for(let g in copy){
+        copy[g].texture = new Array();
+        if(copy[g].level == this.maxlvl){
+          copy[g].texture.push(heatScale[5][0]);
+          copy[g].texture.push(heatScale[5][1]);
+          copy[g].texture.push(heatScale[5][2]);
+        }
+        else if(copy[g].level == this.minlvl){
+          copy[g].texture.push(heatScale[240][0]);
+          copy[g].texture.push(heatScale[240][1]);
+          copy[g].texture.push(heatScale[240][2]);
+        }
+        else{
+          copy[g].texture.push(heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][0]);
+          copy[g].texture.push(heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][1]);
+          copy[g].texture.push(heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][2]);
+        }
+      }
+      console.log(Object.values(copy));
+      return copy;
+    }
+    else if(this.baselineType == "Horizon"){
+      for(let g in copy){
+          copy[g].texture = new Array();
+          if(copy[g].level > 0){
+            console.log(copy[g].level*(Math.floor(120/(this.scaleYpos*2))));
+            copy[g].texture.push(bScale[125-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][0]);
+            copy[g].texture.push(bScale[125-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][1]);
+            copy[g].texture.push(bScale[125-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][2]);
+          }
+          else{
+            copy[g].texture.push(rScale[125-(-copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][0]);
+            copy[g].texture.push(rScale[125-(-copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][1]);
+            copy[g].texture.push(rScale[125-(-copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][2]);
+          }
+      }
+      console.log(Object.values(copy));
+      return copy;
+    }
+    else
+        console.log("WARNING : unhandle BaseLineType : " + this.BaseLineType);
+    return 0;
+  }
 
   //generate the whole graphs depending on @BaseLineType Must be use to generate this.pols or this.polsfill
   this.allPolygons = function(optim){
-    if(this.baselineType == "Stratum" || this.baselineType == "Stratum0")
-      return this.computePolygons(optim,1,this.mins,this.maxs);
+    if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
+      let res = this.computePolygons(this.baselvl,optim,1,this.mins,this.maxs);
+      return this.setColor(res);
+    }
           
     else {
       if(this.baselineType == "Horizon"){
       let res = new Array();
-      res = res.concat(this.computePolygons(optim,1,this.basecut,this.maxs));
-      res = res.concat(this.computePolygons(optim,-1, this.mins, this.basecut));
-      return res;
+      res = res.concat(this.computePolygons(this.baselvl,optim,1,this.basecut,this.maxs));
+      res = res.concat(this.computePolygons(this.baselvl,optim,-1, this.mins, this.basecut));
+      return this.setColor(res);
       }
       else
         console.log("WARNING : unhandle BaseLineType : " + this.BaseLineType);
@@ -391,41 +456,22 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
     return 0;
   }
 
-  /*this.setColor = function(optim){
-    if(optim){
-      if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
-        for(let g in this.pols){
-
-        }
-      }
-      else if(this.baselineType == "Horizon"){
-        for(let g in this.pols){
-          
-        }
-      }
-    }
-    else{
-      if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
-        for(let g in this.polsfill)
-      }
-      else if(this.baselineType == "Horizon"){
-
-      }
-    }
-  }*/
-
 
   //Draw the graph in his canvas
   this.draw = function(optim){
-    console.time('someFunction');
+    //console.time('someFunction');
     if (this.can.height!=this.initHeight+this.addHeight)
       this.can.height = this.initHeight+this.addHeight;
 
     let ctx = this.can.getContext("2d");
     ctx.fillStyle="#F0FF0F";  
     ctx.clearRect(0,0,this.can.width, this.can.height);
-    let up = (this.maxs-this.basecut)
+    let up = (this.maxs-this.baselvl)
+
     let propup = this.ZOOM*(up/(this.maxs-this.mins));
+    let propupCeil = Math.ceil(propup);
+    if(propup == propupCeil)
+      propupCeil += 1.0;
     let graphToDraw;
     if(optim)
       graphToDraw = this.pols;
@@ -434,16 +480,16 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
     for (let j in graphToDraw){
       ctx.save();
       if (graphToDraw[j].level>0){
-        ctx.fillStyle="rgb(0, "+(graphToDraw[j].level*255/ZOOM)+", 255)";
+        ctx.fillStyle="rgb("+graphToDraw[j].texture[0]+", "+graphToDraw[j].texture[1]+", "+graphToDraw[j].texture[2]+")";
         ctx.beginPath();
         //(addHeight+addHeight/(Math.ceil(ZOOM-1)))-(addHeight*graphToDraw[j].level/(Math.ceil(ZOOM-1))));
-        ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight+((this.addHeight*((Math.ceil(propup)-graphToDraw[j].level)/(this.ZOOM-1))))-(1.0-propup%1)*this.addHeight/(this.ZOOM-1))
+        ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight+((this.addHeight*((propupCeil-graphToDraw[j].level)/(this.ZOOM-1))))-(1.0-propup%1)*this.addHeight/(this.ZOOM-1))
         for (let i=1; i<graphToDraw[j].ptx.length; i++)
-          ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight+((this.addHeight*((Math.ceil(propup)-graphToDraw[j].level)/(this.ZOOM-1))))-(1.0-propup%1)*this.addHeight/(this.ZOOM-1))
+          ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight+((this.addHeight*((propupCeil-graphToDraw[j].level)/(this.ZOOM-1))))-(1.0-propup%1)*this.addHeight/(this.ZOOM-1))
         ctx.closePath();
       }
       else {
-      ctx.fillStyle="rgb(255, "+((4+graphToDraw[j].level)*255/ZOOM)+", 0)";
+      ctx.fillStyle="rgb("+graphToDraw[j].texture[0]+", "+graphToDraw[j].texture[1]+", "+graphToDraw[j].texture[2]+")";
       let anim = this.addHeight/(this.ZOOM-1)/this.initHeight;
       ctx.translate(0, 0+this.initHeight
                     +(propup-1)*this.initHeight*anim
@@ -462,7 +508,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
       }
         
         
-      ctx.shadowColor = "#000";
+      ctx.shadowColor = "#FFF";
       ctx.shadowBlur = 1;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
@@ -477,6 +523,15 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
   this.init = function(){
     this.mins = this.getmins();
     this.maxs = this.getmaxs();
+    if(this.baselineType == "Stratum" || this.baselineType == "Stratum0")
+      this.scaleYpos = this.ZOOM;
+    else {
+      if(this.baselineType == "Horizon"){
+        this.scaleYpos = this.ZOOM*(this.maxs-basecut)/(this.maxs-this.mins);
+        this.scaleYneg = this.ZOOM*(basecut-this.mins)/(this.maxs-this.mins);
+      }
+    }
+    this.baselvl = this.getBaselvl();
     this.pols = this.allPolygons(true);
     this.polsfill = null;
 
@@ -525,16 +580,17 @@ for (let i=0; i<256; i++){
   time[i] = i/255;
 }
 
-let ZOOM = 7.24
+let ZOOM = 8.73
 var addHeight = 0;
 var initHeight = 32;
 var timer=null;
-let BASELINE = 30;
+let BASELINE = 30.25;
 
 var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255);
-var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255);
+var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255);
 test1.init();
 test2.init();
-console.log(Object.values(test1));
 test1.draw(true);
 test2.draw(true);
+console.log(Object.values(test2));
+console.log(Object.values(test1));

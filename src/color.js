@@ -273,29 +273,29 @@
     magentaScale[255]=[ 255, 255, 255];heatScale[255]=[ 255, 255, 255];rScale[255]=[255,0,0];gScale[255]=[0,255,0];bScale[255]=[0,0,255];    ocsScale[255]=[255,255,255];rainbowScale[255]=[255,255,255];btcScale[255]=[255,255,255];btyScale[255]=[254,254,13]; lingreyScale[255]=[255,255,255];locsScale[255]=[255,255,255];
 module.exports = {
     oneColor :function(name){
-        if("heatScale")
+        if("heatScale"==name)
             return heatScale;
-        else if("btcScale")
+        else if("btcScale"==name)
             return btcScale;
-        else if("ocsScale")
+        else if("ocsScale"==name)
             return ocsScale;
-        else if("rainbowScale")
+        else if("rainbowScale"==name)
             return rainbowScale;
-        else if("locsScale")
+        else if("locsScale"==name)
             return locsScale;
-        else if("btyScale")
+        else if("btyScale"==name)
             return btyScale;
-        else if("lingreyScale")
-            return btcScale;
-        else if("lingreyScale")
-            return btcScale;
-        else if("rScale")
+        else if("lingreyScale"==name)
+            return lingreyScale;
+        else if("magentaScale"==name)
+            return magentaScale;
+        else if("rScale"==name)
             return rScale;
-        else if("gScale")
+        else if("gScale"==name)
             return gScale;
-        else if("bScale")
+        else if("bScale"==name)
             return bScale;
-        else if("xScale")
+        else if("xScale"==name)
             return xScale;
     }
 };
