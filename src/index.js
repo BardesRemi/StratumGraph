@@ -35,7 +35,7 @@ document.head.appendChild(link);
         //       Graph Classes (via a constructor)      //
         //////////////////////////////////////////////////
 
-function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end){
+function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end, initHeight){
   const maxZOOM = 15.0;
   //attributes
   this.basecut = basecut;
@@ -52,7 +52,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
   this.baselineType = baselineType;
   this.start = start;
   this.end = end;
-  this.initHeight = 32.0;
+  this.initHeight = initHeight;
   this.addHeight = 0.0;
   this.timer = null;
   this.maxs;
@@ -83,9 +83,14 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
   }
 
   this.getBaselvl = function(){
-    if(this.baselineType == "Stratum" || this.baselineType == "Stratum0")
+    if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
+      /*
+      if "0" is the origin of the graphs, instead of it's minimal value, then replace return this.mins by :
+        this.mins=0.0;
+        return 0.0;
+      */
       return this.mins;
-          
+    }
     else {
       if(this.baselineType == "Horizon"){
       return this.basecut;
@@ -115,7 +120,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
     if (basecut==min             && this.baselineType=="Stratum") levelcut=-1;
     if (basecut==Math.min(0,min) && this.baselineType=="Stratum0") levelcut=-1;
 
-    var val0 = ((this.tabledata[this.start]-basecut)*mul)*scaleY/(max-min);
+    var val0 = ((this.tabledata[this.start]-this.baselvl)*mul)*scaleY/(max-min);
     var n0   = Math.floor(val0); // index of bands at beginning
 
     //generation of maxlvl and minlvl
@@ -178,7 +183,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
       }
       var t   = this.timepos[i];
 
-      var val = ((this.tabledata[i]-basecut)*mul)*scaleY/(max-min);
+      var val = ((this.tabledata[i]-this.baselvl)*mul)*scaleY/(max-min);
       var n   = Math.floor(val); // band index
 
       //generation of maxlvl and minlvl
@@ -385,50 +390,133 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
       console.log("WARNING: negative n0");
 
     locPolylist.sort(function(a,b){return mul*(a.level-b.level)});
-    console.log(locPolylist);
     return locPolylist;
   }
 
   //associate a texture for each polygon depending on there level, and the baseline
   this.setColor = function(poly){
     let copy = poly;
+    let forkValue = this.maxs - this.baselvl;
     if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
       for(let g in copy){
         copy[g].texture = new Array();
+        let lvlValue = this.mins +(copy[g].level-1)*forkValue/this.scaleYpos;
+        let nextlvlValue = this.mins + copy[g].level*forkValue/this.scaleYpos;
         var c = document.createElement("canvas");//create a canvas to draw the texture in it
         c.width  = 1;
         c.height = this.initHeight;
         var imgData = c.getContext("2d").getImageData(0, 0, 1, this.initHeight);
-        console.log(copy[g].level);
-        if(copy[g].level == this.maxlvl){
-          for(let k=0; k<this.initHeight; k++){
-            imgData.data[4*k+0]=heatScale[5][0];
-            imgData.data[4*k+1]=heatScale[5][1];
-            imgData.data[4*k+2]=heatScale[5][2];
-            imgData.data[4*k+3]=255;
+        //case when baseline is under actual polygon
+        if(this.basecut <= lvlValue){
+          if(copy[g].level == this.maxlvl){
+            for(let k=0; k<this.initHeight; k++){
+              imgData.data[4*k+0]=heatScale[5][0];
+              imgData.data[4*k+1]=heatScale[5][1];
+              imgData.data[4*k+2]=heatScale[5][2];
+              imgData.data[4*k+3]=255;
+            }
+          }
+          else if(copy[g].level == this.minlvl){
+            for(let k=0; k<this.initHeight+1; k++){
+              imgData.data[4*k+0]=heatScale[240][0];
+              imgData.data[4*k+1]=heatScale[240][1];
+              imgData.data[4*k+2]=heatScale[240][2];
+              imgData.data[4*k+3]=255;
+            }
+          }
+          else{
+            for(let k=0; k<this.initHeight; k++){
+              imgData.data[4*k+0]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][0];
+              imgData.data[4*k+1]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][1];
+              imgData.data[4*k+2]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][2];
+              imgData.data[4*k+3]=255;
+            }
           }
         }
-        else if(copy[g].level == this.minlvl){
-          for(let k=0; k<this.initHeight; k++){
-            imgData.data[4*k+0]=heatScale[240][0];
-            imgData.data[4*k+1]=heatScale[240][1];
-            imgData.data[4*k+2]=heatScale[240][2];
-            imgData.data[4*k+3]=255;
+        //case when baseline is above actual polygon
+        else if(this.basecut >= nextlvlValue){
+          if(copy[g].level == this.maxlvl){
+            for(let k=0; k<this.initHeight; k++){
+              imgData.data[4*k+0]=btcScale[240][0];
+              imgData.data[4*k+1]=btcScale[240][1];
+              imgData.data[4*k+2]=btcScale[240][2];
+              imgData.data[4*k+3]=255;
+            }
+          }
+          else if(copy[g].level == this.minlvl){
+            for(let k=0; k<this.initHeight; k++){
+              imgData.data[4*k+0]=btcScale[5][0];
+              imgData.data[4*k+1]=btcScale[5][1];
+              imgData.data[4*k+2]=btcScale[5][2];
+              imgData.data[4*k+3]=255;
+            }
+          }
+          else{
+            for(let k=0; k<this.initHeight; k++){
+              imgData.data[4*k+0]=btcScale[(copy[g].level*(Math.floor(230/this.scaleYpos)))][0];
+              imgData.data[4*k+1]=btcScale[(copy[g].level*(Math.floor(230/this.scaleYpos)))][1];
+              imgData.data[4*k+2]=btcScale[(copy[g].level*(Math.floor(230/this.scaleYpos)))][2];
+              imgData.data[4*k+3]=255;
+            }
           }
         }
+        //case when baseline is inside actual polygon
         else{
-          for(let k=0; k<this.initHeight; k++){
-            imgData.data[4*k+0]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][0];
-            imgData.data[4*k+1]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][1];
-            imgData.data[4*k+2]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][2];
-            imgData.data[4*k+3]=255;
+          if(copy[g].level == this.maxlvl){
+            for(let k=0; k<this.initHeight; k++){
+              let pixelValue = lvlValue + k*((nextlvlValue-lvlValue)/this.initHeight);
+              if(pixelValue<=this.basecut){
+                imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[240][0];
+                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[240][1];
+                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[240][2];
+                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+              }
+              else{
+                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[5][0];
+                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[5][1];
+                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[5][2];
+                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+              }
+            }
+          }
+          else if(copy[g].level == this.minlvl){
+            for(let k=0; k<this.initHeight; k++){
+              let pixelValue = lvlValue + k*((nextlvlValue-lvlValue)/this.initHeight);
+              if(pixelValue<=this.basecut){
+                imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[5][0];
+                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[5][1];
+                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[5][2];
+                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+              }
+              else{
+                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[240][0];
+                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[240][1];
+                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[240][2];
+                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+              }
+            }
+          }
+          else{
+            for(let k=0; k<this.initHeight; k++){
+              let pixelValue = lvlValue + k*((nextlvlValue-lvlValue)/this.initHeight);
+              if(pixelValue<=this.basecut){
+                imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[(copy[g].level*(Math.floor(230/this.scaleYpos)))][0];
+                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[(copy[g].level*(Math.floor(230/this.scaleYpos)))][1];
+                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[(copy[g].level*(Math.floor(230/this.scaleYpos)))][2];
+                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+              }
+              else{
+                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][0];
+                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][1];
+                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][2];
+                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+              }
+            }
           }
         }
-        imgData.data[4*g+3]=255;
         c.getContext("2d").putImageData(imgData,0,0);
-        copy[g].texture= c.getContext('2d').createPattern(c, "repeat");
+        copy[g].texture= c.getContext('2d').createPattern(c, "repeat-x");
       }
-      console.log(Object.values(copy));
       return copy;
     }
     else if(this.baselineType == "Horizon"){
@@ -449,15 +537,14 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
           else{
             for(let k=0; k<this.initHeight; k++){
               imgData.data[4*k+0]=rScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][0];
-              imgData.data[4*k+1]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][1]/1.5);
+              imgData.data[4*k+1]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][1]/1.5);
               imgData.data[4*k+2]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][2]/1.5);
               imgData.data[4*k+3]=255;
             }
           }
           c.getContext("2d").putImageData(imgData,0,0);
-          copy[g].texture= c.getContext('2d').createPattern(c, "repeat");
+          copy[g].texture= c.getContext('2d').createPattern(c, "repeat-x");
       }
-      console.log(Object.values(copy));
       return copy;
     }
     else
@@ -510,18 +597,24 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
       ctx.save();
       if (graphToDraw[j].level>0){
         ctx.fillStyle=graphToDraw[j].texture;
+        let shift = Math.ceil(((this.addHeight*((propupCeil-graphToDraw[j].level)/(this.ZOOM-1))))-Math.ceil((1.0-propup%1)*this.addHeight/(this.ZOOM-1)));
+        ctx.translate(0, 0-this.initHeight+graphToDraw[j].pty[0]*this.initHeight+shift
+                   );
         ctx.beginPath();
-        //(addHeight+addHeight/(Math.ceil(ZOOM-1)))-(addHeight*graphToDraw[j].level/(Math.ceil(ZOOM-1))));
-        ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight+((this.addHeight*((propupCeil-graphToDraw[j].level)/(this.ZOOM-1))))-(1.0-propup%1)*this.addHeight/(this.ZOOM-1))
+          
+        ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
+       
         for (let i=1; i<graphToDraw[j].ptx.length; i++)
-          ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight+((this.addHeight*((propupCeil-graphToDraw[j].level)/(this.ZOOM-1))))-(1.0-propup%1)*this.addHeight/(this.ZOOM-1))
+          ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
         ctx.closePath();
       }
       else {
       ctx.fillStyle=graphToDraw[j].texture;
       let anim = this.addHeight/(this.ZOOM-1)/this.initHeight;
+      if(anim > 0.995)
+        anim = 1.0;
       ctx.translate(0, 0+this.initHeight
-                    +(propup-1)*this.initHeight*anim
+                    +Math.ceil((propup-1)*this.initHeight*anim)
                    );
       ctx.scale(1.0,1.0*(1.0-anim)-1.0*(anim));
       ctx.translate(0, -this.initHeight
@@ -536,11 +629,22 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
       ctx.closePath();
       }
         
-        
-      ctx.shadowColor = "#FFF";
-      ctx.shadowBlur = 1-(this.addHeight/((this.ZOOM-1)*this.initHeight));
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
+      if(optim){
+        ctx.shadowColor = "#000";
+        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      }
+      else{
+        ctx.shadowColor = "#000";
+        let blurEvol = Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight)));
+        if(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))) > 0.98){
+          blurEvol = 1.0;
+        }
+        ctx.shadowBlur = 1-blurEvol;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      }
 
       ctx.fill();
       ctx.restore();
@@ -571,7 +675,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
       me.initHeight=me.can.height;
         me.timer = setInterval(function(){
          me.addHeight+=1;
-          if(me.addHeight>=(me.ZOOM-1)*me.initHeight)
+          if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight))
             clearInterval(me.timer);
           if(me.polsfill == null)
             me.polsfill = me.allPolygons(false);
@@ -609,14 +713,12 @@ for (let i=0; i<256; i++){
   time[i] = i/255;
 }
 
-let ZOOM = 8.43
-var addHeight = 0;
-var initHeight = 32;
-var timer=null;
-let BASELINE = 30.25;
+let ZOOM = 9.45
+var initHeight = 45;
+let BASELINE = 24.32;
 
-var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255);
-var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255);
+var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight);
+var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight);
 test1.init();
 test2.init();
 test1.draw(true);

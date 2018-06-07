@@ -8,5 +8,6 @@ body {
 
 canvas {
   border: 1px solid red;
+  background: #FFF;
   /*display: block;
 }
