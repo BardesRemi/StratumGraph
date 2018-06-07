@@ -385,6 +385,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
       console.log("WARNING: negative n0");
 
     locPolylist.sort(function(a,b){return mul*(a.level-b.level)});
+    console.log(locPolylist);
     return locPolylist;
   }
 
@@ -394,21 +395,38 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
     if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
       for(let g in copy){
         copy[g].texture = new Array();
+        var c = document.createElement("canvas");//create a canvas to draw the texture in it
+        c.width  = 1;
+        c.height = this.initHeight;
+        var imgData = c.getContext("2d").getImageData(0, 0, 1, this.initHeight);
+        console.log(copy[g].level);
         if(copy[g].level == this.maxlvl){
-          copy[g].texture.push(heatScale[5][0]);
-          copy[g].texture.push(heatScale[5][1]);
-          copy[g].texture.push(heatScale[5][2]);
+          for(let k=0; k<this.initHeight; k++){
+            imgData.data[4*k+0]=heatScale[5][0];
+            imgData.data[4*k+1]=heatScale[5][1];
+            imgData.data[4*k+2]=heatScale[5][2];
+            imgData.data[4*k+3]=255;
+          }
         }
         else if(copy[g].level == this.minlvl){
-          copy[g].texture.push(heatScale[240][0]);
-          copy[g].texture.push(heatScale[240][1]);
-          copy[g].texture.push(heatScale[240][2]);
+          for(let k=0; k<this.initHeight; k++){
+            imgData.data[4*k+0]=heatScale[240][0];
+            imgData.data[4*k+1]=heatScale[240][1];
+            imgData.data[4*k+2]=heatScale[240][2];
+            imgData.data[4*k+3]=255;
+          }
         }
         else{
-          copy[g].texture.push(heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][0]);
-          copy[g].texture.push(heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][1]);
-          copy[g].texture.push(heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][2]);
+          for(let k=0; k<this.initHeight; k++){
+            imgData.data[4*k+0]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][0];
+            imgData.data[4*k+1]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][1];
+            imgData.data[4*k+2]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][2];
+            imgData.data[4*k+3]=255;
+          }
         }
+        imgData.data[4*g+3]=255;
+        c.getContext("2d").putImageData(imgData,0,0);
+        copy[g].texture= c.getContext('2d').createPattern(c, "repeat");
       }
       console.log(Object.values(copy));
       return copy;
@@ -416,17 +434,28 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
     else if(this.baselineType == "Horizon"){
       for(let g in copy){
           copy[g].texture = new Array();
+          var c = document.createElement("canvas");//create a canvas to draw the texture in it
+          c.width  = 1;
+          c.height = this.initHeight;
+          var imgData = c.getContext("2d").getImageData(0, 0, 1, this.initHeight);
           if(copy[g].level > 0){
-            console.log(copy[g].level*(Math.floor(120/(this.scaleYpos*2))));
-            copy[g].texture.push(bScale[125-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][0]);
-            copy[g].texture.push(bScale[125-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][1]);
-            copy[g].texture.push(bScale[125-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][2]);
+            for(let k=0; k<this.initHeight; k++){
+              imgData.data[4*k+0]=Math.floor(lingreyScale[255-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][0]/1.5);
+              imgData.data[4*k+1]=Math.floor(lingreyScale[255-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][1]/1.5);
+              imgData.data[4*k+2]=bScale[255-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][2];
+              imgData.data[4*k+3]=255;
+            }
           }
           else{
-            copy[g].texture.push(rScale[125-(-copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][0]);
-            copy[g].texture.push(rScale[125-(-copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][1]);
-            copy[g].texture.push(rScale[125-(-copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][2]);
+            for(let k=0; k<this.initHeight; k++){
+              imgData.data[4*k+0]=rScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][0];
+              imgData.data[4*k+1]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][1]/1.5);
+              imgData.data[4*k+2]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][2]/1.5);
+              imgData.data[4*k+3]=255;
+            }
           }
+          c.getContext("2d").putImageData(imgData,0,0);
+          copy[g].texture= c.getContext('2d').createPattern(c, "repeat");
       }
       console.log(Object.values(copy));
       return copy;
@@ -480,7 +509,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
     for (let j in graphToDraw){
       ctx.save();
       if (graphToDraw[j].level>0){
-        ctx.fillStyle="rgb("+graphToDraw[j].texture[0]+", "+graphToDraw[j].texture[1]+", "+graphToDraw[j].texture[2]+")";
+        ctx.fillStyle=graphToDraw[j].texture;
         ctx.beginPath();
         //(addHeight+addHeight/(Math.ceil(ZOOM-1)))-(addHeight*graphToDraw[j].level/(Math.ceil(ZOOM-1))));
         ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight+((this.addHeight*((propupCeil-graphToDraw[j].level)/(this.ZOOM-1))))-(1.0-propup%1)*this.addHeight/(this.ZOOM-1))
@@ -489,7 +518,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
         ctx.closePath();
       }
       else {
-      ctx.fillStyle="rgb("+graphToDraw[j].texture[0]+", "+graphToDraw[j].texture[1]+", "+graphToDraw[j].texture[2]+")";
+      ctx.fillStyle=graphToDraw[j].texture;
       let anim = this.addHeight/(this.ZOOM-1)/this.initHeight;
       ctx.translate(0, 0+this.initHeight
                     +(propup-1)*this.initHeight*anim
@@ -509,7 +538,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end)
         
         
       ctx.shadowColor = "#FFF";
-      ctx.shadowBlur = 1;
+      ctx.shadowBlur = 1-(this.addHeight/((this.ZOOM-1)*this.initHeight));
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
 
@@ -580,7 +609,7 @@ for (let i=0; i<256; i++){
   time[i] = i/255;
 }
 
-let ZOOM = 8.73
+let ZOOM = 8.43
 var addHeight = 0;
 var initHeight = 32;
 var timer=null;
