@@ -652,6 +652,132 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
     //console.timeEnd('someFunction');
   }
 
+  //Draw the graph in his canvas (new animation)
+  this.draw2 = function(optim){
+  	//console.time('someFunction');
+    if (this.can.height!=this.initHeight+this.addHeight)
+      this.can.height = this.initHeight+this.addHeight;
+
+    let ctx = this.can.getContext("2d");
+    ctx.fillStyle="#F0FF0F";  
+    ctx.clearRect(0,0,this.can.width, this.can.height);
+    let up = (this.maxs-this.baselvl)
+
+    let propup = this.ZOOM*(up/(this.maxs-this.mins));
+    let propupCeil = Math.ceil(propup);
+    if(propup == propupCeil)
+      propupCeil += 1.0;
+    let graphToDraw;
+    if(optim)
+      graphToDraw = this.pols;
+    else
+      graphToDraw = this.polsfill;
+  	let scaleShiftpos = Math.ceil(this.initHeight*(1-this.scaleYpos%1.0));
+  	let forkPosCoord = Math.ceil(this.initHeight*(this.maxlvl-1)-scaleShiftpos);
+  	for (let j in graphToDraw){
+    	ctx.save();
+    	if (graphToDraw[j].level>0){
+	        ctx.fillStyle=graphToDraw[j].texture;
+	        let shift;
+	        if(graphToDraw[j].level == this.maxlvl){
+	        	if( this.addHeight > scaleShiftpos){
+	        		shift = -scaleShiftpos;
+	        	}
+	        	else
+	        		shift = -this.addHeight;
+	        }
+	        else{
+	        	if(this.addHeight >= this.initHeight*(this.maxlvl-graphToDraw[j].level)-scaleShiftpos)
+	        		shift = this.initHeight*(this.maxlvl-graphToDraw[j].level)-scaleShiftpos;
+				else
+					shift = this.addHeight;
+	        }
+
+	        ctx.translate(0, 0-this.initHeight+graphToDraw[j].pty[0]*this.initHeight+shift
+	                   );
+	        ctx.beginPath();
+	          
+	        ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
+	       
+	        for (let i=1; i<graphToDraw[j].ptx.length; i++)
+	          ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
+	        ctx.closePath();
+     	}
+      	else {
+		    ctx.fillStyle=graphToDraw[j].texture;
+		    let anim;
+		    if(this.addHeight-(forkPosCoord) <= this.initHeight){
+		     	anim = (this.addHeight-(forkPosCoord))/this.initHeight;
+		    }
+		    else
+		    	anim = 1.0;
+		    let shiftBeforeRot;
+		    let shiftAfterRot;
+		    let rota;
+		    let tranAfterRota;
+	        if(this.addHeight >= forkPosCoord){
+	        	shiftBeforeRot = forkPosCoord;
+	        	rota = true;
+	        	if(this.addHeight >= forkPosCoord+this.initHeight && graphToDraw[j].level < -1){
+	        		console.log("je suis rentré")
+	        		tranAfterRota = true;
+	        		//this.addHeight >= forkPosCoord+(graphToDraw[j].level*(-1)*this.initHeight)
+		        	if(true){
+		        		shiftAfterRot = this.initHeight*(graphToDraw[j].level+1);
+		        	}
+		        	else{
+		        		console.log(-(this.addHeight-forkPosCoord) + " , level : " + graphToDraw[j].level);
+		        		shiftAfterRot = -(this.addHeight-forkPosCoord+this.initHeight);
+		        	}
+		    	}
+	        }
+	        else{
+	        	shiftBeforeRot = this.addHeight;
+	        	rota = false;
+	        	tranAfterRota = false;
+	        }
+		    ctx.translate(0, 0-this.initHeight+graphToDraw[j].pty[0]*this.initHeight+shiftBeforeRot
+		                 );
+		    if(rota){
+		    	ctx.translate(0, this.initHeight)
+		    	ctx.scale(1.0,1.0*(1.0-anim)-1.0*(anim));
+		    	ctx.translate(0, -this.initHeight);
+			}
+			if(tranAfterRota)
+				ctx.translate(0, shiftAfterRot);
+		    ctx.beginPath();
+		        
+		    ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
+		     
+		    for (let i=1; i<graphToDraw[j].ptx.length; i++)
+		    	ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
+		    ctx.closePath();
+	    }
+        
+      if(optim){
+        ctx.shadowColor = "#000";
+        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      }
+      else{
+        ctx.shadowColor = "#000";
+        let blurEvol = Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight)));
+        if(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))) > 0.98){
+          blurEvol = 1.0;
+        }
+        ctx.shadowBlur = 1-blurEvol;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      }
+
+      ctx.fill();
+      ctx.restore();
+    }
+    //console.timeEnd('someFunction');
+
+  }
+
   //Must be call after each creation of this object
   this.init = function(){
     this.mins = this.getmins();
@@ -679,7 +805,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
             clearInterval(me.timer);
           if(me.polsfill == null)
             me.polsfill = me.allPolygons(false);
-          me.draw(false);
+          me.draw2(false);
           }, 12);
        } 
      });
@@ -694,7 +820,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
          }
          else
            me.addHeight-=1;
-         me.draw(false);
+         me.draw2(false);
       }, 12);
     });
     document.body.appendChild(this.can);
@@ -715,7 +841,7 @@ for (let i=0; i<256; i++){
 
 let ZOOM = 9.45
 var initHeight = 45;
-let BASELINE = 24.32;
+let BASELINE = 25.32;
 
 var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight);
 var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight);
@@ -725,3 +851,12 @@ test1.draw(true);
 test2.draw(true);
 console.log(Object.values(test2));
 console.log(Object.values(test1));
+
+var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight);
+var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight);
+test3.init();
+test4.init();
+test3.draw2(true);
+test4.draw2(true);
+console.log(Object.values(test3));
+console.log(Object.values(test4));
