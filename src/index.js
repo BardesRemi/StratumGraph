@@ -656,7 +656,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
   this.draw2 = function(optim){
   	//console.time('someFunction');
     if (this.can.height!=this.initHeight+this.addHeight)
-      this.can.height = this.initHeight+this.addHeight;
+      this.can.height = this.initHeight+this.addHeight ;
 
     let ctx = this.can.getContext("2d");
     ctx.fillStyle="#F0FF0F";  
@@ -673,6 +673,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
     else
       graphToDraw = this.polsfill;
   	let scaleShiftpos = Math.ceil(this.initHeight*(1-this.scaleYpos%1.0));
+  	let scaleShiftneg = Math.ceil(this.initHeight*(1-this.scaleYneg%1.0));
   	let forkPosCoord = Math.ceil(this.initHeight*(this.maxlvl-1)-scaleShiftpos);
   	for (let j in graphToDraw){
     	ctx.save();
@@ -719,15 +720,23 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 	        	shiftBeforeRot = forkPosCoord;
 	        	rota = true;
 	        	if(this.addHeight >= forkPosCoord+this.initHeight && graphToDraw[j].level < -1){
-	        		console.log("je suis rentré")
 	        		tranAfterRota = true;
-	        		//this.addHeight >= forkPosCoord+(graphToDraw[j].level*(-1)*this.initHeight)
-		        	if(true){
-		        		shiftAfterRot = this.initHeight*(graphToDraw[j].level+1);
+	        		console.log(graphToDraw[j].level +" == "+ (this.minlvl+1))
+	        		if(graphToDraw[j].level == (this.minlvl+1)){
+	        			if((this.addHeight-forkPosCoord-this.initHeight) <= this.initHeight){
+	        				shiftAfterRot = -(this.addHeight-forkPosCoord-this.initHeight + (scaleShiftneg*((this.addHeight-forkPosCoord-this.initHeight)/this.initHeight)));
+	        			}
+	        			else
+	        				shiftAfterRot = -(this.addHeight-forkPosCoord-this.initHeight + scaleShiftneg);
+	        		}
+		        	else if(this.addHeight <= forkPosCoord+((-1)*graphToDraw[j].level*this.initHeight)){
+		        		console.log(-(this.addHeight-forkPosCoord) + " , level : " + graphToDraw[j].level);
+		        		shiftAfterRot = -(this.addHeight-forkPosCoord-this.initHeight);
 		        	}
 		        	else{
-		        		console.log(-(this.addHeight-forkPosCoord) + " , level : " + graphToDraw[j].level);
-		        		shiftAfterRot = -(this.addHeight-forkPosCoord+this.initHeight);
+		        		console.log("forkPosCoord : "+ forkPosCoord + " , pixellvl : " + ((-1)*graphToDraw[j].level*this.initHeight));
+		        		console.log(this.addHeight + " >= " + (forkPosCoord+((-1)*graphToDraw[j].level*this.initHeight)));
+		        		shiftAfterRot = this.initHeight*(graphToDraw[j].level+1);
 		        	}
 		    	}
 	        }
@@ -841,7 +850,7 @@ for (let i=0; i<256; i++){
 
 let ZOOM = 9.45
 var initHeight = 45;
-let BASELINE = 25.32;
+let BASELINE = 29.32;
 
 var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight);
 var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight);
