@@ -426,9 +426,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
           }
           else{
             for(let k=0; k<this.initHeight; k++){
-              imgData.data[4*k+0]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][0];
-              imgData.data[4*k+1]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][1];
-              imgData.data[4*k+2]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][2];
+              imgData.data[4*k+0]=heatScale[240-(copy[g].level*(Math.floor(220/this.scaleYpos)))][0];
+              imgData.data[4*k+1]=heatScale[240-(copy[g].level*(Math.floor(220/this.scaleYpos)))][1];
+              imgData.data[4*k+2]=heatScale[240-(copy[g].level*(Math.floor(220/this.scaleYpos)))][2];
               imgData.data[4*k+3]=255;
             }
           }
@@ -453,9 +453,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
           }
           else{
             for(let k=0; k<this.initHeight; k++){
-              imgData.data[4*k+0]=btcScale[(copy[g].level*(Math.floor(230/this.scaleYpos)))][0];
-              imgData.data[4*k+1]=btcScale[(copy[g].level*(Math.floor(230/this.scaleYpos)))][1];
-              imgData.data[4*k+2]=btcScale[(copy[g].level*(Math.floor(230/this.scaleYpos)))][2];
+              imgData.data[4*k+0]=btcScale[(copy[g].level*(Math.floor(220/this.scaleYpos)))][0];
+              imgData.data[4*k+1]=btcScale[(copy[g].level*(Math.floor(220/this.scaleYpos)))][1];
+              imgData.data[4*k+2]=btcScale[(copy[g].level*(Math.floor(220/this.scaleYpos)))][2];
               imgData.data[4*k+3]=255;
             }
           }
@@ -500,15 +500,15 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
             for(let k=0; k<this.initHeight; k++){
               let pixelValue = lvlValue + k*((nextlvlValue-lvlValue)/this.initHeight);
               if(pixelValue<=this.basecut){
-                imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[(copy[g].level*(Math.floor(230/this.scaleYpos)))][0];
-                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[(copy[g].level*(Math.floor(230/this.scaleYpos)))][1];
-                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[(copy[g].level*(Math.floor(230/this.scaleYpos)))][2];
+                imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[(copy[g].level*(Math.floor(220/this.scaleYpos)))][0];
+                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[(copy[g].level*(Math.floor(220/this.scaleYpos)))][1];
+                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[(copy[g].level*(Math.floor(220/this.scaleYpos)))][2];
                 imgData.data[4*((this.initHeight-1)-k)+3]=255;
               }
               else{
-                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][0];
-                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][1];
-                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[240-(copy[g].level*(Math.floor(230/this.scaleYpos)))][2];
+                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[240-(copy[g].level*(Math.floor(220/this.scaleYpos)))][0];
+                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[240-(copy[g].level*(Math.floor(220/this.scaleYpos)))][1];
+                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[240-(copy[g].level*(Math.floor(220/this.scaleYpos)))][2];
                 imgData.data[4*((this.initHeight-1)-k)+3]=255;
               }
             }
@@ -721,7 +721,6 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 	        	rota = true;
 	        	if(this.addHeight >= forkPosCoord+this.initHeight && graphToDraw[j].level < -1){
 	        		tranAfterRota = true;
-	        		console.log(graphToDraw[j].level +" == "+ (this.minlvl+1))
 	        		if(graphToDraw[j].level == (this.minlvl+1)){
 	        			if((this.addHeight-forkPosCoord-this.initHeight) <= this.initHeight){
 	        				shiftAfterRot = -(this.addHeight-forkPosCoord-this.initHeight + (scaleShiftneg*((this.addHeight-forkPosCoord-this.initHeight)/this.initHeight)));
@@ -730,12 +729,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 	        				shiftAfterRot = -(this.addHeight-forkPosCoord-this.initHeight + scaleShiftneg);
 	        		}
 		        	else if(this.addHeight <= forkPosCoord+((-1)*graphToDraw[j].level*this.initHeight)){
-		        		console.log(-(this.addHeight-forkPosCoord) + " , level : " + graphToDraw[j].level);
 		        		shiftAfterRot = -(this.addHeight-forkPosCoord-this.initHeight);
 		        	}
 		        	else{
-		        		console.log("forkPosCoord : "+ forkPosCoord + " , pixellvl : " + ((-1)*graphToDraw[j].level*this.initHeight));
-		        		console.log(this.addHeight + " >= " + (forkPosCoord+((-1)*graphToDraw[j].level*this.initHeight)));
 		        		shiftAfterRot = this.initHeight*(graphToDraw[j].level+1);
 		        	}
 		    	}
@@ -787,7 +783,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 
   }
 
-  //Must be call after each creation of this object
+  //Must be call after each creation or modification of this object
   this.init = function(){
     this.mins = this.getmins();
     this.maxs = this.getmaxs();
@@ -805,37 +801,119 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 
     //adding to the canvas : MouseListener | Expansion of the graph
     let me = this;
-    this.can.addEventListener("mousedown", function(){
-      if (me.timer==null) {
-      me.initHeight=me.can.height;
-        me.timer = setInterval(function(){
-         me.addHeight+=1;
-          if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight))
-            clearInterval(me.timer);
-          if(me.polsfill == null)
-            me.polsfill = me.allPolygons(false);
-          me.draw2(false);
-          }, 12);
-       } 
+    this.can.addEventListener("mousedown", function(eventData){
+    	if(eventData.button == 0){																					
+	      	if (me.timer==null) {
+	      		me.initHeight=me.can.height;
+	        	me.timer = setInterval(function(){
+	         	me.addHeight+=1;
+	          	if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight))
+	            	clearInterval(me.timer);
+	          	if(me.polsfill == null)
+	            	me.polsfill = me.allPolygons(false);
+	          	me.draw(false);
+	          	}, 12);
+	       	}
+       	}
+       	if(eventData.button == 1){
+	      	if (me.timer==null) {
+	      		me.initHeight=me.can.height;
+	        	me.timer = setInterval(function(){
+	         	me.addHeight+=1;
+	          	if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight))
+	            	clearInterval(me.timer);
+	          	if(me.polsfill == null)
+	            	me.polsfill = me.allPolygons(false);
+	          	me.draw2(false);
+	          	}, 12);
+	       	}
+       	}
      });
 
-    me.can.addEventListener("mouseup", function(){ 
-       if (me.timer!=null)
-        clearInterval(me.timer);
-       me.timer = setInterval(function(){
-         if(me.addHeight<=0){
-           clearInterval(me.timer);
-           me.timer = null;
-         }
-         else
-           me.addHeight-=1;
-         me.draw2(false);
-      }, 12);
+    this.can.addEventListener("mouseup", function(eventData){ 
+    	if(eventData.button == 0){
+	       	if (me.timer!=null)
+	        	clearInterval(me.timer);
+	      	me.timer = setInterval(function(){
+	         	if(me.addHeight<=0){
+	           		clearInterval(me.timer);
+	           		me.timer = null;
+	         	}
+	         	else
+	           		me.addHeight-=1;
+	         	me.draw(false);
+	      	}, 12);
+      	}
+      	if(eventData.button == 1){
+	       	if (me.timer!=null)
+	        	clearInterval(me.timer);
+	      	me.timer = setInterval(function(){
+	         	if(me.addHeight<=0){
+	           		clearInterval(me.timer);
+	           		me.timer = null;
+	         	}
+	         	else
+	           		me.addHeight-=1;
+	         	me.draw2(false);
+	      	}, 12);
+      	}
+    });
+
+
+    /*
+	Comprendre pk la detection de la molette fonctionne en puissance de 2
+	premier cran = 1 -> deuxieme 2 -> troisieme 4 -> quatrieme 8 -> etc
+	si on fait l'affichage ==> plantage machine après 10 crans. /!\ 
+    */
+    this.can.addEventListener("wheel", function(eventData){
+    	if(eventData.shiftKey && (me.addHeight==0 /*|| me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)*/ )){
+    		console.log(me.ZOOM);
+    		let tempZOOM = me.ZOOM + eventData.deltaY/20;
+    		if(tempZOOM >= 15.0)
+    			me.ZOOM = 15.0;
+    		else if(tempZOOM <= 1.0)
+    			me.ZOOM = 1.0;
+    		else
+    			me.ZOOM = tempZOOM;
+    		tempZOOM = me.ZOOM;
+    		console.log(me.ZOOM);
+    		/*me.init();
+    		console.log(Object.values(me))
+    		me.draw(true);*/
+    	}
+    	if(eventData.altKey && (me.addHeight==0 /*|| me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)*/ )){
+    		console.log(me.basecut);
+    		let tempBaseline = me.basecut  -eventData.deltaY/20;
+    		if(tempBaseline >= me.maxs)
+    			me.basecut = me.maxs;
+    		else if(tempBaseline <= me.mins)
+    			me.basecut = me.mins;
+    		else
+    			me.basecut = tempBaseline;
+    		tempBaseline = me.basecut;
+    		console.log(me.basecut);
+    		/*me.init();
+    		console.log(Object.values(me))
+    		me.draw(true);*/
+    	}
+    	if(eventData.ctrlKey && (me.addHeight==0 /*|| me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)*/ )){
+    		console.log(me.initHeight);
+    		let tempinitHeight = me.initHeight + Math.ceil(eventData.deltaY/3);
+    		if(tempinitHeight <= 1.0)
+    			me.initHeight = 1.0;
+    		else
+    			me.initHeight = tempinitHeight;
+    		tempinitHeight = me.initHeight;
+    		console.log(me.initHeight);
+    		/*me.init();
+    		console.log(Object.values(me))
+    		me.draw(true);*/
+    	}
     });
     document.body.appendChild(this.can);
   }
 }
-
+																																																																																																																																																																																																																																																																																																																																																																		
 
         //////////////////////////////////////////////////
         //          Creation of multiple Graphs         //
@@ -851,6 +929,7 @@ for (let i=0; i<256; i++){
 let ZOOM = 9.45
 var initHeight = 45;
 let BASELINE = 29.32;
+
 
 var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight);
 var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight);
@@ -869,3 +948,28 @@ test3.draw2(true);
 test4.draw2(true);
 console.log(Object.values(test3));
 console.log(Object.values(test4));
+
+var rangeslider = document.getElementById("sliderRange");
+var output = document.getElementById("graph1");
+output.innerHTML = rangeslider.value;
+
+let me = test4
+rangeslider.oninput = function() {
+	console.log(me.basecut);
+	let tempBaseline = this.value;
+    if(tempBaseline >= me.maxs)
+    	me.basecut = me.maxs;
+    else if(tempBaseline <= me.mins)
+    	me.basecut = me.mins;
+    else
+    	me.basecut = tempBaseline;
+    tempBaseline = me.basecut;
+    console.log(me.basecut);
+    me.init();
+    console.log(Object.values(me))
+    if(me.addHeight==0)
+    	me.draw(true);
+    else
+    	me.draw(false);
+	output.innerHTML = this.value;
+}
