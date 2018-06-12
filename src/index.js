@@ -57,8 +57,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
   this.timer = null;
   this.maxs;
   this.mins;
-  this.maxlvl= 1;
-  this.minlvl= 1;
+  this.maxlvl = 1;
+  this.minlvl = 1;
+  this.statu = "opti";
 
 
   //canvas generation
@@ -123,16 +124,6 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
     var val0 = ((this.tabledata[this.start]-this.baselvl)*mul)*scaleY/(max-min);
     var n0   = Math.floor(val0); // index of bands at beginning
 
-    //generation of maxlvl and minlvl
-    if(optim && n0+1 > this.maxlvl)
-      this.maxlvl=n0+1;
-    else if(optim && n0 < this.minlvl){
-      if(n0<0)
-        this.minlvl = n0;
-      else
-        this.minlvl = n0+1;
-    }
-
     // create the/all background polygon
     if (n0>0){
        let lvl = n0;
@@ -178,23 +169,13 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
     for (var i=this.start; i<=this.end; i++) {
 
       if (isNaN(this.tabledata[i])){
-        console.log( "WARNING : tabledata[" + i + "] is undefined");
+        //console.log( "WARNING : tabledata[" + i + "] is undefined");
         continue;
       }
       var t   = this.timepos[i];
 
       var val = ((this.tabledata[i]-this.baselvl)*mul)*scaleY/(max-min);
       var n   = Math.floor(val); // band index
-
-      //generation of maxlvl and minlvl
-      if(optim && n+1 > this.maxlvl)
-        this.maxlvl=n+1;
-      else if(optim && n < this.minlvl){
-        if(n<0)
-          this.minlvl = n;
-        else
-          this.minlvl = n+1;
-      }
 
       if (n==n0 ){ 
           // staying at the same level
@@ -209,7 +190,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
           polystack[n0].pty.push(1.0-val%1.0);
         }
         else {
-          console.log("WARNING: negative n0")  
+          //console.log("WARNING: negative n0")  
         }
       } 
       else if (n<n0){// going down one or MANY level(s)
@@ -232,11 +213,13 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
             if (miny!=maxy) {
               locPolylist.push(pol);
             }
-            else 
-              console.log("WARNING: flat polygon");
+            else {
+            	//console.log("WARNING: flat polygon");
+        	}
           } 
-          else
-            console.log("WARNING: negative n0");
+          else{
+            //console.log("WARNING: negative n0");
+          }
             
 
           if (n0>0) {
@@ -285,8 +268,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
             if (miny!=maxy) {
               locPolylist.push(pol);
             }
-            else 
-              console.log("WARNING: flat polygon");
+            else {
+            	//console.log("WARNING: flat polygon");
+        	}
                     
             polystack[n0-1]=null;
           }
@@ -299,8 +283,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
             polystack[n0].ptx.push(newt);
             polystack[n0].pty.push(0);
           } 
-          else
-            console.log("WARNING: negative n0");
+          else{
+            //console.log("WARNING: negative n0");
+          }
 
           // increment the level and create a new polygon with 2 points
           n0++;
@@ -316,8 +301,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
           polystack[n0].ptx.push(t);
           polystack[n0].pty.push(1.0-val%1.0);
         } 
-        else
-          console.log("WARNING: negative n0");
+        else {
+            //console.log("WARNING: flat polygon");
+        }
       }
       pval = val;
       pt   = t;
@@ -348,8 +334,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
           if (miny!=maxy) {
             locPolylist.push(pol);
           }
-          else 
-            console.log("WARNING: flat polygon");
+          else {
+            //console.log("WARNING: flat polygon");
+          }
         }
       }
       else{
@@ -367,8 +354,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
         if (miny!=maxy) {
           locPolylist.push(pol);
         }
-        else 
-          console.log("WARNING: flat polygon");
+        else {
+            //console.log("WARNING: flat polygon");
+        }
       }
     }
     if (n0>=0) {
@@ -383,12 +371,13 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
       if (miny!=maxy) {
         locPolylist.push(pol);
       }
-      else 
-        console.log("WARNING: flat polygon");
+      else {
+        //console.log("WARNING: flat polygon");
+    	}
     } 
-    else
-      console.log("WARNING: negative n0");
-
+    else{
+          //console.log("WARNING: negative n0");
+    }
     locPolylist.sort(function(a,b){return mul*(a.level-b.level)});
     return locPolylist;
   }
@@ -426,9 +415,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
           }
           else{
             for(let k=0; k<this.initHeight; k++){
-              imgData.data[4*k+0]=heatScale[240-(copy[g].level*(Math.floor(220/this.scaleYpos)))][0];
-              imgData.data[4*k+1]=heatScale[240-(copy[g].level*(Math.floor(220/this.scaleYpos)))][1];
-              imgData.data[4*k+2]=heatScale[240-(copy[g].level*(Math.floor(220/this.scaleYpos)))][2];
+              imgData.data[4*k+0]=heatScale[240-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
+              imgData.data[4*k+1]=heatScale[240-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
+              imgData.data[4*k+2]=heatScale[240-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
               imgData.data[4*k+3]=255;
             }
           }
@@ -453,9 +442,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
           }
           else{
             for(let k=0; k<this.initHeight; k++){
-              imgData.data[4*k+0]=btcScale[(copy[g].level*(Math.floor(220/this.scaleYpos)))][0];
-              imgData.data[4*k+1]=btcScale[(copy[g].level*(Math.floor(220/this.scaleYpos)))][1];
-              imgData.data[4*k+2]=btcScale[(copy[g].level*(Math.floor(220/this.scaleYpos)))][2];
+              imgData.data[4*k+0]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
+              imgData.data[4*k+1]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
+              imgData.data[4*k+2]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
               imgData.data[4*k+3]=255;
             }
           }
@@ -500,15 +489,15 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
             for(let k=0; k<this.initHeight; k++){
               let pixelValue = lvlValue + k*((nextlvlValue-lvlValue)/this.initHeight);
               if(pixelValue<=this.basecut){
-                imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[(copy[g].level*(Math.floor(220/this.scaleYpos)))][0];
-                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[(copy[g].level*(Math.floor(220/this.scaleYpos)))][1];
-                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[(copy[g].level*(Math.floor(220/this.scaleYpos)))][2];
+                imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
+                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
+                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
                 imgData.data[4*((this.initHeight-1)-k)+3]=255;
               }
               else{
-                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[240-(copy[g].level*(Math.floor(220/this.scaleYpos)))][0];
-                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[240-(copy[g].level*(Math.floor(220/this.scaleYpos)))][1];
-                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[240-(copy[g].level*(Math.floor(220/this.scaleYpos)))][2];
+                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[240-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
+                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[240-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
+                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[240-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
                 imgData.data[4*((this.initHeight-1)-k)+3]=255;
               }
             }
@@ -526,7 +515,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
           c.width  = 1;
           c.height = this.initHeight;
           var imgData = c.getContext("2d").getImageData(0, 0, 1, this.initHeight);
-          if(copy[g].level > 0){
+          if(copy[g].level > 0 && this.scaleYpos >= 1){
             for(let k=0; k<this.initHeight; k++){
               imgData.data[4*k+0]=Math.floor(lingreyScale[255-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][0]/1.5);
               imgData.data[4*k+1]=Math.floor(lingreyScale[255-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][1]/1.5);
@@ -534,13 +523,31 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
               imgData.data[4*k+3]=255;
             }
           }
-          else{
-            for(let k=0; k<this.initHeight; k++){
-              imgData.data[4*k+0]=rScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][0];
-              imgData.data[4*k+1]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][1]/1.5);
-              imgData.data[4*k+2]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][2]/1.5);
+          else if(copy[g].level>0 && this.scaleYpos < 1){
+          	for(let k=0; k<this.initHeight; k++){
+              imgData.data[4*k+0]=Math.floor(lingreyScale[150][0]/1.5);
+              imgData.data[4*k+1]=Math.floor(lingreyScale[150][1]/1.5);
+              imgData.data[4*k+2]=bScale[150][2];
               imgData.data[4*k+3]=255;
             }
+          }
+          else{
+          	if(this.scaleYneg >= 1){
+	            for(let k=0; k<this.initHeight; k++){
+	              imgData.data[4*k+0]=rScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][0];
+	              imgData.data[4*k+1]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][1]/1.5);
+	              imgData.data[4*k+2]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][2]/1.5);
+	              imgData.data[4*k+3]=255;
+	            }
+        	}
+        	else{
+        		for(let k=0; k<this.initHeight; k++){
+	              imgData.data[4*k+0]=rScale[150][0];
+	              imgData.data[4*k+1]=Math.floor(lingreyScale[150][1]/1.5);
+	              imgData.data[4*k+2]=Math.floor(lingreyScale[150][2]/1.5);
+	              imgData.data[4*k+3]=255;
+	            }
+        	}
           }
           c.getContext("2d").putImageData(imgData,0,0);
           copy[g].texture= c.getContext('2d').createPattern(c, "repeat-x");
@@ -672,9 +679,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
       graphToDraw = this.pols;
     else
       graphToDraw = this.polsfill;
-  	let scaleShiftpos = Math.ceil(this.initHeight*(1-this.scaleYpos%1.0));
-  	let scaleShiftneg = Math.ceil(this.initHeight*(1-this.scaleYneg%1.0));
-  	let forkPosCoord = Math.ceil(this.initHeight*(this.maxlvl-1)-scaleShiftpos);
+  	let scaleShiftpos = Math.round(this.initHeight*(1-this.scaleYpos%1.0));
+  	let scaleShiftneg = Math.round(this.initHeight*(1-this.scaleYneg%1.0));
+  	let forkPosCoord = Math.round(this.initHeight*(this.maxlvl-1)-scaleShiftpos);
   	for (let j in graphToDraw){
     	ctx.save();
     	if (graphToDraw[j].level>0){
@@ -721,7 +728,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 	        	rota = true;
 	        	if(this.addHeight >= forkPosCoord+this.initHeight && graphToDraw[j].level < -1){
 	        		tranAfterRota = true;
-	        		if(graphToDraw[j].level == (this.minlvl+1)){
+	        		if(graphToDraw[j].level == (this.minlvl)){
 	        			if((this.addHeight-forkPosCoord-this.initHeight) <= this.initHeight){
 	        				shiftAfterRot = -(this.addHeight-forkPosCoord-this.initHeight + (scaleShiftneg*((this.addHeight-forkPosCoord-this.initHeight)/this.initHeight)));
 	        			}
@@ -787,131 +794,149 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
   this.init = function(){
     this.mins = this.getmins();
     this.maxs = this.getmaxs();
-    if(this.baselineType == "Stratum" || this.baselineType == "Stratum0")
-      this.scaleYpos = this.ZOOM;
+    if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
+        this.scaleYpos = this.ZOOM;
+        this.minlvl = 1;
+      	console.log("ZOOM : "+ this.ZOOM + " / scaleYpos : "+ this.scaleYpos);
+    }
     else {
       if(this.baselineType == "Horizon"){
-        this.scaleYpos = this.ZOOM*(this.maxs-basecut)/(this.maxs-this.mins);
-        this.scaleYneg = this.ZOOM*(basecut-this.mins)/(this.maxs-this.mins);
+        this.scaleYpos = this.ZOOM*(this.maxs-this.basecut)/(this.maxs-this.mins);
+        this.scaleYneg = this.ZOOM*(this.basecut-this.mins)/(this.maxs-this.mins);
+        if(this.scaleYneg!=0)
+        	this.minlvl = -Math.ceil(this.scaleYneg);
+        else
+        	this.minlvl = 1;
+        console.log("ZOOM : "+ this.ZOOM + " / scaleYpos : "+ this.scaleYpos + " / scaleYneg : "+ this.scaleYneg);
       }
     }
+    this.maxlvl = Math.ceil(this.scaleYpos);
     this.baselvl = this.getBaselvl();
     this.pols = this.allPolygons(true);
     this.polsfill = null;
-
-    //adding to the canvas : MouseListener | Expansion of the graph
-    let me = this;
-    this.can.addEventListener("mousedown", function(eventData){
-    	if(eventData.button == 0){																					
-	      	if (me.timer==null) {
-	      		me.initHeight=me.can.height;
-	        	me.timer = setInterval(function(){
-	         	me.addHeight+=1;
-	          	if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight))
-	            	clearInterval(me.timer);
-	          	if(me.polsfill == null)
-	            	me.polsfill = me.allPolygons(false);
-	          	me.draw(false);
-	          	}, 12);
-	       	}
-       	}
-       	if(eventData.button == 1){
-	      	if (me.timer==null) {
-	      		me.initHeight=me.can.height;
-	        	me.timer = setInterval(function(){
-	         	me.addHeight+=1;
-	          	if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight))
-	            	clearInterval(me.timer);
-	          	if(me.polsfill == null)
-	            	me.polsfill = me.allPolygons(false);
-	          	me.draw2(false);
-	          	}, 12);
-	       	}
-       	}
-     });
-
-    this.can.addEventListener("mouseup", function(eventData){ 
-    	if(eventData.button == 0){
-	       	if (me.timer!=null)
-	        	clearInterval(me.timer);
-	      	me.timer = setInterval(function(){
-	         	if(me.addHeight<=0){
-	           		clearInterval(me.timer);
-	           		me.timer = null;
-	         	}
-	         	else
-	           		me.addHeight-=1;
-	         	me.draw(false);
-	      	}, 12);
-      	}
-      	if(eventData.button == 1){
-	       	if (me.timer!=null)
-	        	clearInterval(me.timer);
-	      	me.timer = setInterval(function(){
-	         	if(me.addHeight<=0){
-	           		clearInterval(me.timer);
-	           		me.timer = null;
-	         	}
-	         	else
-	           		me.addHeight-=1;
-	         	me.draw2(false);
-	      	}, 12);
-      	}
-    });
-
-
-    /*
-	Comprendre pk la detection de la molette fonctionne en puissance de 2
-	premier cran = 1 -> deuxieme 2 -> troisieme 4 -> quatrieme 8 -> etc
-	si on fait l'affichage ==> plantage machine après 10 crans. /!\ 
-    */
-    this.can.addEventListener("wheel", function(eventData){
-    	if(eventData.shiftKey && (me.addHeight==0 /*|| me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)*/ )){
-    		console.log(me.ZOOM);
-    		let tempZOOM = me.ZOOM + eventData.deltaY/20;
-    		if(tempZOOM >= 15.0)
-    			me.ZOOM = 15.0;
-    		else if(tempZOOM <= 1.0)
-    			me.ZOOM = 1.0;
-    		else
-    			me.ZOOM = tempZOOM;
-    		tempZOOM = me.ZOOM;
-    		console.log(me.ZOOM);
-    		/*me.init();
-    		console.log(Object.values(me))
-    		me.draw(true);*/
-    	}
-    	if(eventData.altKey && (me.addHeight==0 /*|| me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)*/ )){
-    		console.log(me.basecut);
-    		let tempBaseline = me.basecut  -eventData.deltaY/20;
-    		if(tempBaseline >= me.maxs)
-    			me.basecut = me.maxs;
-    		else if(tempBaseline <= me.mins)
-    			me.basecut = me.mins;
-    		else
-    			me.basecut = tempBaseline;
-    		tempBaseline = me.basecut;
-    		console.log(me.basecut);
-    		/*me.init();
-    		console.log(Object.values(me))
-    		me.draw(true);*/
-    	}
-    	if(eventData.ctrlKey && (me.addHeight==0 /*|| me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)*/ )){
-    		console.log(me.initHeight);
-    		let tempinitHeight = me.initHeight + Math.ceil(eventData.deltaY/3);
-    		if(tempinitHeight <= 1.0)
-    			me.initHeight = 1.0;
-    		else
-    			me.initHeight = tempinitHeight;
-    		tempinitHeight = me.initHeight;
-    		console.log(me.initHeight);
-    		/*me.init();
-    		console.log(Object.values(me))
-    		me.draw(true);*/
-    	}
-    });
-    document.body.appendChild(this.can);
+    console.log("max / min lvl : "+ this.maxlvl +" / "+ this.minlvl)
   }
+
+	this.initListener = function(){
+	    //adding to the canvas : MouseListener | Expansion of the graph
+	    let me = this;
+	    this.can.addEventListener("mousedown", function(eventData){
+	    	if(me.statu == "opti" || me.statu == "anim"){
+		    	if(eventData.button == 0){																					
+			      	if (me.timer==null) {
+			      		me.initHeight=me.can.height;
+			        	me.timer = setInterval(function(){
+			         	me.addHeight+=1;
+			         	me.statu="anim"
+			          	if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
+			            	clearInterval(me.timer);
+			            	me.statu="opti";
+			            }
+			          	if(me.polsfill == null)
+			            	me.polsfill = me.allPolygons(false);
+			          	me.draw(false);
+			          	}, 12);
+			       	}
+		       	}
+		       	if(eventData.button == 1){
+			      	if (me.timer==null) {
+			      		me.initHeight=me.can.height;
+			        	me.timer = setInterval(function(){
+			         	me.addHeight+=1;
+			         	me.statu="anim"
+			          	if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
+			            	clearInterval(me.timer);
+			            	me.statu="opti"
+			            }
+			          	if(me.polsfill == null)
+			            	me.polsfill = me.allPolygons(false);
+			          	me.draw2(false);
+			          	}, 12);
+			       	}
+		       	}
+		    }
+	     });
+
+	    this.can.addEventListener("mouseup", function(eventData){
+	    	if(me.statu == "unfold" || me.statu == "anim"){
+		    	if(eventData.button == 0){
+			       	if (me.timer!=null)
+			        	clearInterval(me.timer);
+			      	me.timer = setInterval(function(){
+			         	if(me.addHeight<=0){
+			           		clearInterval(me.timer);
+			           		me.timer = null;
+			         	}
+			         	else
+			           		me.addHeight-=1;
+			         	me.draw(false);
+			      	}, 12);
+		      	}
+		      	if(eventData.button == 1){
+			       	if (me.timer!=null)
+			        	clearInterval(me.timer);
+			      	me.timer = setInterval(function(){
+			         	if(me.addHeight<=0){
+			           		clearInterval(me.timer);
+			           		me.timer = null;
+			         	}
+			         	else
+			           		me.addHeight-=1;
+			         	me.draw2(false);
+			      	}, 12);
+		      	}
+	      	}
+	    });
+
+
+	    /*
+		Comprendre pk la detection de la molette fonctionne en puissance de 2
+		premier cran = 1 -> deuxieme 2 -> troisieme 4 -> quatrieme 8 -> etc
+		si on fait l'affichage ==> plantage machine après 10 crans. /!\ 
+	    */
+	    this.can.addEventListener("wheel", function(eventData){
+	    	eventData.preventDefault()
+	    	if(eventData.shiftKey && (me.addHeight==0 /*|| me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)*/ )){
+	    		let tempZOOM = me.ZOOM + eventData.deltaY/20;
+	    		if(tempZOOM >= 15.0)
+	    			me.ZOOM = 15.0;
+	    		else if(tempZOOM <= 1.0)
+	    			me.ZOOM = 1.0;
+	    		else
+	    			me.ZOOM = tempZOOM;
+	    		tempZOOM = me.ZOOM;
+	    		me.init();
+	    		me.draw(true);
+	    		eventData.stopImmediatePropagation();
+	    		return false;
+	    	}
+	    	if(eventData.altKey && (me.addHeight==0 /*|| me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)*/ )){
+	    		let tempBaseline = me.basecut  -eventData.deltaY/20;
+	    		if(tempBaseline >= me.maxs)
+	    			me.basecut = me.maxs;
+	    		else if(tempBaseline <= me.mins)
+	    			me.basecut = me.mins;
+	    		else
+	    			me.basecut = tempBaseline;
+	    		tempBaseline = me.basecut;
+	    		me.init();
+	    		me.draw(true);
+	    		return false;
+	    	}
+	    	if(eventData.ctrlKey && (me.addHeight==0 /*|| me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)*/ )){
+	    		let tempinitHeight = me.initHeight + Math.ceil(eventData.deltaY/3);
+	    		if(tempinitHeight <= 1.0)
+	    			me.initHeight = 1.0;
+	    		else
+	    			me.initHeight = tempinitHeight;
+	    		tempinitHeight = me.initHeight;
+	    		me.init();
+	    		me.draw(true);
+	    		return false;
+	    	}
+	    });
+	    document.body.appendChild(this.can);
+  	}
 }
 																																																																																																																																																																																																																																																																																																																																																																		
 
@@ -926,7 +951,7 @@ for (let i=0; i<256; i++){
   time[i] = i/255;
 }
 
-let ZOOM = 9.45
+let ZOOM = 8.54
 var initHeight = 45;
 let BASELINE = 29.32;
 
@@ -935,6 +960,8 @@ var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeig
 var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight);
 test1.init();
 test2.init();
+test1.initListener();
+test2.initListener();
 test1.draw(true);
 test2.draw(true);
 console.log(Object.values(test2));
@@ -944,6 +971,8 @@ var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeig
 var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight);
 test3.init();
 test4.init();
+test3.initListener();
+test4.initListener();
 test3.draw2(true);
 test4.draw2(true);
 console.log(Object.values(test3));
@@ -955,7 +984,6 @@ output.innerHTML = rangeslider.value;
 
 let me = test4
 rangeslider.oninput = function() {
-	console.log(me.basecut);
 	let tempBaseline = this.value;
     if(tempBaseline >= me.maxs)
     	me.basecut = me.maxs;
@@ -964,9 +992,7 @@ rangeslider.oninput = function() {
     else
     	me.basecut = tempBaseline;
     tempBaseline = me.basecut;
-    console.log(me.basecut);
     me.init();
-    console.log(Object.values(me))
     if(me.addHeight==0)
     	me.draw(true);
     else
