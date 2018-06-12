@@ -821,16 +821,16 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 	    //adding to the canvas : MouseListener | Expansion of the graph
 	    let me = this;
 	    this.can.addEventListener("mousedown", function(eventData){
-	    	if(me.statu == "opti" || me.statu == "anim"){
+	    	if(me.statu == "opti"){
 		    	if(eventData.button == 0){																					
 			      	if (me.timer==null) {
 			      		me.initHeight=me.can.height;
 			        	me.timer = setInterval(function(){
 			         	me.addHeight+=1;
-			         	me.statu="anim"
+			         	me.statu="anim";
 			          	if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
 			            	clearInterval(me.timer);
-			            	me.statu="opti";
+			            	me.statu="unfold";
 			            }
 			          	if(me.polsfill == null)
 			            	me.polsfill = me.allPolygons(false);
@@ -843,10 +843,10 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 			      		me.initHeight=me.can.height;
 			        	me.timer = setInterval(function(){
 			         	me.addHeight+=1;
-			         	me.statu="anim"
+			         	me.statu="anim";
 			          	if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
 			            	clearInterval(me.timer);
-			            	me.statu="opti"
+			            	me.statu="unfold";
 			            }
 			          	if(me.polsfill == null)
 			            	me.polsfill = me.allPolygons(false);
@@ -857,32 +857,41 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 		    }
 	     });
 
-	    this.can.addEventListener("mouseup", function(eventData){
+	    this.can.addEventListener("mousedown", function(eventData){
 	    	if(me.statu == "unfold" || me.statu == "anim"){
+	    		let drawingMode = false;
 		    	if(eventData.button == 0){
 			       	if (me.timer!=null)
 			        	clearInterval(me.timer);
 			      	me.timer = setInterval(function(){
+			      		me.statu="anim";
 			         	if(me.addHeight<=0){
 			           		clearInterval(me.timer);
 			           		me.timer = null;
+			           		me.statu="opti";
 			         	}
 			         	else
 			           		me.addHeight-=1;
-			         	me.draw(false);
+			           	if(me.statu == "opti")
+			           		drawingMode=true;
+			         	me.draw(drawingMode);
 			      	}, 12);
 		      	}
 		      	if(eventData.button == 1){
 			       	if (me.timer!=null)
 			        	clearInterval(me.timer);
 			      	me.timer = setInterval(function(){
+			      		me.statu="anim";
 			         	if(me.addHeight<=0){
 			           		clearInterval(me.timer);
 			           		me.timer = null;
+			           		me.statu="opti";
 			         	}
 			         	else
 			           		me.addHeight-=1;
-			         	me.draw2(false);
+			           	if(me.statu == "opti")
+			           		drawingMode=true;
+			         	me.draw2(drawingMode);
 			      	}, 12);
 		      	}
 	      	}
@@ -896,43 +905,48 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 	    */
 	    this.can.addEventListener("wheel", function(eventData){
 	    	eventData.preventDefault()
-	    	if(eventData.shiftKey && (me.addHeight==0 /*|| me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)*/ )){
-	    		let tempZOOM = me.ZOOM + eventData.deltaY/20;
-	    		if(tempZOOM >= 15.0)
-	    			me.ZOOM = 15.0;
-	    		else if(tempZOOM <= 1.0)
-	    			me.ZOOM = 1.0;
-	    		else
-	    			me.ZOOM = tempZOOM;
-	    		tempZOOM = me.ZOOM;
-	    		me.init();
-	    		me.draw(true);
-	    		eventData.stopImmediatePropagation();
-	    		return false;
-	    	}
-	    	if(eventData.altKey && (me.addHeight==0 /*|| me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)*/ )){
-	    		let tempBaseline = me.basecut  -eventData.deltaY/20;
-	    		if(tempBaseline >= me.maxs)
-	    			me.basecut = me.maxs;
-	    		else if(tempBaseline <= me.mins)
-	    			me.basecut = me.mins;
-	    		else
-	    			me.basecut = tempBaseline;
-	    		tempBaseline = me.basecut;
-	    		me.init();
-	    		me.draw(true);
-	    		return false;
-	    	}
-	    	if(eventData.ctrlKey && (me.addHeight==0 /*|| me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)*/ )){
-	    		let tempinitHeight = me.initHeight + Math.ceil(eventData.deltaY/3);
-	    		if(tempinitHeight <= 1.0)
-	    			me.initHeight = 1.0;
-	    		else
-	    			me.initHeight = tempinitHeight;
-	    		tempinitHeight = me.initHeight;
-	    		me.init();
-	    		me.draw(true);
-	    		return false;
+	    	if(me.statu!="anim"){
+	    		let drawingMode = true;
+	    		if(me.statu=="unfold")
+	    			drawingMode = false;
+		    	if(eventData.shiftKey){
+		    		let tempZOOM = me.ZOOM + eventData.deltaY/20;
+		    		if(tempZOOM >= 15.0)
+		    			me.ZOOM = 15.0;
+		    		else if(tempZOOM <= 1.0)
+		    			me.ZOOM = 1.0;
+		    		else
+		    			me.ZOOM = tempZOOM;
+		    		tempZOOM = me.ZOOM;
+		    		me.init();
+		    		me.draw(drawingMode);
+		    		eventData.stopImmediatePropagation();
+		    		return false;
+		    	}
+		    	if(eventData.altKey){
+		    		let tempBaseline = me.basecut  -eventData.deltaY/20;
+		    		if(tempBaseline >= me.maxs)
+		    			me.basecut = me.maxs;
+		    		else if(tempBaseline <= me.mins)
+		    			me.basecut = me.mins;
+		    		else
+		    			me.basecut = tempBaseline;
+		    		tempBaseline = me.basecut;
+		    		me.init();
+		    		me.draw(drawingMode);
+		    		return false;
+		    	}
+		    	if(eventData.ctrlKey){
+		    		let tempinitHeight = me.initHeight + Math.ceil(eventData.deltaY/3);
+		    		if(tempinitHeight <= 1.0)
+		    			me.initHeight = 1.0;
+		    		else
+		    			me.initHeight = tempinitHeight;
+		    		tempinitHeight = me.initHeight;
+		    		me.init();
+		    		me.draw(drawingMode);
+		    		return false;
+		    	}
 	    	}
 	    });
 	    document.body.appendChild(this.can);
