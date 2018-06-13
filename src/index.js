@@ -35,7 +35,7 @@ document.head.appendChild(link);
         //       Graph Classes (via a constructor)      //
         //////////////////////////////////////////////////
 
-function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end, initHeight){
+function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end, initHeight, drawingMethod){
   const maxZOOM = 15.0;
   //attributes
   this.basecut = basecut;
@@ -60,6 +60,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
   this.maxlvl = 1;
   this.minlvl = 1;
   this.statu = "opti";
+  this.drawingMethod = drawingMethod
 
 
   //canvas generation
@@ -581,10 +582,13 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 
 
   //Draw the graph in his canvas
-  this.draw = function(optim){
+  this.draw1 = function(optim){
     //console.time('someFunction');
-    if (this.can.height!=this.initHeight+this.addHeight)
-      this.can.height = this.initHeight+this.addHeight;
+    if (this.can.height!=this.initHeight+this.addHeight && this.statu == "anim")
+    	this.can.height = this.initHeight+this.addHeight ;
+  	else if(this.statu == "unfold")
+  		this.addHeight = this.initHeight*this.ZOOM - this.initHeight;
+  		this.can.height = this.initHeight+this.addHeight ;
 
     let ctx = this.can.getContext("2d");
     ctx.fillStyle="#F0FF0F";  
@@ -662,8 +666,12 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
   //Draw the graph in his canvas (new animation)
   this.draw2 = function(optim){
   	//console.time('someFunction');
-    if (this.can.height!=this.initHeight+this.addHeight)
-      this.can.height = this.initHeight+this.addHeight ;
+    if (this.can.height!=this.initHeight+this.addHeight && this.statu != "unfold")
+    	this.can.height = this.initHeight+this.addHeight ;
+  	else if(this.statu == "unfold"){
+  		this.addHeight = Math.ceil(this.initHeight*this.ZOOM - this.initHeight);
+  		this.can.height = this.initHeight+this.addHeight ;
+  	}
 
     let ctx = this.can.getContext("2d");
     ctx.fillStyle="#F0FF0F";  
@@ -680,27 +688,29 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
     else
       graphToDraw = this.polsfill;
   	let scaleShiftpos = Math.round(this.initHeight*(1-this.scaleYpos%1.0));
-  	let scaleShiftneg = Math.round(this.initHeight*(1-this.scaleYneg%1.0));
+  	let scaleShiftneg = Math.round(this.initHeight*(1-this.scaleYneg%1.0)-Math.ceil(1-this.scaleYneg%1.0));
   	let forkPosCoord = Math.round(this.initHeight*(this.maxlvl-1)-scaleShiftpos);
   	for (let j in graphToDraw){
     	ctx.save();
     	if (graphToDraw[j].level>0){
+    		let scaleShiftpostemp = scaleShiftpos;
+    		if(scaleShiftpostemp==this.initHeight)
+	        	scaleShiftpostemp = 0;
 	        ctx.fillStyle=graphToDraw[j].texture;
 	        let shift;
 	        if(graphToDraw[j].level == this.maxlvl){
-	        	if( this.addHeight > scaleShiftpos){
-	        		shift = -scaleShiftpos;
+	        	if( this.addHeight > scaleShiftpostemp){
+	        		shift = -scaleShiftpostemp;
 	        	}
 	        	else
 	        		shift = -this.addHeight;
 	        }
 	        else{
-	        	if(this.addHeight >= this.initHeight*(this.maxlvl-graphToDraw[j].level)-scaleShiftpos)
-	        		shift = this.initHeight*(this.maxlvl-graphToDraw[j].level)-scaleShiftpos;
+	        	if(this.addHeight >= this.initHeight*(this.maxlvl-graphToDraw[j].level)-scaleShiftpostemp)
+	        		shift = this.initHeight*(this.maxlvl-graphToDraw[j].level)-scaleShiftpostemp;
 				else
 					shift = this.addHeight;
 	        }
-
 	        ctx.translate(0, 0-this.initHeight+graphToDraw[j].pty[0]*this.initHeight+shift
 	                   );
 	        ctx.beginPath();
@@ -723,7 +733,7 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 		    let shiftAfterRot;
 		    let rota;
 		    let tranAfterRota;
-	        if(this.addHeight >= forkPosCoord){
+	        if(this.addHeight > forkPosCoord && this.addHeight>0){
 	        	shiftBeforeRot = forkPosCoord;
 	        	rota = true;
 	        	if(this.addHeight >= forkPosCoord+this.initHeight && graphToDraw[j].level < -1){
@@ -790,6 +800,13 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 
   }
 
+  this.draw = function(optim){
+  	if(this.drawingMethod == 1)
+  		this.draw1(optim);
+  	else
+  		this.draw2(optim);
+  }
+
   //Must be call after each creation or modification of this object
   this.init = function(){
     this.mins = this.getmins();
@@ -797,103 +814,66 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
     if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
         this.scaleYpos = this.ZOOM;
         this.minlvl = 1;
-      	console.log("ZOOM : "+ this.ZOOM + " / scaleYpos : "+ this.scaleYpos);
     }
     else {
       if(this.baselineType == "Horizon"){
         this.scaleYpos = this.ZOOM*(this.maxs-this.basecut)/(this.maxs-this.mins);
         this.scaleYneg = this.ZOOM*(this.basecut-this.mins)/(this.maxs-this.mins);
-        if(this.scaleYneg!=0)
+        if(this.scaleYneg>0.5)
         	this.minlvl = -Math.ceil(this.scaleYneg);
         else
         	this.minlvl = 1;
-        console.log("ZOOM : "+ this.ZOOM + " / scaleYpos : "+ this.scaleYpos + " / scaleYneg : "+ this.scaleYneg);
       }
     }
-    this.maxlvl = Math.ceil(this.scaleYpos);
+    if(Math.ceil(this.scaleYpos)>0)
+    	this.maxlvl = Math.ceil(this.scaleYpos);
+    else
+    	this.maxlvl = 1;
     this.baselvl = this.getBaselvl();
     this.pols = this.allPolygons(true);
     this.polsfill = null;
-    console.log("max / min lvl : "+ this.maxlvl +" / "+ this.minlvl)
   }
 
 	this.initListener = function(){
 	    //adding to the canvas : MouseListener | Expansion of the graph
 	    let me = this;
 	    this.can.addEventListener("mousedown", function(eventData){
-	    	if(me.statu == "opti"){
-		    	if(eventData.button == 0){																					
-			      	if (me.timer==null) {
-			      		me.initHeight=me.can.height;
-			        	me.timer = setInterval(function(){
-			         	me.addHeight+=1;
-			         	me.statu="anim";
-			          	if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
-			            	clearInterval(me.timer);
-			            	me.statu="unfold";
-			            }
-			          	if(me.polsfill == null)
-			            	me.polsfill = me.allPolygons(false);
-			          	me.draw(false);
-			          	}, 12);
-			       	}
-		       	}
-		       	if(eventData.button == 1){
-			      	if (me.timer==null) {
-			      		me.initHeight=me.can.height;
-			        	me.timer = setInterval(function(){
-			         	me.addHeight+=1;
-			         	me.statu="anim";
-			          	if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
-			            	clearInterval(me.timer);
-			            	me.statu="unfold";
-			            }
-			          	if(me.polsfill == null)
-			            	me.polsfill = me.allPolygons(false);
-			          	me.draw2(false);
-			          	}, 12);
-			       	}
-		       	}
+	    	if(me.statu == "opti"){																				
+			    if (me.timer==null) {
+			      	me.initHeight=me.can.height;
+			        me.timer = setInterval(function(){
+			        me.addHeight+=1;
+			        me.statu="anim";
+			        if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
+			            clearInterval(me.timer);
+			            me.statu="unfold";
+			        }
+			        if(me.polsfill == null)
+			            me.polsfill = me.allPolygons(false);
+			        me.draw(false);
+			    	}, 12);
+			    }
 		    }
 	     });
 
 	    this.can.addEventListener("mousedown", function(eventData){
 	    	if(me.statu == "unfold" || me.statu == "anim"){
 	    		let drawingMode = false;
-		    	if(eventData.button == 0){
-			       	if (me.timer!=null)
-			        	clearInterval(me.timer);
-			      	me.timer = setInterval(function(){
-			      		me.statu="anim";
-			         	if(me.addHeight<=0){
-			           		clearInterval(me.timer);
-			           		me.timer = null;
-			           		me.statu="opti";
-			         	}
-			         	else
-			           		me.addHeight-=1;
-			           	if(me.statu == "opti")
-			           		drawingMode=true;
-			         	me.draw(drawingMode);
-			      	}, 12);
-		      	}
-		      	if(eventData.button == 1){
-			       	if (me.timer!=null)
-			        	clearInterval(me.timer);
-			      	me.timer = setInterval(function(){
-			      		me.statu="anim";
-			         	if(me.addHeight<=0){
-			           		clearInterval(me.timer);
-			           		me.timer = null;
-			           		me.statu="opti";
-			         	}
-			         	else
-			           		me.addHeight-=1;
-			           	if(me.statu == "opti")
-			           		drawingMode=true;
-			         	me.draw2(drawingMode);
-			      	}, 12);
-		      	}
+			    if (me.timer!=null)
+			      	clearInterval(me.timer);
+			    me.timer = setInterval(function(){
+			      	me.statu="anim";
+			        if(me.addHeight<=0){
+			           	clearInterval(me.timer);
+			           	me.timer = null;
+			           	me.statu="opti";
+			        }
+			        else
+			           	me.addHeight-=1;
+			        if(me.statu == "opti")
+			           	drawingMode=true;
+			        me.draw(drawingMode);
+			    }, 12);
 	      	}
 	    });
 
@@ -911,14 +891,17 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 	    			drawingMode = false;
 		    	if(eventData.shiftKey){
 		    		let tempZOOM = me.ZOOM + eventData.deltaY/20;
-		    		if(tempZOOM >= 15.0)
-		    			me.ZOOM = 15.0;
+		    		if(tempZOOM >= 20.0)
+		    			me.ZOOM = 20.0;
 		    		else if(tempZOOM <= 1.0)
 		    			me.ZOOM = 1.0;
 		    		else
 		    			me.ZOOM = tempZOOM;
 		    		tempZOOM = me.ZOOM;
 		    		me.init();
+		    		if(me.statu=="unfold")
+		    			me.polsfill = me.allPolygons(false);
+		    		console.log(Object.values(me))
 		    		me.draw(drawingMode);
 		    		eventData.stopImmediatePropagation();
 		    		return false;
@@ -933,6 +916,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 		    			me.basecut = tempBaseline;
 		    		tempBaseline = me.basecut;
 		    		me.init();
+		    		if(me.statu=="unfold")
+		    			me.polsfill = me.allPolygons(false);
+		    		console.log(Object.values(me))
 		    		me.draw(drawingMode);
 		    		return false;
 		    	}
@@ -944,6 +930,9 @@ function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end,
 		    			me.initHeight = tempinitHeight;
 		    		tempinitHeight = me.initHeight;
 		    		me.init();
+		    		if(me.statu=="unfold")
+		    			me.polsfill = me.allPolygons(false);
+		    		console.log(Object.values(me))
 		    		me.draw(drawingMode);
 		    		return false;
 		    	}
@@ -965,13 +954,13 @@ for (let i=0; i<256; i++){
   time[i] = i/255;
 }
 
-let ZOOM = 8.54
+let ZOOM = 8.00
 var initHeight = 45;
 let BASELINE = 29.32;
 
 
-var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight);
-var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight);
+var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 1);
+var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 1);
 test1.init();
 test2.init();
 test1.initListener();
@@ -981,8 +970,8 @@ test2.draw(true);
 console.log(Object.values(test2));
 console.log(Object.values(test1));
 
-var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight);
-var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight);
+var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 2);
+var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 2);
 test3.init();
 test4.init();
 test3.initListener();
