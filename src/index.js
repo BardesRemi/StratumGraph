@@ -867,7 +867,7 @@ $(function(){
 		this.initListener = function(){
 		    //adding to the canvas : MouseListener | Expansion of the graph
 		    let me = this;
-		    this.can.addEventListener("mousedown", function(){
+		    /*this.can.addEventListener("click", function(){
 		    	if(me.statu == "opti"){																				
 				    if (me.timer==null) {
 				      	me.initHeight=me.can.height;
@@ -908,8 +908,26 @@ $(function(){
 				        me.draw(drawingMode);
 				    }, 12);
 		      	}
-		     });
+		     });*/
 
+		    //adding to the canvas : onclick listener | seting the baseline
+		    this.can.addEventListener('click',function(eventData){
+		    	eventData.preventDefault()
+		    	if(me.statu!="anim"){
+		    		console.log("x : "+ eventData.offsetX + " / y : "+ eventData.offsetY);
+		    		let drawingMode = true;
+		    		if(me.statu=="unfold"){
+		    			drawingMode = false;
+		    			me.basecut = eventData.offsetX%me.initHeight; //wrong
+		    		}
+		    	me.init();
+			    if(me.statu=="unfold")
+			    	me.polsfill = me.allPolygons(false);
+			    me.draw(drawingMode);
+		    	}
+		    	eventData.stopImmediatePropagation();
+			    return false;
+		    })
 
 		   	//wheel interactions
 		    this.can.addEventListener("wheel", function(eventData){
