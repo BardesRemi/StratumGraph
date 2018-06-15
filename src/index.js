@@ -70,26 +70,28 @@ $(function(){
 	    this.can.height = this.initHeight;
 
 	  //rangesliders generation
-	  this.sliderBaseline = document.createElement('input');
+	  this.sliderBaseline = $("<input class='slider' type='range' step='"+3/30+"'>");
+	  /*document.createElement('input');
+	  	this.sliderBaseline.classes = 'slider';
 	  	this.sliderBaseline.type = 'range';
-	  	this.sliderBaseline.class = 'slider'
-	  	this.sliderBaseline.step = 3/20;
+	  	this.sliderBaseline.step = 3/20;*/
 
-	  this.sliderZOOM = document.createElement('input');
+	  this.sliderZOOM = $("<input class='slider' type='range' min='1.0' max='"+maxZOOM+"' step='"+3/30+"'>");
+	  	/*this.sliderZOOM.class = 'slider';
 	  	this.sliderZOOM.type = 'range';
-	  	this.sliderZOOM.class = 'slider'
 	  	this.sliderZOOM.min  = 1.0;
 	  	this.sliderZOOM.max  = maxZOOM;
 	  	this.sliderZOOM.value = this.ZOOM;
-	  	this.sliderZOOM.step = 3/20;
+	  	this.sliderZOOM.step = 3/20;*/
 
-	  this.sliderInitHeight = document.createElement('input');
+	  this.sliderInitHeight = $("<input class='slider' type='range' min='10.0' max='50.0' step='1'>");
+	  	/*this.sliderInitHeight.class = 'slider';
 	  	this.sliderInitHeight.type = 'range';
-	  	this.sliderInitHeight.class = 'slider'
 	  	this.sliderInitHeight.min  = 10.0;
 	  	this.sliderInitHeight.max  = 50.0;
-	  	this.sliderInitHeight.step = 1;
+	  	this.sliderInitHeight.step = 1;*/
 
+	  this.statusButton = $("<button type='button'>change statu</button>");
 
 	  this.getmins = function(){
 	    let mint = this.tabledata[0];
@@ -710,7 +712,7 @@ $(function(){
 	      graphToDraw = this.pols;
 	    else
 	      graphToDraw = this.polsfill;
-	  	let scaleShiftpos = Math.round(this.initHeight*(1-this.scaleYpos%1.0));
+	  	let scaleShiftpos = this.initHeight*(1-this.scaleYpos%1.0);
 	  	let scaleShiftneg = Math.round(this.initHeight*(1-this.scaleYneg%1.0)-Math.ceil(1-this.scaleYneg%1.0));
 	  	let forkPosCoord = Math.round(this.initHeight*(this.maxlvl-1)-scaleShiftpos);
 	  	for (let j in graphToDraw){
@@ -722,15 +724,15 @@ $(function(){
 		        ctx.fillStyle=graphToDraw[j].texture;
 		        let shift;
 		        if(graphToDraw[j].level == this.maxlvl){
-		        	if( this.addHeight > scaleShiftpostemp){
-		        		shift = -scaleShiftpostemp;
+		        	if( this.addHeight >= scaleShiftpostemp){
+		        		shift = -Math.round(scaleShiftpostemp);
 		        	}
 		        	else
 		        		shift = -this.addHeight;
 		        }
 		        else{
-		        	if(this.addHeight >= this.initHeight*(this.maxlvl-graphToDraw[j].level)-scaleShiftpostemp)
-		        		shift = this.initHeight*(this.maxlvl-graphToDraw[j].level)-scaleShiftpostemp;
+		        	if(this.addHeight >= this.initHeight*(this.maxlvl-graphToDraw[j].level)-Math.round(scaleShiftpostemp))
+		        		shift = this.initHeight*(this.maxlvl-graphToDraw[j].level)-Math.round(scaleShiftpostemp);
 					else
 						shift = this.addHeight;
 		        }
@@ -834,11 +836,11 @@ $(function(){
 	  this.init = function(){
 	    this.mins = this.getmins();
 	    this.maxs = this.getmaxs();
-	    this.sliderBaseline.min  = Math.ceil(this.mins-1);
-	  	this.sliderBaseline.max  = Math.ceil(this.maxs+1);
-	    this.sliderBaseline.value = this.basecut;
-	    this.sliderZOOM.value = this.ZOOM;
-	  	this.sliderInitHeight.value = this.initHeight;
+	    this.sliderBaseline[0].min  = Math.ceil(this.mins-1);
+	  	this.sliderBaseline[0].max  = Math.ceil(this.maxs+1);
+	    this.sliderBaseline[0].value = this.basecut;
+	    this.sliderZOOM[0].value = this.ZOOM;
+	  	this.sliderInitHeight[0].value = this.initHeight;
 	    if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
 	        this.scaleYpos = this.ZOOM;
 	        this.minlvl = 1;
@@ -865,7 +867,7 @@ $(function(){
 		this.initListener = function(){
 		    //adding to the canvas : MouseListener | Expansion of the graph
 		    let me = this;
-		    this.can.addEventListener("mousedown", function(eventData){
+		    this.can.addEventListener("mousedown", function(){
 		    	if(me.statu == "opti"){																				
 				    if (me.timer==null) {
 				      	me.initHeight=me.can.height;
@@ -885,10 +887,7 @@ $(function(){
 				    	}, 12);
 				    }
 			    }
-		     });
-
-		    this.can.addEventListener("mousedown", function(eventData){
-		    	if(me.statu == "unfold" || me.statu == "anim"){
+			    if(me.statu == "unfold" || me.statu == "anim"){
 		    		let drawingMode = false;
 				    if (me.timer!=null)
 				      	clearInterval(me.timer);
@@ -909,7 +908,7 @@ $(function(){
 				        me.draw(drawingMode);
 				    }, 12);
 		      	}
-		    });
+		     });
 
 
 		   	//wheel interactions
@@ -919,8 +918,8 @@ $(function(){
 		    		let drawingMode = true;
 		    		if(me.statu=="unfold")
 		    			drawingMode = false;
-			    	if(eventData.shiftKey){
-			    		let tempZOOM = me.ZOOM + eventData.deltaY/20;
+			    	if(eventData.shiftKey && (!eventData.ctrlKey)){
+			    		let tempZOOM = me.ZOOM + eventData.deltaY/30;
 			    		if(tempZOOM >= maxZOOM)
 			    			me.ZOOM = maxZOOM;
 			    		else if(tempZOOM <= 1.0)
@@ -935,7 +934,7 @@ $(function(){
 			    		return false;
 			    	}
 			    	if(eventData.altKey){
-			    		let tempBaseline = me.basecut  -eventData.deltaY/20;
+			    		let tempBaseline = me.basecut  -eventData.deltaY/30;
 			    		if(tempBaseline >= me.maxs)
 			    			me.basecut = me.maxs;
 			    		else if(tempBaseline <= me.mins)
@@ -949,7 +948,7 @@ $(function(){
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
-			    	if(eventData.ctrlKey){
+			    	if(eventData.ctrlKey && (!eventData.shiftKey)){
 			    		let tempinitHeight = me.initHeight + Math.ceil(eventData.deltaY/3);
 			    		if(tempinitHeight <= 10.0)
 			    			me.initHeight = 10.0;
@@ -964,11 +963,36 @@ $(function(){
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
+			    	/*if(eventData.shiftKey && eventData.ctrlKey){
+			    		let beforeInitHeight = me.initHeight;
+			    		let tempinitHeight = me.initHeight + Math.ceil(eventData.deltaY/3);
+			    		let changepx;
+			    		if(tempinitHeight <= 10.0){
+			    			me.initHeight = 10.0;
+			    			changepx = beforeInitHeight - 10.0;
+			    		}
+			    		else if(tempinitHeight >= 50.0){
+			    			me.initHeight = 50.0;
+			    			changepx = beforeInitHeight - 50.0;
+			    		}
+			    		else{
+			    			me.initHeight = tempinitHeight;
+			    			changepx = beforeInitHeight - tempinitHeight;
+			    			me.ZOOM = me.ZOOM + (me.initHeight*me.ZOOM)/(tempinitHeight*me.ZOOM);
+			    		}
+			    		console.log(changepx);
+			    		me.init();
+			    		if(me.statu=="unfold")
+			    			me.polsfill = me.allPolygons(false);
+			    		me.draw(drawingMode);
+			    		eventData.stopImmediatePropagation();
+			    		return false;
+			    	}*/
 		    	}
 		    });
 
 		    //slider interactions
-		    this.sliderBaseline.oninput = function() {
+		    this.sliderBaseline.on('input', function() {
 		    	if(me.statu!="anim"){
 			    	let drawingMode = true;
 			    	if(me.statu=="unfold")
@@ -986,8 +1010,8 @@ $(function(){
 				    me.draw(drawingMode);
 					//output.innerHTML = this.value;
 				}
-			}
-			this.sliderZOOM.oninput = function() {
+			});
+			this.sliderZOOM.on('input', function() {
 		    	if(me.statu!="anim"){
 			    	let drawingMode = true;
 			    	if(me.statu=="unfold")
@@ -1005,8 +1029,8 @@ $(function(){
 			    	me.draw(drawingMode);
 					//output.innerHTML = this.value;
 				}
-			}
-			this.sliderInitHeight.oninput = function() {
+			});
+			this.sliderInitHeight.on('input', function() {
 		    	if(me.statu!="anim"){
 			    	let drawingMode = true;
 			    	if(me.statu=="unfold")
@@ -1025,19 +1049,65 @@ $(function(){
 			    	me.draw(drawingMode);
 					//output.innerHTML = this.value;
 				}
-			}
+			});
+
+			//button interactions
+			this.statusButton.on('click', function(){
+		    	if(me.statu == "opti"){																				
+				    if (me.timer==null) {
+				      	me.initHeight=me.can.height;
+				        me.timer = setInterval(function(){
+				        	if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
+					        	me.addHeight++;
+					        else
+					        	me.addHeight= me.addHeight*1.03;
+					        me.statu="anim";
+					        if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
+					            clearInterval(me.timer);
+					            me.statu="unfold";
+					        }
+					        if(me.polsfill == null)
+					            me.polsfill = me.allPolygons(false);
+					        me.draw(false);
+				    	}, 12);
+				    }
+			    }
+			    if(me.statu == "unfold" || me.statu == "anim"){
+		    		let drawingMode = false;
+				    if (me.timer!=null)
+				      	clearInterval(me.timer);
+				    me.timer = setInterval(function(){
+				      	me.statu="anim";
+				        if(me.addHeight<=0){
+				           	clearInterval(me.timer);
+				           	me.timer = null;
+				           	me.statu="opti";
+				        }
+				        else
+				           	if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
+					        	me.addHeight--;
+					        else
+					        	me.addHeight= me.addHeight*0.98;
+				        if(me.statu == "opti")
+				           	drawingMode=true;
+				        me.draw(drawingMode);
+				    }, 12);
+		      	}
+		     });
 
 			//adding different elements to the HTML
 			$("#myTable").find('tbody')
 			    .append($('<tr>')
-			        .append($('<td>')
+			    	.append($('<td>')
+			            .append(this.statusButton)
+			        ).append($('<td>')
 			            .append($(this.can))
 			        ).append($('<td>')
-			        	.append($(this.sliderBaseline))
+			        	.append(this.sliderBaseline)
 			        ).append($('<td>')
-			        	.append($(this.sliderZOOM))
+			        	.append(this.sliderZOOM)
 			        ).append($('<td>')
-			        	.append($(this.sliderInitHeight))
+			        	.append(this.sliderInitHeight)
 			        )
 
 			    );
@@ -1057,9 +1127,9 @@ $(function(){
 	  time[i] = i/255;
 	}
 
-	let ZOOM = 8.00
-	var initHeight = 45;
-	let BASELINE = 29.32;
+	let ZOOM = 13.5
+	var initHeight = 35;
+	let BASELINE = 28.76;
 
 
 	var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 1);
