@@ -821,6 +821,16 @@ $(function(){
 	      ctx.fill();
 	      ctx.restore();
 	    }
+	    if(this.baselineType=="Stratum" && this.statu=="unfold"){
+	    	ctx.save();
+	    	ctx.closePath();
+	    	let basecutHeight = ((this.maxs-this.basecut)/((this.maxs-this.mins)/this.ZOOM))*this.initHeight;
+	      	console.log(ctx.isPointInPath(0,1 ))
+	      	ctx.moveTo(0,basecutHeight)
+	      	ctx.lineTo(this.can.width, basecutHeight )
+	      	ctx.stroke();
+	      	ctx.restore();
+	    }
 	    //console.timeEnd('someFunction');
 
 	  }
@@ -918,7 +928,29 @@ $(function(){
 		    		let drawingMode = true;
 		    		if(me.statu=="unfold"){
 		    			drawingMode = false;
-		    			me.basecut = eventData.offsetX%me.initHeight; //wrong
+		    			me.basecut = me.maxs-(((me.maxs-me.mins)/me.ZOOM)/me.initHeight)*eventData.offsetY; //wrong
+		    		}
+		    		else if(me.statu == "opti"){
+		    			let linelvl = 1;
+		    			for(let j in me.pols){
+		    				let polsbegin = me.pols[j].ptx[0];
+		    				let polsending = me.pols[j].ptx[(me.pols[j].ptx).length-1]
+		    				for(let i in me.pols[j].ptx){
+		    					console.log(polsbegin + "==" + (eventData.offsetX/me.can.width)+
+		    						" && "+ polsending +">="+(eventData.offsetX/me.can.width)+
+		    						" && "+ me.pols[j].pty[i]*(me.maxs-me.mins)*((me.maxs-me.mins)/me.ZOOM)%me.initHeight+">="+eventData.offsetY
+		    						+ " && "+ me.pols[j].level + ">" + linelvl)
+
+		    					if (polsbegin<=(eventData.offsetX/me.can.width)
+		    						&& polsending >=(eventData.offsetX/me.can.width)
+		    						&& (me.pols[j].pty[i]*(me.maxs-me.mins)*((me.maxs-me.mins)/me.ZOOM))%me.initHeight>=(me.initHeight-eventData.offsetY)
+		    						&& me.pols[j].level > linelvl){
+		    						linelvl = me.pols[j].level;
+		    					}
+		    				}
+		    			}
+		    			console.log("click lvl value : "+linelvl);
+		    			me.basecut = me.mins + (linelvl+(me.initHeight-eventData.offsetY)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)//+(((me.maxs-me.mins)/me.ZOOM)/me.initHeight)*eventData.offsetY
 		    		}
 		    	me.init();
 			    if(me.statu=="unfold")
