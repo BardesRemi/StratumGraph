@@ -932,25 +932,34 @@ $(function(){
 		    		}
 		    		else if(me.statu == "opti"){
 		    			let linelvl = 1;
+		    			let tempPolslist = new Array();
 		    			for(let j in me.pols){
+		    				let inPols = false;
 		    				let polsbegin = me.pols[j].ptx[0];
 		    				let polsending = me.pols[j].ptx[(me.pols[j].ptx).length-1]
 		    				for(let i in me.pols[j].ptx){
-		    					console.log(polsbegin + "==" + (eventData.offsetX/me.can.width)+
+		    					/*console.log(polsbegin + "<=" + (eventData.offsetX/me.can.width)+
 		    						" && "+ polsending +">="+(eventData.offsetX/me.can.width)+
 		    						" && "+ me.pols[j].pty[i]*(me.maxs-me.mins)*((me.maxs-me.mins)/me.ZOOM)%me.initHeight+">="+eventData.offsetY
-		    						+ " && "+ me.pols[j].level + ">" + linelvl)
+		    						+ " && "+ me.pols[j].level + ">" + linelvl)*/
 
-		    					if (polsbegin<=(eventData.offsetX/me.can.width)
-		    						&& polsending >=(eventData.offsetX/me.can.width)
-		    						&& (me.pols[j].pty[i]*(me.maxs-me.mins)*((me.maxs-me.mins)/me.ZOOM))%me.initHeight>=(me.initHeight-eventData.offsetY)
-		    						&& me.pols[j].level > linelvl){
-		    						linelvl = me.pols[j].level;
+		    					if ( !inPols && polsbegin<=(eventData.offsetX/me.can.width)
+		    						&& polsending >=(eventData.offsetX/me.can.width)){
+		    						//&& (me.pols[j].pty[i]*(me.maxs-me.mins)*((me.maxs-me.mins)/me.ZOOM))%me.initHeight>=(me.initHeight-eventData.offsetY)
+		    						//&& me.pols[j].level > linelvl){
+		    						inPols = true;
 		    					}
 		    				}
+		    				if(inPols)
+		    					tempPolslist.push(me.pols[j]);
+		    			}
+		    			console.log(tempPolslist);
+		    			for(let g in tempPolslist){
+		    				if(tempPolslist[g].level >= linelvl)
+		    					linelvl = tempPolslist[g].level
 		    			}
 		    			console.log("click lvl value : "+linelvl);
-		    			me.basecut = me.mins + (linelvl+(me.initHeight-eventData.offsetY)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)//+(((me.maxs-me.mins)/me.ZOOM)/me.initHeight)*eventData.offsetY
+		    			me.basecut = me.mins + (linelvl-1+(me.initHeight-eventData.offsetY)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
 		    		}
 		    	me.init();
 			    if(me.statu=="unfold")
