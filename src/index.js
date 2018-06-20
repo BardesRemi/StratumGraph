@@ -875,8 +875,9 @@ $(function(){
 	  }
 
 		this.initListener = function(){
+
+			let me = this;
 		    //adding to the canvas : MouseListener | Expansion of the graph
-		    let me = this;
 		    /*this.can.addEventListener("click", function(){
 		    	if(me.statu == "opti"){																				
 				    if (me.timer==null) {
@@ -923,12 +924,12 @@ $(function(){
 		    //adding to the canvas : onclick listener | seting the baseline
 		    this.can.addEventListener('click',function(eventData){
 		    	eventData.preventDefault()
+		    	let tempBasecut;
 		    	if(me.statu!="anim"){
-		    		console.log("x : "+ eventData.offsetX + " / y : "+ eventData.offsetY);
 		    		let drawingMode = true;
 		    		if(me.statu=="unfold"){
 		    			drawingMode = false;
-		    			me.basecut = me.maxs-(((me.maxs-me.mins)/me.ZOOM)/me.initHeight)*eventData.offsetY; //wrong
+		    			tempBasecut = me.maxs-(((me.maxs-me.mins)/me.ZOOM)/me.initHeight)*eventData.offsetY;
 		    		}
 		    		else if(me.statu == "opti"){
 		    			let linelvl = 1;
@@ -938,37 +939,79 @@ $(function(){
 		    				let polsbegin = me.pols[j].ptx[0];
 		    				let polsending = me.pols[j].ptx[(me.pols[j].ptx).length-1]
 		    				for(let i in me.pols[j].ptx){
-		    					/*console.log(polsbegin + "<=" + (eventData.offsetX/me.can.width)+
-		    						" && "+ polsending +">="+(eventData.offsetX/me.can.width)+
-		    						" && "+ me.pols[j].pty[i]*(me.maxs-me.mins)*((me.maxs-me.mins)/me.ZOOM)%me.initHeight+">="+eventData.offsetY
-		    						+ " && "+ me.pols[j].level + ">" + linelvl)*/
 
 		    					if ( !inPols && polsbegin<=(eventData.offsetX/me.can.width)
 		    						&& polsending >=(eventData.offsetX/me.can.width)){
-		    						//&& (me.pols[j].pty[i]*(me.maxs-me.mins)*((me.maxs-me.mins)/me.ZOOM))%me.initHeight>=(me.initHeight-eventData.offsetY)
-		    						//&& me.pols[j].level > linelvl){
 		    						inPols = true;
 		    					}
 		    				}
 		    				if(inPols)
 		    					tempPolslist.push(me.pols[j]);
 		    			}
-		    			console.log(tempPolslist);
-		    			for(let g in tempPolslist){
-		    				if(tempPolslist[g].level >= linelvl)
-		    					linelvl = tempPolslist[g].level
-		    			}
-		    			console.log("click lvl value : "+linelvl);
-		    			me.basecut = me.mins + (linelvl-1+(me.initHeight-eventData.offsetY)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+		    			if(tempPolslist.length>1){
+			    			let points = new Array();
+			    			for(let g in tempPolslist){
+			    				let breakingPoint = false;
+			    				let dist = 1.0;
+			    				let point = 0;
+			    				let cpt = 0;
+			    				while(!breakingPoint){
+			    					if(Math.abs(tempPolslist[g].ptx[cpt]-eventData.offsetX/me.can.width)<=dist){
+			    						dist = Math.abs(tempPolslist[g].ptx[cpt]-eventData.offsetX/me.can.width);
+			    						point = cpt;
+			    					}
+			    					if(Math.abs(tempPolslist[g].ptx[cpt] > eventData.offsetX/me.can.width))
+			    						breakingPoint = true;
+			    					cpt++
+			    				}
+			    				points.push(point);
+			    			}
+			    			if(Math.round(tempPolslist[0].pty[points[0]]*(me.ZOOM*me.initHeight))%me.initHeight > (me.initHeight-eventData.offsetY))
+			    				linelvl = tempPolslist[0].level;
+			    			else
+			    				linelvl = tempPolslist[1].level;
+
+			    		}
+			    		if(me.baselineType == "Stratum"){
+			    			tempBasecut = me.mins + (linelvl-1+(me.initHeight-eventData.offsetY)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+			    		}
+			    		else if(me.baselineType == "Horizon"){
+			    			if(linelvl > 0)
+		    				tempBasecut = me.basecut + (linelvl-1+(me.initHeight-eventData.offsetY)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+		    			else
+		    				tempBasecut = me.basecut + (linelvl+(me.initHeight-eventData.offsetY)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+			    		}
 		    		}
-		    	me.init();
-			    if(me.statu=="unfold")
-			    	me.polsfill = me.allPolygons(false);
-			    me.draw(drawingMode);
+		    		if (me.statu=="unfold" || me.statu == "opti") {
+		    			let oldStatu = me.statu
+				        me.timer = setInterval(function(){
+				        	if(me.basecut < tempBasecut){
+					        	me.basecut = me.basecut + 0.1;
+					        	me.statu="anim";
+					        	if(me.basecut>=tempBasecut){
+						            clearInterval(me.timer);
+						            me.statu=oldStatu;
+						        }
+				        	}
+					        else{
+					        	me.basecut = me.basecut - 0.1;
+					        	me.statu="anim";
+					        	if(me.basecut<=tempBasecut){
+						            clearInterval(me.timer);
+						            me.timer=null;
+						            me.statu=oldStatu;
+						        }
+					        }
+					        me.init();
+					        if(oldStatu == "unfold")
+					            me.polsfill = me.allPolygons(false);
+					        me.draw(drawingMode);
+				    	}, 12);
+				    }
 		    	}
 		    	eventData.stopImmediatePropagation();
 			    return false;
-		    })
+		    });
 
 		   	//wheel interactions
 		    this.can.addEventListener("wheel", function(eventData){
