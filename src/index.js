@@ -685,6 +685,15 @@ $(function(){
 	      ctx.fill();
 	      ctx.restore();
 	    }
+	    if(this.baselineType=="Stratum" && this.statu=="unfold"){
+	    	ctx.save();
+	    	ctx.closePath();
+	    	let basecutHeight = ((this.maxs-this.basecut)/((this.maxs-this.mins)/this.ZOOM))*this.initHeight;
+	      	ctx.moveTo(0,basecutHeight)
+	      	ctx.lineTo(this.can.width, basecutHeight )
+	      	ctx.stroke();
+	      	ctx.restore();
+	    }
 	    //console.timeEnd('someFunction');
 	  }
 
@@ -825,7 +834,6 @@ $(function(){
 	    	ctx.save();
 	    	ctx.closePath();
 	    	let basecutHeight = ((this.maxs-this.basecut)/((this.maxs-this.mins)/this.ZOOM))*this.initHeight;
-	      	console.log(ctx.isPointInPath(0,1 ))
 	      	ctx.moveTo(0,basecutHeight)
 	      	ctx.lineTo(this.can.width, basecutHeight )
 	      	ctx.stroke();
@@ -986,7 +994,7 @@ $(function(){
 		    			let oldStatu = me.statu
 				        me.timer = setInterval(function(){
 				        	if(me.basecut < tempBasecut){
-					        	me.basecut = me.basecut + 0.1;
+					        	me.basecut = me.basecut + 0.15;
 					        	me.statu="anim";
 					        	if(me.basecut>=tempBasecut){
 						            clearInterval(me.timer);
@@ -994,7 +1002,7 @@ $(function(){
 						        }
 				        	}
 					        else{
-					        	me.basecut = me.basecut - 0.1;
+					        	me.basecut = me.basecut - 0.15;
 					        	me.statu="anim";
 					        	if(me.basecut<=tempBasecut){
 						            clearInterval(me.timer);
@@ -1138,7 +1146,6 @@ $(function(){
 			    	if(me.statu=="unfold")
 			    		drawingMode = false;
 			    	let tempinitHeight = this.value;
-			    	console.log(this.value);
 			    	if(tempinitHeight <= 10.0)
 			    		me.initHeight = 10.0;
 			    	else if(tempinitHeight >= 50.0)
@@ -1155,24 +1162,22 @@ $(function(){
 
 			//button interactions
 			this.statusButton.on('click', function(){
-		    	if(me.statu == "opti"){																				
-				    if (me.timer==null) {
-				      	me.initHeight=me.can.height;
-				        me.timer = setInterval(function(){
-				        	if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
-					        	me.addHeight++;
-					        else
-					        	me.addHeight= me.addHeight*1.03;
-					        me.statu="anim";
-					        if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
-					            clearInterval(me.timer);
-					            me.statu="unfold";
-					        }
-					        if(me.polsfill == null)
-					            me.polsfill = me.allPolygons(false);
-					        me.draw(false);
-				    	}, 12);
-				    }
+		    	if(me.statu == "opti"){	
+				    me.initHeight=me.can.height;
+				    me.timer = setInterval(function(){
+				        if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
+					        me.addHeight++;
+					    else
+					        me.addHeight= me.addHeight*1.03;
+					    me.statu="anim";
+					    if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
+					        clearInterval(me.timer);
+					        me.statu="unfold";
+					    }
+					    if(me.polsfill == null)
+					        me.polsfill = me.allPolygons(false);
+					    me.draw(false);
+				    }, 12);
 			    }
 			    if(me.statu == "unfold" || me.statu == "anim"){
 		    		let drawingMode = false;
