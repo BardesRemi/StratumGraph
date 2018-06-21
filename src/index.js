@@ -20,6 +20,23 @@ let $ = require("jquery");
 	    let xScale       = colors.oneColor("xScale");
 
 
+function adj(theth){
+	console.log(theth.children('.lab').css('display'))
+	if (theth.children('.lab').css('display')=='inline'){
+		theth.children('.lab').css('display', 'none')
+		theth.children('.adjuster').html('+')
+		theth.css('background-color', '#f00');
+		theth.css('width', '20px');
+		theth.css('max-width', '20px');
+    } else{
+		theth.children('.lab').css('display', 'inline')
+		theth.children('.adjuster').html('&nbsp;-&nbsp;')
+		theth.css('background-color', '#0f0');
+		theth.css('width', '');
+		theth.css('max-width', '');
+    }
+}
+
 	        //////////////////////////////////////////////////
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
@@ -31,6 +48,25 @@ $(function(){
 	link.href = favicon;
 	document.head.appendChild(link);
 
+	$(".adjuster").on('click',function(){
+		console.log("drg")
+		adj($(this.parentNode));
+	})
+
+    $.ajax({
+    	url:"data/AAPL.csv",
+    	async:false,
+    	success:function(data){
+	        var lines = data.split(/\r?\n|\r/);
+	        for(let l in lines)
+	        {
+	          var vals = lines[l].split(',');
+	          //for (let v in vals) 
+	             //console.log(vals[v]);
+	    	}   
+        }
+    });
+    console.log("done");
 
 	        //////////////////////////////////////////////////
 	        //       Graph Classes (via a constructor)      //
@@ -832,7 +868,7 @@ $(function(){
 	    }
 	    if(this.baselineType=="Stratum" && this.statu=="unfold"){
 	    	ctx.save();
-	    	ctx.closePath();
+	    	ctx.beginPath();
 	    	let basecutHeight = ((this.maxs-this.basecut)/((this.maxs-this.mins)/this.ZOOM))*this.initHeight;
 	      	ctx.moveTo(0,basecutHeight)
 	      	ctx.lineTo(this.can.width, basecutHeight )

@@ -6,6 +6,11 @@ body {
 	align-items:center;
 }
 
+.adjuster{
+	border:1px solid black;
+	cursor: pointer;
+}
+
 canvas {
   border: 1px solid red;
   background: #FFF;
