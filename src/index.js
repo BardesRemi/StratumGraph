@@ -68,6 +68,21 @@ $(function(){
     });
     console.log("done");
 
+    	    //////////////////////////////////////////////////
+	        //        		calculating method  		    //
+	        //////////////////////////////////////////////////
+
+    //+ Jonas Raoni Soares Silva
+    //@ http://jsfromhell.com/math/is-point-in-poly [rev. #0]
+    function isPointInPoly(poly, pt){
+      //console.log("isPointInPoly "+pt.x+","+pt.y);
+      for(var c = false, i = -1, l = poly.ptx.length, j = l - 1; ++i < l; j = i)
+        ((poly.pty[i] <= pt.y && pt.y < poly.pty[j]) || (poly.pty[j] <= pt.y && pt.y < poly.pty[i]))
+        && (pt.x < (poly.ptx[j] - poly.ptx[i]) * (pt.y - poly.pty[i]) / (poly.pty[j] - poly.pty[i]) + poly.ptx[i])
+        && (c = !c);
+      return c;
+    }
+
 	        //////////////////////////////////////////////////
 	        //       Graph Classes (via a constructor)      //
 	        //////////////////////////////////////////////////
