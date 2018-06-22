@@ -20,26 +20,29 @@ let $ = require("jquery");
 	    let xScale       = colors.oneColor("xScale");
 
 
-function adj(theth){
-	console.log(theth.children('.lab').css('display'))
-	if (theth.children('.lab').css('display')=='inline'){
-		theth.children('.lab').css('display', 'none')
-		theth.children('.adjuster').html('+')
-		theth.css('background-color', '#f00');
-		theth.css('width', '20px');
-		theth.css('max-width', '20px');
-    } else{
-		theth.children('.lab').css('display', 'inline')
-		theth.children('.adjuster').html('&nbsp;-&nbsp;')
-		theth.css('background-color', '#0f0');
-		theth.css('width', '');
-		theth.css('max-width', '');
-    }
-}
+		function adj(theth){
+			console.log(theth.children('.lab').css('display'))
+			if (theth.children('.lab').css('display')=='inline'){
+				theth.children('.lab').css('display', 'none')
+				theth.children('.adjuster').html('+')
+				theth.css('background-color', '#f00');
+				theth.css('width', '20px');
+				theth.css('max-width', '20px');
+		    } else{
+				theth.children('.lab').css('display', 'inline')
+				theth.children('.adjuster').html('&nbsp;-&nbsp;')
+				theth.css('background-color', '#0f0');
+				theth.css('width', '');
+				theth.css('max-width', '');
+		    }
+		}
 
 	        //////////////////////////////////////////////////
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
+const maxZOOM = 15.0;
+const canvasWidth = 750;
+
 $(function(){
 	const favicon = require('./assets/favicon.png');
 	let link = document.createElement('link');
@@ -52,20 +55,57 @@ $(function(){
 		console.log("drg")
 		adj($(this.parentNode));
 	})
-
+	var parseResult = new Object({
+		name : 'pouet',
+		timeBegin : 0,
+		timeEnd : 0,
+		time : new Array(),
+		value : new Array()
+	})
     $.ajax({
     	url:"data/AAPL.csv",
     	async:false,
     	success:function(data){
+    		parseResult.name = "AAPL";
+    		parseResult.time = [];
+    		parseResult.value = [];
 	        var lines = data.split(/\r?\n|\r/);
-	        for(let l in lines)
-	        {
-	          var vals = lines[l].split(',');
-	          //for (let v in vals) 
-	             //console.log(vals[v]);
-	    	}   
+	        let conformData = true;
+	        for(let l in lines){
+	        	var vals = lines[l].split(',');
+	        	if(vals.length < 2)
+	        		continue;
+	        	let date = new Date(vals[0]);
+		        if(l>1){
+		            if(date < parseResult.time[parseResult.time.length-1]){
+		            	parseResult.time.push(date);
+		            	parseResult.value.push(vals[vals.length-1])
+		            }
+		            else{
+		            	console.log("WARNING : data not linear in time")
+		            	conformData = false;
+		            	break;
+		            }
+		        }
+		        else if(l == 1){
+		        	parseResult.timeEnd = date;
+		        	parseResult.time.push(date);
+		            parseResult.value.push(vals[vals.length-1])
+		        }
+	    	}
+	    	if(conformData){
+	    		parseResult.timeBegin = parseResult.time[parseResult.time.length-1];
+	    		for(let i in parseResult.time){
+	    			parseResult.time[i] = parseResult.time[i] - parseResult.timeBegin;
+	    			parseResult.time[i] = parseResult.time[i]/(parseResult.timeEnd-parseResult.timeBegin);
+	    			if(i!=0){
+
+	    			}
+	    		}
+	    	}  
         }
     });
+    console.log(Object.values(parseResult));
     console.log("done");
 
     	    //////////////////////////////////////////////////
@@ -87,9 +127,9 @@ $(function(){
 	        //       Graph Classes (via a constructor)      //
 	        //////////////////////////////////////////////////
 
-	function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end, initHeight, drawingMethod){
-	  const maxZOOM = 15.0;
+	function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end, initHeight, drawingMethod, name){
 	  //attributes
+	  this.name = name;
 	  this.basecut = basecut;
 	  this.baselvl;
 	  if(ZOOM > maxZOOM)
@@ -117,17 +157,17 @@ $(function(){
 
 	  //canvas generation
 	  this.can = document.createElement('canvas');
-	    this.can.width = '750';
+	    this.can.width = canvasWidth;
 	    this.can.height = this.initHeight;
 
 	  //rangesliders generation
-	  this.sliderBaseline = $("<input class='slider' type='range' step='"+3/30+"'>");
+	  this.sliderBaseline = $("<input class='slider' type='range' step='"+0.15+"'>");
 	  /*document.createElement('input');
 	  	this.sliderBaseline.classes = 'slider';
 	  	this.sliderBaseline.type = 'range';
 	  	this.sliderBaseline.step = 3/20;*/
 
-	  this.sliderZOOM = $("<input class='slider' type='range' min='1.0' max='"+maxZOOM+"' step='"+3/30+"'>");
+	  this.sliderZOOM = $("<input class='slider' type='range' min='1.0' max='"+maxZOOM+"' step='"+0.15+"'>");
 	  	/*this.sliderZOOM.class = 'slider';
 	  	this.sliderZOOM.type = 'range';
 	  	this.sliderZOOM.min  = 1.0;
@@ -142,7 +182,7 @@ $(function(){
 	  	this.sliderInitHeight.max  = 50.0;
 	  	this.sliderInitHeight.step = 1;*/
 
-	  this.statusButton = $("<button type='button'>change statu</button>");
+	  this.statusButton = $("<button type='button'>fold / unfold</button>");
 
 	  this.getmins = function(){
 	    let mint = this.tabledata[0];
@@ -984,6 +1024,10 @@ $(function(){
 		    this.can.addEventListener('click',function(eventData){
 		    	eventData.preventDefault()
 		    	let tempBasecut;
+		    	let ptclick = {
+		    		x : eventData.offsetX,
+		    		y : initHeight-eventData.offsetY
+		    	};
 		    	if(me.statu!="anim"){
 		    		let drawingMode = true;
 		    		if(me.statu=="unfold"){
@@ -1008,37 +1052,34 @@ $(function(){
 		    					tempPolslist.push(me.pols[j]);
 		    			}
 		    			if(tempPolslist.length>1){
-			    			let points = new Array();
-			    			for(let g in tempPolslist){
-			    				let breakingPoint = false;
-			    				let dist = 1.0;
-			    				let point = 0;
-			    				let cpt = 0;
-			    				while(!breakingPoint){
-			    					if(Math.abs(tempPolslist[g].ptx[cpt]-eventData.offsetX/me.can.width)<=dist){
-			    						dist = Math.abs(tempPolslist[g].ptx[cpt]-eventData.offsetX/me.can.width);
-			    						point = cpt;
-			    					}
-			    					if(Math.abs(tempPolslist[g].ptx[cpt] > eventData.offsetX/me.can.width))
-			    						breakingPoint = true;
-			    					cpt++
-			    				}
-			    				points.push(point);
+		    				let normalizedptClick = {
+					    		x : eventData.offsetX/me.can.width,
+					    		y : eventData.offsetY/me.initHeight //((me.initHeight-eventData.offsetY)+(tempPolslist[0].level-1)*me.initHeight)/(me.ZOOM*me.initHeight)
+					    	}
+					    	console.log("x : "+ normalizedptClick.x +" y : "+ normalizedptClick.y)
+					    	console.log("x : "+ normalizedptClick.x +" y : "+ normalizedptClick.y)
+					    	console.log("test 1 : " + (isPointInPoly(tempPolslist[0],ptclick) && isPointInPoly(tempPolslist[1],ptclick)))
+		    				console.log("test 2 : " + (isPointInPoly(tempPolslist[0],ptclick)))
+		    				console.log("test 3 : " + (isPointInPoly(tempPolslist[1],ptclick)))
+			    			if(isPointInPoly(tempPolslist[0],normalizedptClick) && isPointInPoly(tempPolslist[1],normalizedptClick)){
+			    				if(tempPolslist[0].level > tempPolslist[1].level)
+			    					linelvl = tempPolslist[0].level;
+			    				else
+			    					linelvl = tempPolslist[1].level;
 			    			}
-			    			if(Math.round(tempPolslist[0].pty[points[0]]*(me.ZOOM*me.initHeight))%me.initHeight > (me.initHeight-eventData.offsetY))
+			    			else if(isPointInPoly(tempPolslist[0],normalizedptClick))
 			    				linelvl = tempPolslist[0].level;
 			    			else
-			    				linelvl = tempPolslist[1].level;
-
+			    				linelvl = tempPolslist[1].level
 			    		}
 			    		if(me.baselineType == "Stratum"){
-			    			tempBasecut = me.mins + (linelvl-1+(me.initHeight-eventData.offsetY)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+			    			tempBasecut = me.mins + (linelvl-1+(ptclick.y)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
 			    		}
 			    		else if(me.baselineType == "Horizon"){
 			    			if(linelvl > 0)
-		    				tempBasecut = me.basecut + (linelvl-1+(me.initHeight-eventData.offsetY)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+		    				tempBasecut = me.basecut + (linelvl-1+(ptclick.y)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
 		    			else
-		    				tempBasecut = me.basecut + (linelvl+(me.initHeight-eventData.offsetY)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+		    				tempBasecut = me.basecut + (linelvl+(ptclick.y)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
 			    		}
 		    		}
 		    		if (me.statu=="unfold" || me.statu == "opti") {
@@ -1048,7 +1089,7 @@ $(function(){
 					        	me.basecut = me.basecut + 0.15;
 					        	me.statu="anim";
 					        	if(me.basecut>=tempBasecut){
-						            clearInterval(me.timer);
+						            clearInterval(me.timer); 
 						            me.statu=oldStatu;
 						        }
 				        	}
@@ -1257,6 +1298,8 @@ $(function(){
 			$("#myTable").find('tbody')
 			    .append($('<tr>')
 			    	.append($('<td>')
+			            .append(this.name)
+			        ).append($('<td>')
 			            .append(this.statusButton)
 			        ).append($('<td>')
 			            .append($(this.can))
@@ -1290,8 +1333,8 @@ $(function(){
 	let BASELINE = 28.76;
 
 
-	var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 1);
-	var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 1);
+	var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 1, "first");
+	var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 1, "scnd");
 	test1.init();
 	test2.init();
 	test1.initListener();
@@ -1301,8 +1344,8 @@ $(function(){
 	console.log(Object.values(test2));
 	console.log(Object.values(test1));
 
-	var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 2);
-	var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 2);
+	var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 2, "third");
+	var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 2, "fourth");
 	test3.init();
 	test4.init();
 	test3.initListener();
