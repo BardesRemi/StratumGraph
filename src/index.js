@@ -41,7 +41,7 @@ let $ = require("jquery");
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
 const maxZOOM = 15.0;
-const canvasWidth = 750;
+const canvasWidth = 1066;
 
 $(function(){
 	const favicon = require('./assets/favicon.png');
@@ -55,58 +55,7 @@ $(function(){
 		console.log("drg")
 		adj($(this.parentNode));
 	})
-	var parseResult = new Object({
-		name : 'pouet',
-		timeBegin : 0,
-		timeEnd : 0,
-		time : new Array(),
-		value : new Array()
-	})
-    $.ajax({
-    	url:"data/AAPL.csv",
-    	async:false,
-    	success:function(data){
-    		parseResult.name = "AAPL";
-    		parseResult.time = [];
-    		parseResult.value = [];
-	        var lines = data.split(/\r?\n|\r/);
-	        let conformData = true;
-	        for(let l in lines){
-	        	var vals = lines[l].split(',');
-	        	if(vals.length < 2)
-	        		continue;
-	        	let date = new Date(vals[0]);
-		        if(l>1){
-		            if(date < parseResult.time[parseResult.time.length-1]){
-		            	parseResult.time.push(date);
-		            	parseResult.value.push(vals[vals.length-1])
-		            }
-		            else{
-		            	console.log("WARNING : data not linear in time")
-		            	conformData = false;
-		            	break;
-		            }
-		        }
-		        else if(l == 1){
-		        	parseResult.timeEnd = date;
-		        	parseResult.time.push(date);
-		            parseResult.value.push(vals[vals.length-1])
-		        }
-	    	}
-	    	if(conformData){
-	    		parseResult.timeBegin = parseResult.time[parseResult.time.length-1];
-	    		for(let i in parseResult.time){
-	    			parseResult.time[i] = parseResult.time[i] - parseResult.timeBegin;
-	    			parseResult.time[i] = parseResult.time[i]/(parseResult.timeEnd-parseResult.timeBegin);
-	    			if(i!=0){
-
-	    			}
-	    		}
-	    	}  
-        }
-    });
-    console.log(Object.values(parseResult));
-    console.log("done");
+	
 
     	    //////////////////////////////////////////////////
 	        //        		calculating method  		    //
@@ -185,16 +134,16 @@ $(function(){
 	  this.statusButton = $("<button type='button'>fold / unfold</button>");
 
 	  this.getmins = function(){
-	    let mint = this.tabledata[0];
-	    for (let i=1; i<256; i++){
+	    let mint = 0;
+	    for (let i=1; i<this.tabledata.length-1; i++){
 	      if (this.tabledata[i] < this.tabledata[mint]) mint =i; 
 	    }
 	    return this.tabledata[mint];
 	  }
 
 	  this.getmaxs = function(){
-	    let maxt = this.tabledata[0];
-	    for (let i=1; i<256; i++){
+	    let maxt = 0;
+	    for (let i=1; i<this.tabledata.length; i++){
 	      if (this.tabledata[i] > this.tabledata[maxt]) maxt =i;
 	    }
 	    return this.tabledata[maxt];
@@ -224,7 +173,6 @@ $(function(){
 	    if (mul==1 && basecut==max) {return new Array();}
 	    // no negative polygon when basecut is so low
 	    if (mul==-1 && basecut==min) {return new Array();}
-
 	    let scaleY
 	    if(mul==1)
 	      scaleY=this.scaleYpos;
@@ -1056,16 +1004,32 @@ $(function(){
 					    		x : eventData.offsetX/me.can.width,
 					    		y : eventData.offsetY/me.initHeight //((me.initHeight-eventData.offsetY)+(tempPolslist[0].level-1)*me.initHeight)/(me.ZOOM*me.initHeight)
 					    	}
-					    	console.log("x : "+ normalizedptClick.x +" y : "+ normalizedptClick.y)
+					    	/*console.log("x : "+ normalizedptClick.x +" y : "+ normalizedptClick.y)
 					    	console.log("x : "+ normalizedptClick.x +" y : "+ normalizedptClick.y)
 					    	console.log("test 1 : " + (isPointInPoly(tempPolslist[0],ptclick) && isPointInPoly(tempPolslist[1],ptclick)))
 		    				console.log("test 2 : " + (isPointInPoly(tempPolslist[0],ptclick)))
-		    				console.log("test 3 : " + (isPointInPoly(tempPolslist[1],ptclick)))
+		    				console.log("test 3 : " + (isPointInPoly(tempPolslist[1],ptclick)))*/
 			    			if(isPointInPoly(tempPolslist[0],normalizedptClick) && isPointInPoly(tempPolslist[1],normalizedptClick)){
-			    				if(tempPolslist[0].level > tempPolslist[1].level)
-			    					linelvl = tempPolslist[0].level;
-			    				else
-			    					linelvl = tempPolslist[1].level;
+			    				if(me.baselineType == "Stratum"){
+				    				if(tempPolslist[0].level > tempPolslist[1].level)
+				    					linelvl = tempPolslist[0].level;
+				    				else
+				    					linelvl = tempPolslist[1].level;
+				    			}
+				    			else if(me.baselineType == "Horizon"){
+			    					if(tempPolslist[0].level>0 && tempPolslist[1].level >0){
+			    						if(tempPolslist[0].level > tempPolslist[1].level)
+				    						linelvl = tempPolslist[0].level;
+				    					else
+				    						linelvl = tempPolslist[1].level;
+			    					}
+			    					else{
+			    						if(tempPolslist[0].level < tempPolslist[1].level)
+				    						linelvl = tempPolslist[0].level;
+				    					else
+				    						linelvl = tempPolslist[1].level;
+			    					}
+			    				}
 			    			}
 			    			else if(isPointInPoly(tempPolslist[0],normalizedptClick))
 			    				linelvl = tempPolslist[0].level;
@@ -1081,22 +1045,28 @@ $(function(){
 		    			else
 		    				tempBasecut = me.basecut + (linelvl+(ptclick.y)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
 			    		}
+			    		if(tempBasecut >= me.maxs)
+			    			tempBasecut = me.maxs;
+			    		else if(tempBasecut <= me.mins)
+			    			tempBasecut = me.mins;
 		    		}
 		    		if (me.statu=="unfold" || me.statu == "opti") {
 		    			let oldStatu = me.statu
 				        me.timer = setInterval(function(){
 				        	if(me.basecut < tempBasecut){
-					        	me.basecut = me.basecut + 0.15;
+					        	me.basecut = me.basecut*1.05;
 					        	me.statu="anim";
 					        	if(me.basecut>=tempBasecut){
+					        		me.basecut = tempBasecut;
 						            clearInterval(me.timer); 
 						            me.statu=oldStatu;
 						        }
 				        	}
 					        else{
-					        	me.basecut = me.basecut - 0.15;
+					        	me.basecut = me.basecut*0.95;
 					        	me.statu="anim";
 					        	if(me.basecut<=tempBasecut){
+					        		me.basecut = tempBasecut;
 						            clearInterval(me.timer);
 						            me.timer=null;
 						            me.statu=oldStatu;
@@ -1315,8 +1285,101 @@ $(function(){
 
 	  	}
 	}
-																																																																																																																																																																																																																																																																																																																																																																			
+			//////////////////////////////////////////////////
+	        //          	Parsing a CSV file   	        //
+	        //////////////////////////////////////////////////	
 
+	/*
+		The CSV File must be in this shape :
+		first line "titles" of each columns
+		first column must be a date (with the right format)
+		Last column must be the data
+		"parsing" session can be change for 
+	*/
+	function graphFromCSV(filePath, ZOOM, BaseLineType, initHeight){
+		let parseResult = new Object({
+		name : 'pouet',
+		timeBegin : 0,
+		timeEnd : 0,
+		time : new Array(),
+		valueMax : 0,
+		valueMin : 0,
+		value : new Array()
+		})
+
+	    $.ajax({
+	    	url:filePath,
+	    	async:false,
+	    	success:function(data){
+	    		parseResult.name = "AAPL";
+	    		parseResult.time = [];
+	    		parseResult.value = [];
+		        var lines = data.split(/\r?\n|\r/);
+		        let conformData = true;
+		        for(let l in lines){
+		        	var vals = lines[l].split(',');
+		        	if(vals.length < 2)
+		        		continue;
+		        	let date = new Date(vals[0]);
+			        if(l>1){
+			            if(date < parseResult.time[parseResult.time.length-1]){
+			            	parseResult.time.push(date);
+			            	parseResult.value.push(parseFloat(vals[vals.length-1]))
+			            }
+			            else{
+			            	console.log("WARNING : data not linear in time")
+			            	conformData = false;
+			            	break;
+			            }
+			        }
+			        else if(l == 1){
+			        	parseResult.timeEnd = date;
+			        	parseResult.valueMax = parseFloat(vals[vals.length-1]);
+			        	parseResult.valueMin = parseFloat(vals[vals.length-1]);
+			        	parseResult.time.push(date);
+			            parseResult.value.push(parseFloat(vals[vals.length-1]))
+			        }
+		    	}
+		    	if(conformData){
+		    		parseResult.timeBegin = parseResult.time[parseResult.time.length-1];
+		    		let tempTimeTable = new Array();
+		    		let tempValueTable = new Array();
+		    		for(let i in parseResult.time){
+		    			parseResult.time[i] = parseResult.time[i] - parseResult.timeBegin;
+		    			parseResult.time[i] = parseResult.time[i]/(parseResult.timeEnd-parseResult.timeBegin);
+
+		    			if(i!=0 && i!=parseResult.time.length-1){
+		    				if(Math.round(tempValueTable[tempValueTable.length-1])!=Math.round(parseResult.value[i])){
+		    					tempTimeTable.push(parseResult.time[i])
+		    					tempValueTable.push(parseFloat(parseResult.value[i]))
+		    				}
+		    			}
+		    			else{
+		    				tempTimeTable.push(parseResult.time[i])
+		    				tempValueTable.push(parseFloat(parseResult.value[i]))
+		    			}
+		    		}
+		    		parseResult.time = tempTimeTable.reverse();
+		    		parseResult.value = tempValueTable;
+		    	}
+		    	for(let i in parseResult.value){
+		    		if(parseResult.value[i] > parseResult.valueMax)
+		    			parseResult.valueMax = parseResult.value[i];
+		    		else if(parseResult.value[i] < parseResult.valueMin)
+		    			parseResult.valueMin = parseResult.value[i];
+		    	}  
+	        }
+	    });
+	    console.log("done");
+	    let finalResult = new Graph((parseResult.valueMax+parseResult.valueMin)/2, ZOOM, 1,
+								 parseResult.value, parseResult.time, BaseLineType, 0, parseResult.time.length-1,
+								 initHeight, 2, parseResult.name);
+		finalResult.init();
+		finalResult.initListener();
+		finalResult.draw(true);
+		console.log(Object.values(finalResult));
+	    return finalResult;
+	}
 	        //////////////////////////////////////////////////
 	        //          Creation of multiple Graphs         //
 	        //////////////////////////////////////////////////
@@ -1350,8 +1413,17 @@ $(function(){
 	test4.init();
 	test3.initListener();
 	test4.initListener();
-	test3.draw2(true);
-	test4.draw2(true);
+	test3.draw(true);
+	test4.draw(true);
 	console.log(Object.values(test3));
 	console.log(Object.values(test4));
+
+	var parseTest1Hor = graphFromCSV("data/AAPL.csv", ZOOM, "Horizon", initHeight);
+	var parseTest1Str = graphFromCSV("data/AAPL.csv", ZOOM, "Stratum", initHeight);
+	var parseTest2Hor = graphFromCSV("data/AMZN.csv", ZOOM, "Horizon", initHeight);
+	var parseTest2Str = graphFromCSV("data/AMZN.csv", ZOOM, "Stratum", initHeight);
+	var parseTest3Hor = graphFromCSV("data/GOOGL.csv", ZOOM, "Horizon", initHeight);
+	var parseTest3Str = graphFromCSV("data/GOOGL.csv", ZOOM, "Stratum", initHeight);
+	var parseTest4Hor = graphFromCSV("data/MSFT.csv", ZOOM, "Horizon", initHeight);
+	var parseTest4Str = graphFromCSV("data/MSFT.csv", ZOOM, "Stratum", initHeight);
 });
