@@ -1013,8 +1013,11 @@ $(function(){
 		    			let oldStatu = me.statu
 				        me.timer = setInterval(function(){
 				        	if(me.basecut < tempBasecut){
-					        	me.basecut = me.basecut*1.03;
-					        	me.statu="anim-opti";
+					        	me.basecut = me.basecut*1.05;
+					        	if(oldStatu == "opti")
+					        		me.statu="anim-opti";
+					        	else
+					        		me.statu= "anim";
 					        	if(me.basecut>=tempBasecut){
 					        		me.basecut = tempBasecut;
 						            clearInterval(me.timer); 
@@ -1022,8 +1025,11 @@ $(function(){
 						        }
 				        	}
 					        else{
-					        	me.basecut = me.basecut*0.97;
-					        	me.statu="anim-opti";
+					        	me.basecut = me.basecut*0.95;
+					        	if(oldStatu == "opti")
+					        		me.statu="anim-opti";
+					        	else
+					        		me.statu= "anim";
 					        	if(me.basecut<=tempBasecut){
 					        		me.basecut = tempBasecut;
 						            clearInterval(me.timer);
