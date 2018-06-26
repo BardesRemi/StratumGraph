@@ -1056,7 +1056,7 @@ $(function(){
 		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 		    		if(me.statu=="unfold")
 			    	if(eventData.shiftKey && (!eventData.ctrlKey)){
-			    		let tempZOOM = me.ZOOM + eventData.deltaY/Math.abs(eventData.deltaY);
+			    		let tempZOOM = me.ZOOM + (eventData.deltaY/Math.abs(eventData.deltaY))*0.15;
 			    		if(tempZOOM >= maxZOOM)
 			    			me.ZOOM = maxZOOM;
 			    		else if(tempZOOM <= 1.0)
@@ -1071,7 +1071,7 @@ $(function(){
 			    		return false;
 			    	}
 			    	if(eventData.altKey){
-			    		let tempBaseline = me.basecut + eventData.deltaY/Math.abs(eventData.deltaY);
+			    		let tempBaseline = me.basecut + (eventData.deltaY/Math.abs(eventData.deltaY))*0.15;
 			    		if(tempBaseline >= me.maxs)
 			    			me.basecut = me.maxs;
 			    		else if(tempBaseline <= me.mins)
@@ -1321,7 +1321,7 @@ $(function(){
 		    			}
 		    		}
 		    		parseResult.time = tempTimeTable.reverse();
-		    		parseResult.value = tempValueTable;
+		    		parseResult.value = tempValueTable.reverse();
 		    	}
 		    	for(let i in parseResult.value){
 		    		if(parseResult.value[i] > parseResult.valueMax)
