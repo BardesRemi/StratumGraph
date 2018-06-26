@@ -41,7 +41,7 @@ let $ = require("jquery");
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
 const maxZOOM = 15.0;
-const canvasWidth = 1066;
+const canvasWidth = 1700;
 
 $(function(){
 	const favicon = require('./assets/favicon.png');
@@ -110,13 +110,13 @@ $(function(){
 	    this.can.height = this.initHeight;
 
 	  //rangesliders generation
-	  this.sliderBaseline = $("<input class='slider' type='range' step='"+0.15+"'>");
+	  this.sliderBaseline = $("<input class='slider' type='range' step='0.01'>");
 	  /*document.createElement('input');
 	  	this.sliderBaseline.classes = 'slider';
 	  	this.sliderBaseline.type = 'range';
 	  	this.sliderBaseline.step = 3/20;*/
 
-	  this.sliderZOOM = $("<input class='slider' type='range' min='1.0' max='"+maxZOOM+"' step='"+0.15+"'>");
+	  this.sliderZOOM = $("<input class='slider' type='range' min='1.0' max='"+maxZOOM+"' step='0.01'>");
 	  	/*this.sliderZOOM.class = 'slider';
 	  	this.sliderZOOM.type = 'range';
 	  	this.sliderZOOM.min  = 1.0;
@@ -646,7 +646,7 @@ $(function(){
 
 
 	  //Draw the graph in his canvas
-	  this.draw1 = function(optim){
+	  this.draw1 = function(){
 	    //console.time('someFunction');
 	    if (this.can.height!=this.initHeight+this.addHeight && this.statu == "anim")
 	    	this.can.height = this.initHeight+this.addHeight ;
@@ -664,7 +664,7 @@ $(function(){
 	    if(propup == propupCeil)
 	      propupCeil += 1.0;
 	    let graphToDraw;
-	    if(optim)
+	    if(this.statu == "opti")
 	      graphToDraw = this.pols;
 	    else
 	      graphToDraw = this.polsfill;
@@ -704,7 +704,7 @@ $(function(){
 	      ctx.closePath();
 	      }
 	        
-	      if(optim){
+	      if(this.statu == "opti"){
 	        ctx.shadowColor = "#000";
 	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
 	        ctx.shadowOffsetX = 0;
@@ -737,7 +737,7 @@ $(function(){
 	  }
 
 	  //Draw the graph in his canvas (new animation)
-	  this.draw2 = function(optim){
+	  this.draw2 = function(){
 	  	//console.time('someFunction');
 	    if (this.can.height!=this.initHeight+this.addHeight && this.statu != "unfold")
 	    	this.can.height = this.initHeight+this.addHeight ;
@@ -756,7 +756,7 @@ $(function(){
 	    if(propup == propupCeil)
 	      propupCeil += 1.0;
 	    let graphToDraw;
-	    if(optim)
+	    if(this.statu == "opti")
 	      graphToDraw = this.pols;
 	    else
 	      graphToDraw = this.polsfill;
@@ -806,7 +806,17 @@ $(function(){
 			    let shiftAfterRot;
 			    let rota;
 			    let tranAfterRota;
-		        if(this.addHeight > forkPosCoord && this.addHeight>0){
+			    if((graphToDraw[j].level == -1 && graphToDraw[j].level == this.minlvl && this.addHeight-forkPosCoord==this.height)
+			    	||(graphToDraw[j].level == -2 && graphToDraw[j].level == this.minlvl && this.addHeight-forkPosCoord==2*this.height)){
+			    	if(graphToDraw[j].level == -1 && graphToDraw[j].level == this.minlvl){
+			    		rota = true;
+			    		tranAfterRota = false;
+			    	}
+			    	else{
+
+			    	}
+			    }
+		        else if(this.addHeight > forkPosCoord && this.addHeight>0){
 		        	shiftBeforeRot = forkPosCoord;
 		        	rota = true;
 		        	if(this.addHeight >= forkPosCoord+this.initHeight && graphToDraw[j].level < -1){
@@ -849,7 +859,7 @@ $(function(){
 			    ctx.closePath();
 		    }
 	        
-	      if(optim){
+	      if(this.statu == "opti"){
 	        ctx.shadowColor = "#000";
 	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
 	        ctx.shadowOffsetX = 0;
@@ -882,11 +892,11 @@ $(function(){
 
 	  }
 
-	  this.draw = function(optim){
+	  this.draw = function(){
 	  	if(this.drawingMethod == 1)
-	  		this.draw1(optim);
+	  		this.draw1();
 	  	else
-	  		this.draw2(optim);
+	  		this.draw2();
 	  }
 
 	  //Must be call after each creation or modification of this object
@@ -924,49 +934,6 @@ $(function(){
 		this.initListener = function(){
 
 			let me = this;
-		    //adding to the canvas : MouseListener | Expansion of the graph
-		    /*this.can.addEventListener("click", function(){
-		    	if(me.statu == "opti"){																				
-				    if (me.timer==null) {
-				      	me.initHeight=me.can.height;
-				        me.timer = setInterval(function(){
-				        	if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
-					        	me.addHeight++;
-					        else
-					        	me.addHeight= me.addHeight*1.03;
-					        me.statu="anim";
-					        if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
-					            clearInterval(me.timer);
-					            me.statu="unfold";
-					        }
-					        if(me.polsfill == null)
-					            me.polsfill = me.allPolygons(false);
-					        me.draw(false);
-				    	}, 12);
-				    }
-			    }
-			    if(me.statu == "unfold" || me.statu == "anim"){
-		    		let drawingMode = false;
-				    if (me.timer!=null)
-				      	clearInterval(me.timer);
-				    me.timer = setInterval(function(){
-				      	me.statu="anim";
-				        if(me.addHeight<=0){
-				           	clearInterval(me.timer);
-				           	me.timer = null;
-				           	me.statu="opti";
-				        }
-				        else
-				           	if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
-					        	me.addHeight--;
-					        else
-					        	me.addHeight= me.addHeight*0.98;
-				        if(me.statu == "opti")
-				           	drawingMode=true;
-				        me.draw(drawingMode);
-				    }, 12);
-		      	}
-		     });*/
 
 		    //adding to the canvas : onclick listener | seting the baseline
 		    this.can.addEventListener('click',function(eventData){
@@ -976,10 +943,12 @@ $(function(){
 		    		x : eventData.offsetX,
 		    		y : initHeight-eventData.offsetY
 		    	};
+		    	let normalizedptClick = {
+					x : eventData.offsetX/me.can.width,
+					y : eventData.offsetY/me.initHeight
+				}
 		    	if(me.statu!="anim"){
-		    		let drawingMode = true;
 		    		if(me.statu=="unfold"){
-		    			drawingMode = false;
 		    			tempBasecut = me.maxs-(((me.maxs-me.mins)/me.ZOOM)/me.initHeight)*eventData.offsetY;
 		    		}
 		    		else if(me.statu == "opti"){
@@ -999,16 +968,7 @@ $(function(){
 		    				if(inPols)
 		    					tempPolslist.push(me.pols[j]);
 		    			}
-		    			if(tempPolslist.length>1){
-		    				let normalizedptClick = {
-					    		x : eventData.offsetX/me.can.width,
-					    		y : eventData.offsetY/me.initHeight //((me.initHeight-eventData.offsetY)+(tempPolslist[0].level-1)*me.initHeight)/(me.ZOOM*me.initHeight)
-					    	}
-					    	/*console.log("x : "+ normalizedptClick.x +" y : "+ normalizedptClick.y)
-					    	console.log("x : "+ normalizedptClick.x +" y : "+ normalizedptClick.y)
-					    	console.log("test 1 : " + (isPointInPoly(tempPolslist[0],ptclick) && isPointInPoly(tempPolslist[1],ptclick)))
-		    				console.log("test 2 : " + (isPointInPoly(tempPolslist[0],ptclick)))
-		    				console.log("test 3 : " + (isPointInPoly(tempPolslist[1],ptclick)))*/
+		    			if(tempPolslist.length==2){
 			    			if(isPointInPoly(tempPolslist[0],normalizedptClick) && isPointInPoly(tempPolslist[1],normalizedptClick)){
 			    				if(me.baselineType == "Stratum"){
 				    				if(tempPolslist[0].level > tempPolslist[1].level)
@@ -1034,16 +994,25 @@ $(function(){
 			    			else if(isPointInPoly(tempPolslist[0],normalizedptClick))
 			    				linelvl = tempPolslist[0].level;
 			    			else
-			    				linelvl = tempPolslist[1].level
+			    				linelvl = tempPolslist[1].level;
+			    		}
+			    		else{
+			    			if(isPointInPoly(tempPolslist[0],normalizedptClick))
+			    				linelvl = tempPolslist[0].level;
+			    			else{
+			    				console.log('WARNING : clicked point outside polygons')
+			    				eventData.stopImmediatePropagation();
+			    				return false;
+			    			}
 			    		}
 			    		if(me.baselineType == "Stratum"){
-			    			tempBasecut = me.mins + (linelvl-1+(ptclick.y)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+			    			tempBasecut = me.mins + (linelvl-1+ptclick.y/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
 			    		}
 			    		else if(me.baselineType == "Horizon"){
 			    			if(linelvl > 0)
-		    				tempBasecut = me.basecut + (linelvl-1+(ptclick.y)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
-		    			else
-		    				tempBasecut = me.basecut + (linelvl+(ptclick.y)/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+			    				tempBasecut = me.basecut + (linelvl-1+ptclick.y/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+			    			else
+			    				tempBasecut = me.basecut + ((linelvl+1)-ptclick.y/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
 			    		}
 			    		if(tempBasecut >= me.maxs)
 			    			tempBasecut = me.maxs;
@@ -1075,7 +1044,7 @@ $(function(){
 					        me.init();
 					        if(oldStatu == "unfold")
 					            me.polsfill = me.allPolygons(false);
-					        me.draw(drawingMode);
+					        me.draw();
 				    	}, 12);
 				    }
 		    	}
@@ -1086,12 +1055,11 @@ $(function(){
 		   	//wheel interactions
 		    this.can.addEventListener("wheel", function(eventData){
 		    	eventData.preventDefault()
+		    	console.log(eventData.deltaY);
 		    	if(me.statu!="anim"){
-		    		let drawingMode = true;
 		    		if(me.statu=="unfold")
-		    			drawingMode = false;
 			    	if(eventData.shiftKey && (!eventData.ctrlKey)){
-			    		let tempZOOM = me.ZOOM + eventData.deltaY/30;
+			    		let tempZOOM = me.ZOOM + eventData.deltaY/Math.abs(eventData.deltaY);
 			    		if(tempZOOM >= maxZOOM)
 			    			me.ZOOM = maxZOOM;
 			    		else if(tempZOOM <= 1.0)
@@ -1101,12 +1069,12 @@ $(function(){
 			    		me.init();
 			    		if(me.statu=="unfold")
 			    			me.polsfill = me.allPolygons(false);
-			    		me.draw(drawingMode);
+			    		me.draw();
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
 			    	if(eventData.altKey){
-			    		let tempBaseline = me.basecut  -eventData.deltaY/30;
+			    		let tempBaseline = me.basecut + eventData.deltaY/Math.abs(eventData.deltaY);
 			    		if(tempBaseline >= me.maxs)
 			    			me.basecut = me.maxs;
 			    		else if(tempBaseline <= me.mins)
@@ -1116,12 +1084,12 @@ $(function(){
 			    		me.init();
 			    		if(me.statu=="unfold")
 			    			me.polsfill = me.allPolygons(false);
-			    		me.draw(drawingMode);
+			    		me.draw();
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
 			    	if(eventData.ctrlKey && (!eventData.shiftKey)){
-			    		let tempinitHeight = me.initHeight + Math.ceil(eventData.deltaY/3);
+			    		let tempinitHeight = me.initHeight + eventData.deltaY/Math.abs(eventData.deltaY);
 			    		if(tempinitHeight <= 10.0)
 			    			me.initHeight = 10.0;
 			    		else if(tempinitHeight >= 50.0)
@@ -1131,7 +1099,7 @@ $(function(){
 			    		me.init();
 			    		if(me.statu=="unfold")
 			    			me.polsfill = me.allPolygons(false);
-			    		me.draw(drawingMode);
+			    		me.draw();
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
@@ -1156,7 +1124,7 @@ $(function(){
 			    		me.init();
 			    		if(me.statu=="unfold")
 			    			me.polsfill = me.allPolygons(false);
-			    		me.draw(drawingMode);
+			    		me.draw();
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}*/
@@ -1166,9 +1134,6 @@ $(function(){
 		    //slider interactions
 		    this.sliderBaseline.on('input', function() {
 		    	if(me.statu!="anim"){
-			    	let drawingMode = true;
-			    	if(me.statu=="unfold")
-			    		drawingMode = false;
 			    	let tempBaseline = this.value;
 				    if(tempBaseline > me.maxs)
 				    	me.basecut = me.maxs;
@@ -1179,15 +1144,12 @@ $(function(){
 				    me.init();
 				   	if(me.statu=="unfold")
 				    	me.polsfill = me.allPolygons(false);
-				    me.draw(drawingMode);
+				    me.draw();
 					//output.innerHTML = this.value;
 				}
 			});
 			this.sliderZOOM.on('input', function() {
 		    	if(me.statu!="anim"){
-			    	let drawingMode = true;
-			    	if(me.statu=="unfold")
-			    		drawingMode = false;
 			    	let tempZOOM = this.value;
 				    if(tempZOOM >= maxZOOM)
 			    		me.ZOOM = maxZOOM;
@@ -1198,15 +1160,12 @@ $(function(){
 			    	me.init();
 			    	if(me.statu=="unfold")
 			    		me.polsfill = me.allPolygons(false);
-			    	me.draw(drawingMode);
+			    	me.draw();
 					//output.innerHTML = this.value;
 				}
 			});
 			this.sliderInitHeight.on('input', function() {
 		    	if(me.statu!="anim"){
-			    	let drawingMode = true;
-			    	if(me.statu=="unfold")
-			    		drawingMode = false;
 			    	let tempinitHeight = this.value;
 			    	if(tempinitHeight <= 10.0)
 			    		me.initHeight = 10.0;
@@ -1217,7 +1176,7 @@ $(function(){
 			    	me.init();
 			    	if(me.statu=="unfold")
 			    		me.polsfill = me.allPolygons(false);
-			    	me.draw(drawingMode);
+			    	me.draw();
 					//output.innerHTML = this.value;
 				}
 			});
@@ -1242,7 +1201,6 @@ $(function(){
 				    }, 12);
 			    }
 			    if(me.statu == "unfold" || me.statu == "anim"){
-		    		let drawingMode = false;
 				    if (me.timer!=null)
 				      	clearInterval(me.timer);
 				    me.timer = setInterval(function(){
@@ -1252,14 +1210,13 @@ $(function(){
 				           	me.timer = null;
 				           	me.statu="opti";
 				        }
-				        else
-				           	if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
-					        	me.addHeight--;
-					        else
-					        	me.addHeight= me.addHeight*0.98;
-				        if(me.statu == "opti")
-				           	drawingMode=true;
-				        me.draw(drawingMode);
+				        else{
+				        	if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
+				        		me.addHeight--;
+				        	else
+				        		me.addHeight= me.addHeight*0.98;
+				    	}
+				        me.draw();
 				    }, 12);
 		      	}
 		     });
@@ -1307,17 +1264,24 @@ $(function(){
 		value : new Array()
 		})
 
+		let words = filePath.split('/');
+		console.log(words);
+		let tempname = "";
+		for (let l=0; l < words[words.length-1].length-4;l++){
+			tempname = tempname + words[words.length-1][l]
+		}
+
 	    $.ajax({
 	    	url:filePath,
 	    	async:false,
 	    	success:function(data){
-	    		parseResult.name = "AAPL";
+	    		parseResult.name = tempname;
 	    		parseResult.time = [];
 	    		parseResult.value = [];
-		        var lines = data.split(/\r?\n|\r/);
+		        let lines = data.split(/\r?\n|\r/);
 		        let conformData = true;
 		        for(let l in lines){
-		        	var vals = lines[l].split(',');
+		        	let vals = lines[l].split(',');
 		        	if(vals.length < 2)
 		        		continue;
 		        	let date = new Date(vals[0]);
