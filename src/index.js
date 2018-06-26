@@ -472,17 +472,17 @@ $(function(){
 	          }
 	          else if(copy[g].level == this.minlvl){
 	            for(let k=0; k<this.initHeight+1; k++){
-	              imgData.data[4*k+0]=heatScale[240][0];
-	              imgData.data[4*k+1]=heatScale[240][1];
-	              imgData.data[4*k+2]=heatScale[240][2];
+	              imgData.data[4*k+0]=heatScale[220][0];
+	              imgData.data[4*k+1]=heatScale[220][1];
+	              imgData.data[4*k+2]=heatScale[220][2];
 	              imgData.data[4*k+3]=255;
 	            }
 	          }
 	          else{
 	            for(let k=0; k<this.initHeight; k++){
-	              imgData.data[4*k+0]=heatScale[240-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
-	              imgData.data[4*k+1]=heatScale[240-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
-	              imgData.data[4*k+2]=heatScale[240-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
+	              imgData.data[4*k+0]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
+	              imgData.data[4*k+1]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
+	              imgData.data[4*k+2]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
 	              imgData.data[4*k+3]=255;
 	            }
 	          }
@@ -664,7 +664,7 @@ $(function(){
 	    if(propup == propupCeil)
 	      propupCeil += 1.0;
 	    let graphToDraw;
-	    if(this.statu == "opti")
+	    if(this.statu == "opti" || this.statu == "anim-opti")
 	      graphToDraw = this.pols;
 	    else
 	      graphToDraw = this.polsfill;
@@ -704,7 +704,7 @@ $(function(){
 	      ctx.closePath();
 	      }
 	        
-	      if(this.statu == "opti"){
+	      if(this.statu == "opti" || this.statu == "anim-opti"){
 	        ctx.shadowColor = "#000";
 	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
 	        ctx.shadowOffsetX = 0;
@@ -756,7 +756,7 @@ $(function(){
 	    if(propup == propupCeil)
 	      propupCeil += 1.0;
 	    let graphToDraw;
-	    if(this.statu == "opti")
+	    if(this.statu == "opti" || this.statu == "anim-opti")
 	      graphToDraw = this.pols;
 	    else
 	      graphToDraw = this.polsfill;
@@ -806,17 +806,7 @@ $(function(){
 			    let shiftAfterRot;
 			    let rota;
 			    let tranAfterRota;
-			    if((graphToDraw[j].level == -1 && graphToDraw[j].level == this.minlvl && this.addHeight-forkPosCoord==this.height)
-			    	||(graphToDraw[j].level == -2 && graphToDraw[j].level == this.minlvl && this.addHeight-forkPosCoord==2*this.height)){
-			    	if(graphToDraw[j].level == -1 && graphToDraw[j].level == this.minlvl){
-			    		rota = true;
-			    		tranAfterRota = false;
-			    	}
-			    	else{
-
-			    	}
-			    }
-		        else if(this.addHeight > forkPosCoord && this.addHeight>0){
+		        if(this.addHeight > forkPosCoord && this.addHeight>0){
 		        	shiftBeforeRot = forkPosCoord;
 		        	rota = true;
 		        	if(this.addHeight >= forkPosCoord+this.initHeight && graphToDraw[j].level < -1){
@@ -859,7 +849,7 @@ $(function(){
 			    ctx.closePath();
 		    }
 	        
-	      if(this.statu == "opti"){
+	      if(this.statu == "opti" || this.statu == "anim-opti"){
 	        ctx.shadowColor = "#000";
 	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
 	        ctx.shadowOffsetX = 0;
@@ -947,7 +937,7 @@ $(function(){
 					x : eventData.offsetX/me.can.width,
 					y : eventData.offsetY/me.initHeight
 				}
-		    	if(me.statu!="anim"){
+		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 		    		if(me.statu=="unfold"){
 		    			tempBasecut = me.maxs-(((me.maxs-me.mins)/me.ZOOM)/me.initHeight)*eventData.offsetY;
 		    		}
@@ -1023,8 +1013,8 @@ $(function(){
 		    			let oldStatu = me.statu
 				        me.timer = setInterval(function(){
 				        	if(me.basecut < tempBasecut){
-					        	me.basecut = me.basecut*1.05;
-					        	me.statu="anim";
+					        	me.basecut = me.basecut*1.03;
+					        	me.statu="anim-opti";
 					        	if(me.basecut>=tempBasecut){
 					        		me.basecut = tempBasecut;
 						            clearInterval(me.timer); 
@@ -1032,8 +1022,8 @@ $(function(){
 						        }
 				        	}
 					        else{
-					        	me.basecut = me.basecut*0.95;
-					        	me.statu="anim";
+					        	me.basecut = me.basecut*0.97;
+					        	me.statu="anim-opti";
 					        	if(me.basecut<=tempBasecut){
 					        		me.basecut = tempBasecut;
 						            clearInterval(me.timer);
@@ -1044,6 +1034,7 @@ $(function(){
 					        me.init();
 					        if(oldStatu == "unfold")
 					            me.polsfill = me.allPolygons(false);
+					        console.log(me.timer);
 					        me.draw();
 				    	}, 12);
 				    }
@@ -1056,7 +1047,7 @@ $(function(){
 		    this.can.addEventListener("wheel", function(eventData){
 		    	eventData.preventDefault()
 		    	console.log(eventData.deltaY);
-		    	if(me.statu!="anim"){
+		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 		    		if(me.statu=="unfold")
 			    	if(eventData.shiftKey && (!eventData.ctrlKey)){
 			    		let tempZOOM = me.ZOOM + eventData.deltaY/Math.abs(eventData.deltaY);
@@ -1133,7 +1124,7 @@ $(function(){
 
 		    //slider interactions
 		    this.sliderBaseline.on('input', function() {
-		    	if(me.statu!="anim"){
+		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 			    	let tempBaseline = this.value;
 				    if(tempBaseline > me.maxs)
 				    	me.basecut = me.maxs;
@@ -1149,7 +1140,7 @@ $(function(){
 				}
 			});
 			this.sliderZOOM.on('input', function() {
-		    	if(me.statu!="anim"){
+		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 			    	let tempZOOM = this.value;
 				    if(tempZOOM >= maxZOOM)
 			    		me.ZOOM = maxZOOM;
@@ -1165,7 +1156,7 @@ $(function(){
 				}
 			});
 			this.sliderInitHeight.on('input', function() {
-		    	if(me.statu!="anim"){
+		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 			    	let tempinitHeight = this.value;
 			    	if(tempinitHeight <= 10.0)
 			    		me.initHeight = 10.0;
