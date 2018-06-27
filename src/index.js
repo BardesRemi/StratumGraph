@@ -43,6 +43,14 @@ let $ = require("jquery");
 const maxZOOM = 15.0;
 const canvasWidth = 1700;
 
+let dragGraph = null;
+let dragStart = null;
+
+function dist(x1, y1, x2, y2){
+  return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))
+
+} 
+
 $(function(){
 	const favicon = require('./assets/favicon.png');
 	let link = document.createElement('link');
@@ -108,6 +116,7 @@ $(function(){
 	  this.can = document.createElement('canvas');
 	    this.can.width = canvasWidth;
 	    this.can.height = this.initHeight;
+	    $(this.can).addClass("IG");
 
 	  //rangesliders generation
 	  this.sliderBaseline = $("<input class='slider' type='range' step='0.01'>");
@@ -131,7 +140,7 @@ $(function(){
 	  	this.sliderInitHeight.max  = 50.0;
 	  	this.sliderInitHeight.step = 1;*/
 
-	  this.statusButton = $("<button type='button'>fold / unfold</button>");
+	  this.statusButton = $("<button class='superbutton' type='button'>fold / unfold</button>");
 
 	  this.getmins = function(){
 	    let mint = 0;
@@ -568,6 +577,10 @@ $(function(){
 	            }
 	          }
 	        }
+            if((imgData.data[0]+imgData.data[1]+imgData.data[2])/3 > 80)
+                copy[g].shadow = "#000";
+            else
+                copy[g].shadow = "#FFF";
 	        c.getContext("2d").putImageData(imgData,0,0);
 	        copy[g].texture= c.getContext('2d').createPattern(c, "repeat-x");
 	      }
@@ -614,6 +627,10 @@ $(function(){
 		            }
 	        	}
 	          }
+              if((imgData.data[0]+imgData.data[1]+imgData.data[2])/3 > 150)
+                copy[g].shadow = "#000";
+              else
+                copy[g].shadow = "#FFF";
 	          c.getContext("2d").putImageData(imgData,0,0);
 	          copy[g].texture= c.getContext('2d').createPattern(c, "repeat-x");
 	      }
@@ -705,13 +722,13 @@ $(function(){
 	      }
 	        
 	      if(this.statu == "opti" || this.statu == "anim-opti"){
-	        ctx.shadowColor = "#000";
+	    	ctx.shadowColor = graphToDraw[j].shadow;
 	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
 	        ctx.shadowOffsetX = 0;
 	        ctx.shadowOffsetY = 0;
 	      }
 	      else{
-	        ctx.shadowColor = "#000";
+	        ctx.shadowColor = graphToDraw[j].shadow;
 	        let blurEvol = Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight)));
 	        if(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))) > 0.98){
 	          blurEvol = 1.0;
@@ -850,7 +867,10 @@ $(function(){
 		    }
 	        
 	      if(this.statu == "opti" || this.statu == "anim-opti"){
-	        ctx.shadowColor = "#000";
+	        if((ctx.fillStyle[0]+ctx.fillStyle[1]+ctx.fillStyle[2])/3 > 20)
+	        	ctx.shadowColor = graphToDraw[j].shadow;
+	    	else
+	    		ctx.shadowColor = graphToDraw[j].shadow;
 	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
 	        ctx.shadowOffsetX = 0;
 	        ctx.shadowOffsetY = 0;
@@ -928,6 +948,12 @@ $(function(){
 		    //adding to the canvas : onclick listener | seting the baseline
 		    this.can.addEventListener('click',function(eventData){
 		    	eventData.preventDefault()
+            	console.log("click");
+            	if (dragGraph!=null && dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y)>20)
+            	  return true;
+            	console.log(eventData);
+            	console.log(eventData.pageX);
+
 		    	let tempBasecut;
 		    	let ptclick = {
 		    		x : eventData.offsetX,
@@ -1048,6 +1074,87 @@ $(function(){
 		    	eventData.stopImmediatePropagation();
 			    return false;
 		    });
+
+            this.can.addEventListener("mousedown", function(eventData){
+            	eventData.preventDefault();
+            	console.log("mousedown");
+            	console.log("  "+eventData.pageY);
+                $(this).addClass("originGraph");
+
+            	dragGraph = eventData.target;
+            	dragStart = {x:eventData.pageX, y:eventData.pageY}
+            	//console.log(eventData.);
+            	return false;
+            });
+
+			window.addEventListener("mousemove", function(eventData){
+            	//eventData.preventDefault();
+				$(".destinationGraph").each(function( index ) {
+					$(this).removeClass("destinationGraph")
+				});
+
+            	if (dragGraph!=null && dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y)>20){
+            	  //console.log("+MM "+eventData.pageX+","+eventData.pageY+" => "+dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y));
+	  
+            	  $(".IG").each(function( index ) {
+					 let offset = $(this).offset()
+					 //console.log(offset.top+"<"+eventData.pageY+"<"+(offset.top+$(this).height()))
+            	  	 if(eventData.pageY>offset.top && eventData.pageY<offset.top+$(this).height())
+                       $(this).addClass("destinationGraph");
+            	  });
+            	}
+            	//return false;
+            });
+
+            this.can.addEventListener("mouseup", function(eventData){
+            	console.log(eventData);
+
+
+            	if (dragGraph!=null && dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y)>10){
+
+                	let parOrigin = $(".originGraph").parent().parent();
+	            	let parDestination = $(".destinationGraph").parent().parent();
+	            	console.log(parOrigin[0])
+
+	            	let prevOrigin = parOrigin.prev();
+	            	console.log(parOrigin[0])
+
+	            	let prevDest = parDestination.prev();
+
+					parDestination.insertAfter(prevOrigin)
+					parOrigin.insertAfter(prevDest)
+
+					$(".originGraph").each(function( index ) {
+						$(this).removeClass("originGraph")
+					});
+					$(".destinationGraph").each(function( index ) {
+						$(this).removeClass("destinationGraph")
+					});
+	            	dragGraph = null;
+	            	dragStart = null;
+	            	
+            	    eventData.preventDefault();
+            	    eventData.stopPropagation();
+                    return true;
+				}
+                else{
+                    $(".originGraph").each(function( index ) {
+                        $(this).removeClass("originGraph")
+                    });
+                    $(".destinationGraph").each(function( index ) {
+                        $(this).removeClass("destinationGraph")
+                    });
+                    dragGraph = null;
+                    dragStart = null;
+                    
+                    eventData.preventDefault();
+                    eventData.stopPropagation();
+                    return true;
+                }
+
+
+
+            });
 
 		   	//wheel interactions
 		    this.can.addEventListener("wheel", function(eventData){
@@ -1211,7 +1318,7 @@ $(function(){
 				        	if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
 				        		me.addHeight--;
 				        	else
-				        		me.addHeight= me.addHeight*0.98;
+				        		me.addHeight= me.addHeight*0.97;
 				    	}
 				        me.draw();
 				    }, 12);
@@ -1222,8 +1329,8 @@ $(function(){
 			$("#myTable").find('tbody')
 			    .append($('<tr>')
 			    	.append($('<td>')
-			            .append(this.name)
-			        ).append($('<td>')
+			            .append($("<span id='title"+$("#myTable tr").length+"'class='title'>"+this.name+"_"+$("#myTable tr").length+"</span>"))
+			        ).append($('<td style="position:relative">')
 			            .append(this.statusButton)
 			        ).append($('<td>')
 			            .append($(this.can))
@@ -1236,6 +1343,34 @@ $(function(){
 			        )
 
 			    );
+
+             let id = $("#myTable tr").length-1
+             $(this.can).attr("id", "canvas_"+id)
+             $(this.sliderBaseline).attr("id", "slider_"+id)
+             
+
+             this.sliderBaseline.on("mousedown", function(eventData){
+                console.log("down "+this.id)
+             });
+             this.sliderBaseline.on("mousemove", function(eventData){
+                console.log("  move "+this.id)
+                let originSlider = this;
+                $(".slider").each(function (){
+                   let offset = $(this).offset();
+                   let offsetOrigin = $(originSlider).offset();
+                   console.log(Math.min(eventData.pageY, offsetOrigin.top))
+                   console.log("  "+offset.top+" == "+this.id)
+                   console.log(Math.max(eventData.pageY, offsetOrigin.top))
+                   if (offset.top>Math.min(eventData.pageY, offsetOrigin.top) && offset.top<Math.max(eventData.pageY, offsetOrigin.top)){
+                       $(this).addClass("selected");
+                       $(this)[0].value = $(originSlider)[0].value;
+                    }
+                })
+             });
+             this.sliderBaseline.on("mouseup", function(eventData){
+                console.log("  up "+this.id)
+             });
+			 console.log(id)
 
 	  	}
 	}
