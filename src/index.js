@@ -44,12 +44,9 @@ const maxZOOM = 15.0;
 const canvasWidth = 1700;
 
 let dragGraph = null;
-let dragStart = null;
+let dragStart = null; 
 
-function dist(x1, y1, x2, y2){
-  return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))
-
-} 
+let tableGraph = new Array();
 
 $(function(){
 	const favicon = require('./assets/favicon.png');
@@ -60,7 +57,6 @@ $(function(){
 	document.head.appendChild(link);
 
 	$(".adjuster").on('click',function(){
-		console.log("drg")
 		adj($(this.parentNode));
 	})
 	
@@ -80,6 +76,9 @@ $(function(){
       return c;
     }
 
+    function dist(x1, y1, x2, y2){
+        return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))
+    }
 	        //////////////////////////////////////////////////
 	        //       Graph Classes (via a constructor)      //
 	        //////////////////////////////////////////////////
@@ -119,13 +118,13 @@ $(function(){
 	    $(this.can).addClass("IG");
 
 	  //rangesliders generation
-	  this.sliderBaseline = $("<input class='slider' type='range' step='0.01'>");
+	  this.sliderBaseline = $("<input class='sliderBaseline' type='range' step='0.01'>");
 	  /*document.createElement('input');
 	  	this.sliderBaseline.classes = 'slider';
 	  	this.sliderBaseline.type = 'range';
 	  	this.sliderBaseline.step = 3/20;*/
 
-	  this.sliderZOOM = $("<input class='slider' type='range' min='1.0' max='"+maxZOOM+"' step='0.01'>");
+	  this.sliderZOOM = $("<input class='sliderZOOM' type='range' min='1.0' max='"+maxZOOM+"' step='0.01'>");
 	  	/*this.sliderZOOM.class = 'slider';
 	  	this.sliderZOOM.type = 'range';
 	  	this.sliderZOOM.min  = 1.0;
@@ -133,7 +132,7 @@ $(function(){
 	  	this.sliderZOOM.value = this.ZOOM;
 	  	this.sliderZOOM.step = 3/20;*/
 
-	  this.sliderInitHeight = $("<input class='slider' type='range' min='10.0' max='50.0' step='1'>");
+	  this.sliderInitHeight = $("<input class='sliderInitHeight' type='range' min='10.0' max='50.0' step='1'>");
 	  	/*this.sliderInitHeight.class = 'slider';
 	  	this.sliderInitHeight.type = 'range';
 	  	this.sliderInitHeight.min  = 10.0;
@@ -577,7 +576,7 @@ $(function(){
 	            }
 	          }
 	        }
-            if((imgData.data[0]+imgData.data[1]+imgData.data[2])/3 > 80)
+            if((imgData.data[imgData.data.length-4]+imgData.data[imgData.data.length-3]+imgData.data[imgData.data.length-2])/3 > 80)
                 copy[g].shadow = "#000";
             else
                 copy[g].shadow = "#FFF";
@@ -627,7 +626,7 @@ $(function(){
 		            }
 	        	}
 	          }
-              if((imgData.data[0]+imgData.data[1]+imgData.data[2])/3 > 150)
+              if((imgData.data[imgData.data.length-4]+imgData.data[imgData.data.length-3]+imgData.data[imgData.data.length-2])/3 > 150)
                 copy[g].shadow = "#000";
               else
                 copy[g].shadow = "#FFF";
@@ -867,16 +866,13 @@ $(function(){
 		    }
 	        
 	      if(this.statu == "opti" || this.statu == "anim-opti"){
-	        if((ctx.fillStyle[0]+ctx.fillStyle[1]+ctx.fillStyle[2])/3 > 20)
-	        	ctx.shadowColor = graphToDraw[j].shadow;
-	    	else
-	    		ctx.shadowColor = graphToDraw[j].shadow;
+	    	ctx.shadowColor = graphToDraw[j].shadow;
 	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
 	        ctx.shadowOffsetX = 0;
 	        ctx.shadowOffsetY = 0;
 	      }
 	      else{
-	        ctx.shadowColor = "#000";
+	        ctx.shadowColor = graphToDraw[j].shadow;
 	        let blurEvol = Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight)));
 	        if(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))) > 0.98){
 	          blurEvol = 1.0;
@@ -948,11 +944,8 @@ $(function(){
 		    //adding to the canvas : onclick listener | seting the baseline
 		    this.can.addEventListener('click',function(eventData){
 		    	eventData.preventDefault()
-            	console.log("click");
             	if (dragGraph!=null && dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y)>20)
             	  return true;
-            	console.log(eventData);
-            	console.log(eventData.pageX);
 
 		    	let tempBasecut;
 		    	let ptclick = {
@@ -1066,7 +1059,6 @@ $(function(){
 					        me.init();
 					        if(oldStatu == "unfold")
 					            me.polsfill = me.allPolygons(false);
-					        console.log(me.timer);
 					        me.draw();
 				    	}, 12);
 				    }
@@ -1077,8 +1069,6 @@ $(function(){
 
             this.can.addEventListener("mousedown", function(eventData){
             	eventData.preventDefault();
-            	console.log("mousedown");
-            	console.log("  "+eventData.pageY);
                 $(this).addClass("originGraph");
 
             	dragGraph = eventData.target;
@@ -1107,17 +1097,14 @@ $(function(){
             });
 
             this.can.addEventListener("mouseup", function(eventData){
-            	console.log(eventData);
 
 
             	if (dragGraph!=null && dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y)>10){
 
                 	let parOrigin = $(".originGraph").parent().parent();
 	            	let parDestination = $(".destinationGraph").parent().parent();
-	            	console.log(parOrigin[0])
 
 	            	let prevOrigin = parOrigin.prev();
-	            	console.log(parOrigin[0])
 
 	            	let prevDest = parDestination.prev();
 
@@ -1159,10 +1146,8 @@ $(function(){
 		   	//wheel interactions
 		    this.can.addEventListener("wheel", function(eventData){
 		    	eventData.preventDefault()
-		    	console.log(eventData.deltaY);
 		    	if(me.statu!="anim" && me.statu!="anim-opti"){
-		    		if(me.statu=="unfold")
-			    	if(eventData.shiftKey && (!eventData.ctrlKey)){
+			    	if(eventData.shiftKey){
 			    		let tempZOOM = me.ZOOM + (eventData.deltaY/Math.abs(eventData.deltaY))*0.15;
 			    		if(tempZOOM >= maxZOOM)
 			    			me.ZOOM = maxZOOM;
@@ -1192,7 +1177,7 @@ $(function(){
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
-			    	if(eventData.ctrlKey && (!eventData.shiftKey)){
+			    	if(eventData.ctrlKey){
 			    		let tempinitHeight = me.initHeight + eventData.deltaY/Math.abs(eventData.deltaY);
 			    		if(tempinitHeight <= 10.0)
 			    			me.initHeight = 10.0;
@@ -1350,17 +1335,13 @@ $(function(){
              
 
              this.sliderBaseline.on("mousedown", function(eventData){
-                console.log("down "+this.id)
+                $(this).addClass("selected");
              });
              this.sliderBaseline.on("mousemove", function(eventData){
-                console.log("  move "+this.id)
                 let originSlider = this;
-                $(".slider").each(function (){
+                $(".sliderBaseline").each(function (){
                    let offset = $(this).offset();
                    let offsetOrigin = $(originSlider).offset();
-                   console.log(Math.min(eventData.pageY, offsetOrigin.top))
-                   console.log("  "+offset.top+" == "+this.id)
-                   console.log(Math.max(eventData.pageY, offsetOrigin.top))
                    if (offset.top>Math.min(eventData.pageY, offsetOrigin.top) && offset.top<Math.max(eventData.pageY, offsetOrigin.top)){
                        $(this).addClass("selected");
                        $(this)[0].value = $(originSlider)[0].value;
@@ -1368,11 +1349,65 @@ $(function(){
                 })
              });
              this.sliderBaseline.on("mouseup", function(eventData){
-                console.log("  up "+this.id)
+                $(".selected").each(function( index ) {
+                        $(this).removeClass("selected")
+                    });
              });
-			 console.log(id)
+
+             this.sliderZOOM.on("mousedown", function(eventData){
+                $(this).addClass("selected");
+             });
+             this.sliderZOOM.on("mousemove", function(eventData){
+                let originSlider = this;
+                $(".sliderZOOM").each(function (){
+                   let offset = $(this).offset();
+                   let offsetOrigin = $(originSlider).offset();
+                   if (offset.top>Math.min(eventData.pageY, offsetOrigin.top) && offset.top<Math.max(eventData.pageY, offsetOrigin.top)){
+                       $(this).addClass("selected");
+                    }
+                })
+                for(let g in tableGraph){
+                    if(tableGraph[g].sliderZOOM[0].classList.contains("selected")){
+                        tableGraph[g].ZOOM = originSlider.value;
+                        tableGraph[g].init();
+                        tableGraph[g].draw();
+                    }
+                }
+             });
+             this.sliderZOOM.on("mouseup", function(eventData){
+                $(".selected").each(function( index ) {
+                        $(this).removeClass("selected")
+                    });
+             });
+
+             this.sliderInitHeight.on("mousedown", function(eventData){
+                $(this).addClass("selected");
+             });
+             this.sliderInitHeight.on("mousemove", function(eventData){
+                let originSlider = this;
+                $(".sliderInitHeight").each(function (){
+                   let offset = $(this).offset();
+                   let offsetOrigin = $(originSlider).offset();
+                   if (offset.top>Math.min(eventData.pageY, offsetOrigin.top) && offset.top<Math.max(eventData.pageY, offsetOrigin.top)){
+                       $(this).addClass("selected");
+                    }
+                })
+                for(let g in tableGraph){
+                    if(tableGraph[g].sliderInitHeight[0].classList.contains("selected")){
+                        tableGraph[g].initHeight = parseInt(originSlider.value);
+                        tableGraph[g].init();
+                        tableGraph[g].draw();
+                    }
+                }
+             });
+             this.sliderInitHeight.on("mouseup", function(eventData){
+                $(".selected").each(function( index ) {
+                        $(this).removeClass("selected")
+                    });
+             });
 
 	  	}
+        tableGraph.push(this);
 	}
 			//////////////////////////////////////////////////
 	        //          	Parsing a CSV file   	        //
@@ -1397,7 +1432,6 @@ $(function(){
 		})
 
 		let words = filePath.split('/');
-		console.log(words);
 		let tempname = "";
 		for (let l=0; l < words[words.length-1].length-4;l++){
 			tempname = tempname + words[words.length-1][l]
@@ -1473,7 +1507,6 @@ $(function(){
 		finalResult.init();
 		finalResult.initListener();
 		finalResult.draw(true);
-		console.log(Object.values(finalResult));
 	    return finalResult;
 	}
 	        //////////////////////////////////////////////////
@@ -1500,8 +1533,6 @@ $(function(){
 	test2.initListener();
 	test1.draw(true);
 	test2.draw(true);
-	console.log(Object.values(test2));
-	console.log(Object.values(test1));
 
 	var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 2, "third");
 	var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 2, "fourth");
@@ -1511,8 +1542,6 @@ $(function(){
 	test4.initListener();
 	test3.draw(true);
 	test4.draw(true);
-	console.log(Object.values(test3));
-	console.log(Object.values(test4));
 
 	var parseTest1Hor = graphFromCSV("data/AAPL.csv", ZOOM, "Horizon", initHeight);
 	var parseTest1Str = graphFromCSV("data/AAPL.csv", ZOOM, "Stratum", initHeight);
@@ -1522,4 +1551,5 @@ $(function(){
 	var parseTest3Str = graphFromCSV("data/GOOGL.csv", ZOOM, "Stratum", initHeight);
 	var parseTest4Hor = graphFromCSV("data/MSFT.csv", ZOOM, "Horizon", initHeight);
 	var parseTest4Str = graphFromCSV("data/MSFT.csv", ZOOM, "Stratum", initHeight);
+    console.log(tableGraph);
 });
