@@ -45,6 +45,8 @@ const canvasWidth = 1700;
 
 let dragGraph = null;
 let dragStart = null; 
+let initialBaseline = null;
+let windowInteractionStatus = null;
 
 let tableGraph = new Array();
 
@@ -83,7 +85,7 @@ $(function(){
 	        //       Graph Classes (via a constructor)      //
 	        //////////////////////////////////////////////////
 
-	function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end, initHeight, drawingMethod, name){
+	function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end, initHeight, drawingMethod, baselineMethod, name){
 	  //attributes
 	  this.name = name;
 	  this.basecut = basecut;
@@ -109,6 +111,9 @@ $(function(){
 	  this.minlvl = 1;
 	  this.statu = "opti";
 	  this.drawingMethod = drawingMethod
+      this.baselineMethod = baselineMethod
+
+      this.namehtml = $("<span id='title"+$("#myTable tr").length+"'class='title'>"+this.name+"_"+$("#myTable tr").length+"</span>")
 
 
 	  //canvas generation
@@ -942,11 +947,8 @@ $(function(){
 			let me = this;
 
 		    //adding to the canvas : onclick listener | seting the baseline
-		    this.can.addEventListener('click',function(eventData){
+		    /*this.can.addEventListener('click',function(eventData){
 		    	eventData.preventDefault()
-            	if (dragGraph!=null && dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y)>20)
-            	  return true;
-
 		    	let tempBasecut;
 		    	let ptclick = {
 		    		x : eventData.offsetX,
@@ -1065,16 +1067,142 @@ $(function(){
 		    	}
 		    	eventData.stopImmediatePropagation();
 			    return false;
-		    });
+		    });*/
 
             this.can.addEventListener("mousedown", function(eventData){
+                eventData.preventDefault();
+                if(me.baselineMethod){
+                    console.log("bonjour");
+                    $(this).addClass("movingBaseline1");
+                    dragGraph = eventData.target;
+                    dragStart = {x:eventData.pageX, y:eventData.pageY}
+                    initialBaseline = me.basecut;
+                    windowInteractionStatus = "baselineGraph"
+                }
+                else if(!me.baselineMethod){
+                    $(this).addClass("movingBaseline2");
+                }
+                return false;
+            });
+
+            this.can.addEventListener("mousemove", function(eventData){
+                if(me.can.classList.contains("movingBaseline2")){
+                    let tempBasecut;
+                    let ptclick = {
+                        x : eventData.offsetX,
+                        y : me.initHeight-eventData.offsetY
+                    };
+                    let normalizedptClick = {
+                        x : eventData.offsetX/me.can.width,
+                        y : eventData.offsetY/me.initHeight
+                    }
+                    if(me.statu!="anim" && me.statu!="anim-opti"){
+                        if(me.statu=="unfold"){
+                            tempBasecut = me.maxs-(((me.maxs-me.mins)/me.ZOOM)/me.initHeight)*eventData.offsetY;
+                        }
+                        else if(me.statu == "opti"){
+                            let linelvl = 1;
+                            let tempPolslist = new Array();
+                            for(let j in me.pols){
+                                let inPols = false;
+                                let polsbegin = me.pols[j].ptx[0];
+                                let polsending = me.pols[j].ptx[(me.pols[j].ptx).length-1]
+                                for(let i in me.pols[j].ptx){
+
+                                    if ( !inPols && polsbegin<=(eventData.offsetX/me.can.width)
+                                        && polsending >=(eventData.offsetX/me.can.width)){
+                                        inPols = true;
+                                    }
+                                }
+                                if(inPols)
+                                    tempPolslist.push(me.pols[j]);
+                            }
+                            if(tempPolslist.length==2){
+                                if(isPointInPoly(tempPolslist[0],normalizedptClick) && isPointInPoly(tempPolslist[1],normalizedptClick)){
+                                    if(me.baselineType == "Stratum"){
+                                        if(tempPolslist[0].level > tempPolslist[1].level)
+                                            linelvl = tempPolslist[0].level;
+                                        else
+                                            linelvl = tempPolslist[1].level;
+                                    }
+                                    else if(me.baselineType == "Horizon"){
+                                        if(tempPolslist[0].level>0 && tempPolslist[1].level >0){
+                                            if(tempPolslist[0].level > tempPolslist[1].level)
+                                                linelvl = tempPolslist[0].level;
+                                            else
+                                                linelvl = tempPolslist[1].level;
+                                        }
+                                        else{
+                                            if(tempPolslist[0].level < tempPolslist[1].level)
+                                                linelvl = tempPolslist[0].level;
+                                            else
+                                                linelvl = tempPolslist[1].level;
+                                        }
+                                    }
+                                }
+                                else if(isPointInPoly(tempPolslist[0],normalizedptClick))
+                                    linelvl = tempPolslist[0].level;
+                                else
+                                    linelvl = tempPolslist[1].level;
+                            }
+                            else{
+                                if(isPointInPoly(tempPolslist[0],normalizedptClick))
+                                    linelvl = tempPolslist[0].level;
+                                else{
+                                    console.log('WARNING : mouse cursor is outside polygons')
+                                    eventData.stopImmediatePropagation();
+                                    return false;
+                                }
+                            }
+                            if(me.baselineType == "Stratum"){
+                                tempBasecut = me.mins + (linelvl-1+ptclick.y/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+                            }
+                            else if(me.baselineType == "Horizon"){
+                                if(linelvl > 0)
+                                    tempBasecut = me.basecut + (linelvl-1+ptclick.y/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+                                else
+                                    tempBasecut = me.basecut + ((linelvl+1)-ptclick.y/me.initHeight)*((me.maxs-me.mins)/me.ZOOM)
+                            }
+                            if(tempBasecut >= me.maxs)
+                                tempBasecut = me.maxs;
+                            else if(tempBasecut <= me.mins)
+                                tempBasecut = me.mins;
+                        }
+                        me.basecut = tempBasecut;
+                        me.init();
+                        if(me.statu == "unfold")
+                            me.polsfill = me.allPolygons(false);
+                        me.draw();
+
+                    eventData.preventDefault();
+                    eventData.stopPropagation();
+                    return false;
+                    }
+                }
+            });
+
+            this.namehtml.on("mousedown", function(eventData){
             	eventData.preventDefault();
                 $(this).addClass("originGraph");
 
             	dragGraph = eventData.target;
             	dragStart = {x:eventData.pageX, y:eventData.pageY}
+                windowInteractionStatus = "movingGraph";
             	//console.log(eventData.);
             	return false;
+            });
+
+            this.can.addEventListener("mouseup", function(eventData){
+                if(me.can.classList.contains("movingBaseline2")){
+
+                    $(".movingBaseline2").each(function(index){
+                        $(this).removeClass("movingBaseline2")
+                    });
+
+                    eventData.preventDefault();
+                    eventData.stopPropagation();
+                    return false;
+                }
             });
 
 			window.addEventListener("mousemove", function(eventData){
@@ -1082,21 +1210,57 @@ $(function(){
 				$(".destinationGraph").each(function( index ) {
 					$(this).removeClass("destinationGraph")
 				});
-
-            	if (dragGraph!=null && dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y)>20){
-            	  //console.log("+MM "+eventData.pageX+","+eventData.pageY+" => "+dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y));
-	  
-            	  $(".IG").each(function( index ) {
-					 let offset = $(this).offset()
-					 //console.log(offset.top+"<"+eventData.pageY+"<"+(offset.top+$(this).height()))
-            	  	 if(eventData.pageY>offset.top && eventData.pageY<offset.top+$(this).height())
-                       $(this).addClass("destinationGraph");
-            	  });
-            	}
-            	//return false;
+                if(windowInteractionStatus == "movingGraph"){
+                	if (dragGraph!=null && dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y)>20){
+                	  //console.log("+MM "+eventData.pageX+","+eventData.pageY+" => "+dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y));
+    	  
+                	  $(".title").each(function( index ) {
+    					 let offset = $(this).offset()
+    					 //console.log(offset.top+"<"+eventData.pageY+"<"+(offset.top+$(this).height()))
+                	  	 if(eventData.pageY>offset.top && eventData.pageY<offset.top+$(this).height())
+                           $(this).addClass("destinationGraph");
+                	  });
+                	}
+            	   //return false;
+                }
+                if(windowInteractionStatus == "baselineGraph"){
+                    if (dragGraph!=null && initialBaseline!= null){
+                        if(me.can.classList.contains("movingBaseline1")){
+                            let tempBaseline = initialBaseline+(-1)*((eventData.pageY-dragStart.y)*((me.maxs-me.mins)/me.ZOOM/me.initHeight));
+                            if(tempBaseline >= me.maxs)
+                                me.basecut = me.maxs;
+                            else if(tempBaseline <= me.mins)
+                                me.basecut = me.mins;
+                            else
+                                me.basecut = tempBaseline;
+                            me.init();
+                            if(me.statu=="unfold")
+                                me.polsfill = me.allPolygons(false);
+                            me.draw();
+                        }
+                    }
+                }
             });
 
-            this.can.addEventListener("mouseup", function(eventData){
+            window.addEventListener("mouseup", function(eventData){
+                if(windowInteractionStatus == "baselineGraph"){
+
+                    $(".movingBaseline1").each(function(index){
+                        $(this).removeClass("movingBaseline1")
+                    }); 
+
+                    dragGraph = null;
+                    dragStart = null;
+                    initialBaseline = null;
+                    windowInteractionStatus = null
+
+                    eventData.preventDefault();
+                    eventData.stopPropagation();
+                    return true;
+                }
+            });
+
+            this.namehtml.on("mouseup", function(eventData){
 
 
             	if (dragGraph!=null && dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y)>10){
@@ -1119,6 +1283,7 @@ $(function(){
 					});
 	            	dragGraph = null;
 	            	dragStart = null;
+                    windowInteractionStatus = null
 	            	
             	    eventData.preventDefault();
             	    eventData.stopPropagation();
@@ -1314,7 +1479,7 @@ $(function(){
 			$("#myTable").find('tbody')
 			    .append($('<tr>')
 			    	.append($('<td>')
-			            .append($("<span id='title"+$("#myTable tr").length+"'class='title'>"+this.name+"_"+$("#myTable tr").length+"</span>"))
+			            .append(this.namehtml)
 			        ).append($('<td style="position:relative">')
 			            .append(this.statusButton)
 			        ).append($('<td>')
@@ -1420,7 +1585,7 @@ $(function(){
 		Last column must be the data
 		"parsing" session can be change for 
 	*/
-	function graphFromCSV(filePath, ZOOM, BaseLineType, initHeight){
+	function graphFromCSV(filePath, ZOOM, BaseLineType, initHeight, drawingMethod, baselineMethod){
 		let parseResult = new Object({
 		name : 'pouet',
 		timeBegin : 0,
@@ -1503,7 +1668,7 @@ $(function(){
 	    console.log("done");
 	    let finalResult = new Graph((parseResult.valueMax+parseResult.valueMin)/2, ZOOM, 1,
 								 parseResult.value, parseResult.time, BaseLineType, 0, parseResult.time.length-1,
-								 initHeight, 2, parseResult.name);
+								 initHeight, drawingMethod, baselineMethod, parseResult.name);
 		finalResult.init();
 		finalResult.initListener();
 		finalResult.draw(true);
@@ -1525,8 +1690,8 @@ $(function(){
 	let BASELINE = 28.76;
 
 
-	var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 1, "first");
-	var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 1, "scnd");
+	var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 1,true, "first");
+	var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 1,true, "scnd");
 	test1.init();
 	test2.init();
 	test1.initListener();
@@ -1534,8 +1699,8 @@ $(function(){
 	test1.draw(true);
 	test2.draw(true);
 
-	var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 2, "third");
-	var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 2, "fourth");
+	var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 2,false, "third");
+	var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 2,false, "fourth");
 	test3.init();
 	test4.init();
 	test3.initListener();
@@ -1543,13 +1708,13 @@ $(function(){
 	test3.draw(true);
 	test4.draw(true);
 
-	var parseTest1Hor = graphFromCSV("data/AAPL.csv", ZOOM, "Horizon", initHeight);
-	var parseTest1Str = graphFromCSV("data/AAPL.csv", ZOOM, "Stratum", initHeight);
-	var parseTest2Hor = graphFromCSV("data/AMZN.csv", ZOOM, "Horizon", initHeight);
-	var parseTest2Str = graphFromCSV("data/AMZN.csv", ZOOM, "Stratum", initHeight);
-	var parseTest3Hor = graphFromCSV("data/GOOGL.csv", ZOOM, "Horizon", initHeight);
-	var parseTest3Str = graphFromCSV("data/GOOGL.csv", ZOOM, "Stratum", initHeight);
-	var parseTest4Hor = graphFromCSV("data/MSFT.csv", ZOOM, "Horizon", initHeight);
-	var parseTest4Str = graphFromCSV("data/MSFT.csv", ZOOM, "Stratum", initHeight);
+	var parseTest1Hor = graphFromCSV("data/AAPL.csv", ZOOM, "Horizon", initHeight, 1,true);
+	var parseTest1Str = graphFromCSV("data/AAPL.csv", ZOOM, "Stratum", initHeight, 1,true);
+	var parseTest2Hor = graphFromCSV("data/AMZN.csv", ZOOM, "Horizon", initHeight, 1,true);
+	var parseTest2Str = graphFromCSV("data/AMZN.csv", ZOOM, "Stratum", initHeight, 1,true);
+	var parseTest3Hor = graphFromCSV("data/GOOGL.csv", ZOOM, "Horizon", initHeight, 2,false);
+	var parseTest3Str = graphFromCSV("data/GOOGL.csv", ZOOM, "Stratum", initHeight, 2,false);
+	var parseTest4Hor = graphFromCSV("data/MSFT.csv", ZOOM, "Horizon", initHeight, 2,false);
+	var parseTest4Str = graphFromCSV("data/MSFT.csv", ZOOM, "Stratum", initHeight, 2,false);
     console.log(tableGraph);
 });
