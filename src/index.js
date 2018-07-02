@@ -85,7 +85,7 @@ $(function(){
 	        //       Graph Classes (via a constructor)      //
 	        //////////////////////////////////////////////////
 
-	function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end, initHeight, drawingMethod, baselineMethod, name){
+	function Graph(basecut, ZOOM, add, tabledata, timepos, baselineType, start, end, initHeight, name){
 	  //attributes
 	  this.name = name;
 	  this.basecut = basecut;
@@ -110,8 +110,8 @@ $(function(){
 	  this.maxlvl = 1;
 	  this.minlvl = 1;
 	  this.statu = "opti";
-	  this.drawingMethod = drawingMethod
-      this.baselineMethod = baselineMethod
+	  this.drawingMethod = true
+      this.baselineMethod = true
 
       this.namehtml = $("<span id='title"+$("#myTable tr").length+"'class='title'>"+this.name+"_"+$("#myTable tr").length+"</span>")
 
@@ -145,6 +145,10 @@ $(function(){
 	  	this.sliderInitHeight.step = 1;*/
 
 	  this.statusButton = $("<button class='superbutton' type='button'>fold / unfold</button>");
+
+      this.animMethodButton = $("<input type = 'checkbox' name = 'animMethodButton' checked>")
+
+      this.baselineMethodButton = $("<input type = 'checkbox' name = 'baselineMethodButton' checked>")
 
 	  this.getmins = function(){
 	    let mint = 0;
@@ -904,7 +908,7 @@ $(function(){
 	  }
 
 	  this.draw = function(){
-	  	if(this.drawingMethod == 1)
+	  	if(this.drawingMethod == true)
 	  		this.draw1();
 	  	else
 	  		this.draw2();
@@ -1475,6 +1479,20 @@ $(function(){
 		      	}
 		     });
 
+            this.animMethodButton.on('input', function(){
+                if(this.checked)
+                    me.drawingMethod = true;
+                else
+                    me.drawingMethod = false;
+            })
+
+            this.baselineMethodButton.on('input', function(){
+                if(this.checked)
+                    me.baselineMethod = true;
+                else
+                    me.baselineMethod = false;
+            })
+
 			//adding different elements to the HTML
 			$("#myTable").find('tbody')
 			    .append($('<tr>')
@@ -1490,7 +1508,11 @@ $(function(){
 			        	.append(this.sliderZOOM)
 			        ).append($('<td>')
 			        	.append(this.sliderInitHeight)
-			        )
+			        ).append($('<td>')
+                        .append(this.animMethodButton)
+                    ).append($('<td>')
+                        .append(this.baselineMethodButton)
+                    )
 
 			    );
 
@@ -1585,7 +1607,7 @@ $(function(){
 		Last column must be the data
 		"parsing" session can be change for 
 	*/
-	function graphFromCSV(filePath, ZOOM, BaseLineType, initHeight, drawingMethod, baselineMethod){
+	function graphFromCSV(filePath, ZOOM, BaseLineType, initHeight){
 		let parseResult = new Object({
 		name : 'pouet',
 		timeBegin : 0,
@@ -1668,7 +1690,7 @@ $(function(){
 	    console.log("done");
 	    let finalResult = new Graph((parseResult.valueMax+parseResult.valueMin)/2, ZOOM, 1,
 								 parseResult.value, parseResult.time, BaseLineType, 0, parseResult.time.length-1,
-								 initHeight, drawingMethod, baselineMethod, parseResult.name);
+								 initHeight, parseResult.name);
 		finalResult.init();
 		finalResult.initListener();
 		finalResult.draw(true);
@@ -1690,8 +1712,8 @@ $(function(){
 	let BASELINE = 28.76;
 
 
-	var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 1,true, "first");
-	var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 1,true, "scnd");
+	var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, "first");
+	var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, "scnd");
 	test1.init();
 	test2.init();
 	test1.initListener();
@@ -1699,8 +1721,8 @@ $(function(){
 	test1.draw(true);
 	test2.draw(true);
 
-	var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, 2,false, "third");
-	var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, 2,false, "fourth");
+	var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, "third");
+	var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, "fourth");
 	test3.init();
 	test4.init();
 	test3.initListener();
@@ -1708,13 +1730,13 @@ $(function(){
 	test3.draw(true);
 	test4.draw(true);
 
-	var parseTest1Hor = graphFromCSV("data/AAPL.csv", ZOOM, "Horizon", initHeight, 1,true);
-	var parseTest1Str = graphFromCSV("data/AAPL.csv", ZOOM, "Stratum", initHeight, 1,true);
-	var parseTest2Hor = graphFromCSV("data/AMZN.csv", ZOOM, "Horizon", initHeight, 1,true);
-	var parseTest2Str = graphFromCSV("data/AMZN.csv", ZOOM, "Stratum", initHeight, 1,true);
-	var parseTest3Hor = graphFromCSV("data/GOOGL.csv", ZOOM, "Horizon", initHeight, 2,false);
-	var parseTest3Str = graphFromCSV("data/GOOGL.csv", ZOOM, "Stratum", initHeight, 2,false);
-	var parseTest4Hor = graphFromCSV("data/MSFT.csv", ZOOM, "Horizon", initHeight, 2,false);
-	var parseTest4Str = graphFromCSV("data/MSFT.csv", ZOOM, "Stratum", initHeight, 2,false);
+	var parseTest1Hor = graphFromCSV("data/AAPL.csv", ZOOM, "Horizon", initHeight);
+	var parseTest1Str = graphFromCSV("data/AAPL.csv", ZOOM, "Stratum", initHeight);
+	var parseTest2Hor = graphFromCSV("data/AMZN.csv", ZOOM, "Horizon", initHeight);
+	var parseTest2Str = graphFromCSV("data/AMZN.csv", ZOOM, "Stratum", initHeight);
+	var parseTest3Hor = graphFromCSV("data/GOOGL.csv", ZOOM, "Horizon", initHeight);
+	var parseTest3Str = graphFromCSV("data/GOOGL.csv", ZOOM, "Stratum", initHeight);
+	var parseTest4Hor = graphFromCSV("data/MSFT.csv", ZOOM, "Horizon", initHeight);
+	var parseTest4Str = graphFromCSV("data/MSFT.csv", ZOOM, "Stratum", initHeight);
     console.log(tableGraph);
 });
