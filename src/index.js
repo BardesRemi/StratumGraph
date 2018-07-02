@@ -111,7 +111,17 @@ $(function(){
 	  this.minlvl = 1;
 	  this.statu = "opti";
 	  this.drawingMethod = true
-      this.baselineMethod = true
+      this.baselineMethod
+      let tempStrg
+      if(this.baselineType == "Stratum"){
+        this.baselineMethod = true;
+        tempStrg = "<input type = 'checkbox' name = 'baselineMethodButton' checked>"
+      }
+      if(this.baselineType == "Horizon"){
+        this.baselineMethod = false;
+        tempStrg = "<input type = 'checkbox' name = 'baselineMethodButton'>"
+      }
+      this.shadow = true
 
       this.namehtml = $("<span id='title"+$("#myTable tr").length+"'class='title'>"+this.name+"_"+$("#myTable tr").length+"</span>")
 
@@ -148,7 +158,9 @@ $(function(){
 
       this.animMethodButton = $("<input type = 'checkbox' name = 'animMethodButton' checked>")
 
-      this.baselineMethodButton = $("<input type = 'checkbox' name = 'baselineMethodButton' checked>")
+      this.baselineMethodButton = $(tempStrg)
+
+      this.shadowButton = $("<input type = 'checkbox' name = 'shadowButton' checked>")
 
 	  this.getmins = function(){
 	    let mint = 0;
@@ -728,23 +740,24 @@ $(function(){
 	        ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
 	      ctx.closePath();
 	      }
-	        
-	      if(this.statu == "opti" || this.statu == "anim-opti"){
-	    	ctx.shadowColor = graphToDraw[j].shadow;
-	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
-	        ctx.shadowOffsetX = 0;
-	        ctx.shadowOffsetY = 0;
-	      }
-	      else{
-	        ctx.shadowColor = graphToDraw[j].shadow;
-	        let blurEvol = Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight)));
-	        if(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))) > 0.98){
-	          blurEvol = 1.0;
-	        }
-	        ctx.shadowBlur = 1-blurEvol;
-	        ctx.shadowOffsetX = 0;
-	        ctx.shadowOffsetY = 0;
-	      }
+	      if(this.shadow){
+    	      if(this.statu == "opti" || this.statu == "anim-opti"){
+    	    	ctx.shadowColor = graphToDraw[j].shadow;
+    	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
+    	        ctx.shadowOffsetX = 0;
+    	        ctx.shadowOffsetY = 0;
+    	      }
+    	      else{
+    	        ctx.shadowColor = graphToDraw[j].shadow;
+    	        let blurEvol = Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight)));
+    	        if(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))) > 0.98){
+    	          blurEvol = 1.0;
+    	        }
+    	        ctx.shadowBlur = 1-blurEvol;
+    	        ctx.shadowOffsetX = 0;
+    	        ctx.shadowOffsetY = 0;
+    	      }
+          }
 
 	      ctx.fill();
 	      ctx.restore();
@@ -873,23 +886,24 @@ $(function(){
 			    	ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
 			    ctx.closePath();
 		    }
-	        
-	      if(this.statu == "opti" || this.statu == "anim-opti"){
-	    	ctx.shadowColor = graphToDraw[j].shadow;
-	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
-	        ctx.shadowOffsetX = 0;
-	        ctx.shadowOffsetY = 0;
-	      }
-	      else{
-	        ctx.shadowColor = graphToDraw[j].shadow;
-	        let blurEvol = Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight)));
-	        if(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))) > 0.98){
-	          blurEvol = 1.0;
-	        }
-	        ctx.shadowBlur = 1-blurEvol;
-	        ctx.shadowOffsetX = 0;
-	        ctx.shadowOffsetY = 0;
-	      }
+	      if(this.shadow){
+    	      if(this.statu == "opti" || this.statu == "anim-opti"){
+    	    	ctx.shadowColor = graphToDraw[j].shadow;
+    	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
+    	        ctx.shadowOffsetX = 0;
+    	        ctx.shadowOffsetY = 0;
+    	      }
+    	      else{
+    	        ctx.shadowColor = graphToDraw[j].shadow;
+    	        let blurEvol = Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight)));
+    	        if(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))) > 0.98){
+    	          blurEvol = 1.0;
+    	        }
+    	        ctx.shadowBlur = 1-blurEvol;
+    	        ctx.shadowOffsetX = 0;
+    	        ctx.shadowOffsetY = 0;
+    	      }
+          }
 
 	      ctx.fill();
 	      ctx.restore();
@@ -1075,7 +1089,7 @@ $(function(){
 
             this.can.addEventListener("mousedown", function(eventData){
                 eventData.preventDefault();
-                if(me.baselineMethod){
+                if(!me.baselineMethod){
                     console.log("bonjour");
                     $(this).addClass("movingBaseline1");
                     dragGraph = eventData.target;
@@ -1083,7 +1097,7 @@ $(function(){
                     initialBaseline = me.basecut;
                     windowInteractionStatus = "baselineGraph"
                 }
-                else if(!me.baselineMethod){
+                else if(me.baselineMethod){
                     $(this).addClass("movingBaseline2");
                 }
                 return false;
@@ -1493,6 +1507,23 @@ $(function(){
                     me.baselineMethod = false;
             })
 
+            this.shadowButton.on('input', function(){
+                if(this.checked){
+                    me.shadow = true;
+                    me.init();
+                    if(me.statu=="unfold")
+                        me.polsfill = me.allPolygons(false);
+                    me.draw();
+                }
+                else{
+                    me.shadow = false;
+                    me.init();
+                    if(me.statu=="unfold")
+                        me.polsfill = me.allPolygons(false);
+                    me.draw();
+                }
+            })
+
 			//adding different elements to the HTML
 			$("#myTable").find('tbody')
 			    .append($('<tr>')
@@ -1512,6 +1543,8 @@ $(function(){
                         .append(this.animMethodButton)
                     ).append($('<td>')
                         .append(this.baselineMethodButton)
+                    ).append($('<td>')
+                        .append(this.shadowButton)
                     )
 
 			    );
