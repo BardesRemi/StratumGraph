@@ -121,6 +121,7 @@ $(function(){
         this.baselineMethod = false;
         tempStrg = "<input type = 'checkbox' name = 'baselineMethodButton'>"
       }
+      
       this.shadow = true
 
       this.namehtml = $("<span id='title"+$("#myTable tr").length+"'class='title'>"+this.name+"_"+$("#myTable tr").length+"</span>")
@@ -615,9 +616,9 @@ $(function(){
 	          var imgData = c.getContext("2d").getImageData(0, 0, 1, this.initHeight);
 	          if(copy[g].level > 0 && this.scaleYpos >= 1){
 	            for(let k=0; k<this.initHeight; k++){
-	              imgData.data[4*k+0]=Math.floor(lingreyScale[255-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][0]/1.5);
-	              imgData.data[4*k+1]=Math.floor(lingreyScale[255-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][1]/1.5);
-	              imgData.data[4*k+2]=bScale[255-(copy[g].level*(Math.floor(120/(this.scaleYpos*2))))][2];
+	              imgData.data[4*k+0]=Math.floor(lingreyScale[255-(copy[g].level*(Math.floor(180/(this.scaleYpos*2))))][0]/1.5);
+	              imgData.data[4*k+1]=Math.floor(lingreyScale[255-(copy[g].level*(Math.floor(180/(this.scaleYpos*2))))][1]/1.5);
+	              imgData.data[4*k+2]=bScale[255-(copy[g].level*(Math.floor(80/(this.scaleYpos*2))))][2];
 	              imgData.data[4*k+3]=255;
 	            }
 	          }
@@ -625,7 +626,7 @@ $(function(){
 	          	for(let k=0; k<this.initHeight; k++){
 	              imgData.data[4*k+0]=Math.floor(lingreyScale[150][0]/1.5);
 	              imgData.data[4*k+1]=Math.floor(lingreyScale[150][1]/1.5);
-	              imgData.data[4*k+2]=bScale[150][2];
+	              imgData.data[4*k+2]=bScale[220][2];
 	              imgData.data[4*k+3]=255;
 	            }
 	          }
@@ -633,14 +634,14 @@ $(function(){
 	          	if(this.scaleYneg >= 1){
 		            for(let k=0; k<this.initHeight; k++){
 		              imgData.data[4*k+0]=rScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][0];
-		              imgData.data[4*k+1]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][1]/1.5);
-		              imgData.data[4*k+2]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(120/(this.scaleYneg*2))))][2]/1.5);
+		              imgData.data[4*k+1]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(240/(this.scaleYneg*2))))][1]/1.5);
+		              imgData.data[4*k+2]=Math.floor(lingreyScale[255+(copy[g].level*(Math.floor(240/(this.scaleYneg*2))))][2]/1.5);
 		              imgData.data[4*k+3]=255;
 		            }
 	        	}
 	        	else{
 	        		for(let k=0; k<this.initHeight; k++){
-		              imgData.data[4*k+0]=rScale[150][0];
+		              imgData.data[4*k+0]=rScale[220][0];
 		              imgData.data[4*k+1]=Math.floor(lingreyScale[150][1]/1.5);
 		              imgData.data[4*k+2]=Math.floor(lingreyScale[150][2]/1.5);
 		              imgData.data[4*k+3]=255;
@@ -764,12 +765,12 @@ $(function(){
 	    }
 	    if(this.baselineType=="Stratum" && this.statu=="unfold"){
 	    	ctx.save();
-	    	ctx.closePath();
-	    	let basecutHeight = ((this.maxs-this.basecut)/((this.maxs-this.mins)/this.ZOOM))*this.initHeight;
-	      	ctx.moveTo(0,basecutHeight)
-	      	ctx.lineTo(this.can.width, basecutHeight )
-	      	ctx.stroke();
-	      	ctx.restore();
+            ctx.beginPath();
+            let basecutHeight = ((this.maxs-this.basecut)/((this.maxs-this.mins)/this.ZOOM))*this.initHeight;
+            ctx.moveTo(0,basecutHeight)
+            ctx.lineTo(this.can.width, basecutHeight )
+            ctx.stroke();
+            ctx.restore();
 	    }
 	    //console.timeEnd('someFunction');
 	  }
