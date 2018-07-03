@@ -124,6 +124,7 @@ $(function(){
       if(this.baselineType == "Horizon"){
         this.baselineMethod = false;
         tempStrg = "<input type = 'checkbox' name = 'baselineMethodButton'>"
+        this.alternatDraw = true;
       }
       
       this.shadow = true
@@ -926,9 +927,160 @@ $(function(){
 
 	  }
 
+      //Draw the graph in his canvas (new animation)
+      this.draw3 = function(){
+        //console.time('someFunction');
+        if (this.can.height!=this.initHeight+this.addHeight && this.statu != "unfold")
+            this.can.height = this.initHeight+this.addHeight ;
+        else if(this.statu == "unfold"){
+            this.addHeight = Math.ceil(this.initHeight*this.ZOOM - this.initHeight);
+            this.can.height = this.initHeight+this.addHeight ;
+        }
+
+        let ctx = this.can.getContext("2d");
+        ctx.fillStyle="#F0FF0F";  
+        ctx.clearRect(0,0,this.can.width, this.can.height);
+        let up = (this.maxs-this.baselvl)
+
+        let propup = this.ZOOM*(up/(this.maxs-this.mins));
+        let propupCeil = Math.ceil(propup);
+        if(propup == propupCeil)
+          propupCeil += 1.0;
+        let graphToDraw;
+        if(this.statu == "opti" || this.statu == "anim-opti")
+          graphToDraw = this.pols;
+        else
+          graphToDraw = this.polsfill;
+        let scaleShiftpos = this.initHeight*(1-this.scaleYpos%1.0);
+        let scaleShiftneg = Math.round(this.initHeight*(1-this.scaleYneg%1.0)-Math.ceil(1-this.scaleYneg%1.0));
+        let forkPosCoord = Math.round(this.initHeight*(this.maxlvl-1)-scaleShiftpos);
+        for (let j in graphToDraw){
+            ctx.save();
+            if (graphToDraw[j].level>0){
+                let scaleShiftpostemp = scaleShiftpos;
+                if(scaleShiftpostemp==this.initHeight)
+                    scaleShiftpostemp = 0;
+                ctx.fillStyle=graphToDraw[j].texture;
+                let shift;
+                if(graphToDraw[j].level == this.maxlvl){
+                    if( this.addHeight >= scaleShiftpostemp){
+                        shift = -Math.round(scaleShiftpostemp);
+                    }
+                    else
+                        shift = -this.addHeight;
+                }
+                else{
+                    if(this.addHeight >= this.initHeight*(this.maxlvl-graphToDraw[j].level)-Math.round(scaleShiftpostemp))
+                        shift = this.initHeight*(this.maxlvl-graphToDraw[j].level)-Math.round(scaleShiftpostemp);
+                    else
+                        shift = this.addHeight;
+                }
+                ctx.translate(0, 0-this.initHeight+graphToDraw[j].pty[0]*this.initHeight+shift
+                           );
+                ctx.beginPath();
+                  
+                ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
+               
+                for (let i=1; i<graphToDraw[j].ptx.length; i++)
+                  ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
+                ctx.closePath();
+            }
+            else {
+                ctx.fillStyle=graphToDraw[j].texture;
+                let shiftBeforeRot;
+                let shiftAfterRot;
+                let tranAfterRota;
+                let rota;
+                if(this.addHeight > forkPosCoord && this.addHeight>0){
+                    shiftBeforeRot = forkPosCoord;
+                    rota = true;
+                    if(this.addHeight >= forkPosCoord+this.initHeight && graphToDraw[j].level < -1){
+                        tranAfterRota = true;
+                        if(graphToDraw[j].level == (this.minlvl)){
+                            if((this.addHeight-forkPosCoord-this.initHeight) <= this.initHeight){
+                                shiftAfterRot = -(this.addHeight-forkPosCoord-this.initHeight + (scaleShiftneg*((this.addHeight-forkPosCoord-this.initHeight)/this.initHeight)));
+                            }
+                            else
+                                shiftAfterRot = -(this.addHeight-forkPosCoord-this.initHeight + scaleShiftneg);
+                        }
+                        else if(this.addHeight <= forkPosCoord+((-1)*graphToDraw[j].level*this.initHeight)){
+                            shiftAfterRot = -(this.addHeight-forkPosCoord-this.initHeight);
+                        }
+                        else{
+                            shiftAfterRot = this.initHeight*(graphToDraw[j].level+1);
+                        }
+                    }
+                }
+                else{
+                    shiftBeforeRot = this.addHeight;
+                    rota = false;
+                    tranAfterRota = false;
+                }
+                let shiftDuringRot;
+                if(this.addHeight-(forkPosCoord) <= this.initHeight && this.addHeight-(forkPosCoord) > 0){
+                    shiftDuringRot = (this.addHeight-(forkPosCoord));
+                    console.log(shiftDuringRot);
+                }
+                else
+                    shiftDuringRot = this.initHeight;
+                ctx.translate(0, 0-this.initHeight+graphToDraw[j].pty[0]*this.initHeight+shiftBeforeRot
+                             );
+                if(rota)
+                    ctx.translate(0, shiftDuringRot)
+                ctx.scale(1.0,-1.0);
+                ctx.translate(0, -this.initHeight);
+                if(tranAfterRota)
+                    ctx.translate(0, shiftAfterRot);
+                ctx.beginPath();
+                    
+                ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
+                 
+                for (let i=1; i<graphToDraw[j].ptx.length; i++)
+                    ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
+                ctx.closePath();
+            }
+          if(this.shadow){
+              if(this.statu == "opti" || this.statu == "anim-opti"){
+                ctx.shadowColor = graphToDraw[j].shadow;
+                ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+              }
+              else{
+                ctx.shadowColor = graphToDraw[j].shadow;
+                let blurEvol = Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight)));
+                if(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))) > 0.98){
+                  blurEvol = 1.0;
+                }
+                ctx.shadowBlur = 1-blurEvol;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+              }
+          }
+
+          ctx.fill();
+          ctx.restore();
+        }
+        if(this.baselineType=="Stratum" && this.statu=="unfold"){
+            ctx.save();
+            ctx.beginPath();
+            let basecutHeight = ((this.maxs-this.basecut)/((this.maxs-this.mins)/this.ZOOM))*this.initHeight;
+            ctx.moveTo(0,basecutHeight)
+            ctx.lineTo(this.can.width, basecutHeight )
+            ctx.stroke();
+            ctx.restore();
+        }
+        //console.timeEnd('someFunction');
+
+      }
+
 	  this.draw = function(){
-	  	if(this.drawingMethod == true)
-	  		this.draw1();
+	  	if(this.drawingMethod == true){
+            if(this.baselineType=="Horizon" && this.alternatDraw)
+                this.draw3();
+            else
+	  		    this.draw1();
+        }
 	  	else
 	  		this.draw2();
 	  }
@@ -1095,7 +1247,6 @@ $(function(){
             this.can.addEventListener("mousedown", function(eventData){
                 eventData.preventDefault();
                 if(!me.baselineMethod){
-                    console.log("bonjour");
                     $(this).addClass("movingBaseline1");
                     dragGraph = eventData.target;
                     dragStart = {x:eventData.pageX, y:eventData.pageY}
@@ -1503,6 +1654,10 @@ $(function(){
                     me.drawingMethod = true;
                 else
                     me.drawingMethod = false;
+                me.init();
+                if(me.statu=="unfold")
+                    me.polsfill = me.allPolygons(false);
+                me.draw();
             })
 
             this.baselineMethodButton.on('input', function(){
@@ -1510,6 +1665,10 @@ $(function(){
                     me.baselineMethod = true;
                 else
                     me.baselineMethod = false;
+                me.init();
+                if(me.statu=="unfold")
+                    me.polsfill = me.allPolygons(false);
+                me.draw();
             })
 
             this.shadowButton.on('input', function(){
@@ -1796,7 +1955,6 @@ $(function(){
             //////////////////////////////////////////////////
             //              Expe timer gesture              //
             //////////////////////////////////////////////////  
-    console.log($("#timerStartButton"))
     $("#timerStartButton").on('click', function(){
         if(timerStart==null){
             timerStart = new Date();
@@ -1811,6 +1969,7 @@ $(function(){
     $("#timerEndButton").on('click', function(){
         if(timerStart!=null){
             timerLength = new Date() - timerStart;
+            console.log(tableGraph);
             timerStart = null;
         }
         else{
