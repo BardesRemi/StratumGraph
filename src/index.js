@@ -1019,7 +1019,6 @@ $(function(){
                 let shiftDuringRot;
                 if(this.addHeight-(forkPosCoord) <= this.initHeight && this.addHeight-(forkPosCoord) > 0){
                     shiftDuringRot = (this.addHeight-(forkPosCoord));
-                    console.log(shiftDuringRot);
                 }
                 else
                     shiftDuringRot = this.initHeight;
@@ -1362,7 +1361,6 @@ $(function(){
             	dragGraph = eventData.target;
             	dragStart = {x:eventData.pageX, y:eventData.pageY}
                 windowInteractionStatus = "movingGraph";
-            	//console.log(eventData.);
             	return false;
             });
 
@@ -1379,6 +1377,46 @@ $(function(){
                 }
             });
 
+            this.statusButton.on('click', function(){
+                if(me.statu == "opti"){ 
+                    me.initHeight=me.can.height;
+                    me.timer = setInterval(function(){
+                        if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
+                            me.addHeight++;
+                        else
+                            me.addHeight= me.addHeight*1.03;
+                        me.statu="anim";
+                        if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
+                            clearInterval(me.timer);
+                            me.statu="unfold";
+                        }
+                        if(me.polsfill == null)
+                            me.polsfill = me.allPolygons(false);
+                        me.draw(false);
+                    }, 12);
+                }
+                if(me.statu == "unfold" || me.statu == "anim"){
+                    if (me.timer!=null)
+                        clearInterval(me.timer);
+                    me.timer = setInterval(function(){
+                        me.statu="anim";
+                        if(me.addHeight<=0){
+                            clearInterval(me.timer);
+                            me.timer = null;
+                            me.statu="opti";
+                        }
+                        else{
+                            if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
+                                me.addHeight--;
+                            else
+                                me.addHeight= me.addHeight*0.97;
+                        }
+                        me.draw();
+                    }, 12);
+                }
+             });
+
+
 			window.addEventListener("mousemove", function(eventData){
             	//eventData.preventDefault();
 				$(".destinationGraph").each(function( index ) {
@@ -1386,11 +1424,9 @@ $(function(){
 				});
                 if(windowInteractionStatus == "movingGraph"){
                 	if (dragGraph!=null && dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y)>20){
-                	  //console.log("+MM "+eventData.pageX+","+eventData.pageY+" => "+dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y));
     	  
                 	  $(".title").each(function( index ) {
     					 let offset = $(this).offset()
-    					 //console.log(offset.top+"<"+eventData.pageY+"<"+(offset.top+$(this).height()))
                 	  	 if(eventData.pageY>offset.top && eventData.pageY<offset.top+$(this).height())
                            $(this).addClass("destinationGraph");
                 	  });
@@ -1610,7 +1646,7 @@ $(function(){
 			});
 
 			//button interactions
-			this.statusButton.on('click', function(){
+			/*this.statusButton.on('click', function(){
 		    	if(me.statu == "opti"){	
 				    me.initHeight=me.can.height;
 				    me.timer = setInterval(function(){
@@ -1647,7 +1683,7 @@ $(function(){
 				        me.draw();
 				    }, 12);
 		      	}
-		     });
+		     });*/
 
             this.animMethodButton.on('input', function(){
                 if(this.checked)
