@@ -50,10 +50,6 @@ th {
   min-height:100%;
 }
 
-td{
-	
-}
-
 /* The slider itself */
 .sliderBaseline {
     -webkit-appearance: none;  /* Override default CSS styles */
@@ -157,4 +153,9 @@ td{
     height: 15px; /* Slider handle height */
     background: #4CAF50; /* Green background */
     cursor: pointer; /* Cursor on hover */
+}
+
+.timerbutton {
+  height:40px;
+  width:75px;
 }

@@ -41,8 +41,11 @@ let $ = require("jquery");
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
 const maxZOOM = 15.0;
-const maxHeight = 75;
+const maxHeight = 100;
 const canvasWidth = 1700;
+
+let timerStart = null;
+let timerLength = null;
 
 let dragGraph = null;
 let dragStart = null; 
@@ -1788,4 +1791,32 @@ $(function(){
 	var parseTest4Hor = graphFromCSV("data/MSFT.csv", ZOOM, "Horizon", initHeight);
 	var parseTest4Str = graphFromCSV("data/MSFT.csv", ZOOM, "Stratum", initHeight);
     console.log(tableGraph);
+
+
+            //////////////////////////////////////////////////
+            //              Expe timer gesture              //
+            //////////////////////////////////////////////////  
+    console.log($("#timerStartButton"))
+    $("#timerStartButton").on('click', function(){
+        if(timerStart==null){
+            timerStart = new Date();
+            timerLength = null;
+        }
+        else{
+            console.log("il faut finir le test avant d'en commencer un nouveau");
+        }
+        console.log(timerStart);
+    })
+
+    $("#timerEndButton").on('click', function(){
+        if(timerStart!=null){
+            timerLength = new Date() - timerStart;
+            timerStart = null;
+        }
+        else{
+            console.log("il faut commencer le test avant de vouloir le finir");
+        }
+        console.log(timerStart);
+        console.log(timerLength);
+    })
 });
