@@ -41,6 +41,7 @@ let $ = require("jquery");
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
 const maxZOOM = 15.0;
+const maxHeight = 75;
 const canvasWidth = 1700;
 
 let dragGraph = null;
@@ -148,7 +149,7 @@ $(function(){
 	  	this.sliderZOOM.value = this.ZOOM;
 	  	this.sliderZOOM.step = 3/20;*/
 
-	  this.sliderInitHeight = $("<input class='sliderInitHeight' type='range' min='10.0' max='50.0' step='1'>");
+	  this.sliderInitHeight = $("<input class='sliderInitHeight' type='range' min='10.0' max='"+maxHeight+"' step='1'>");
 	  	/*this.sliderInitHeight.class = 'slider';
 	  	this.sliderInitHeight.type = 'range';
 	  	this.sliderInitHeight.min  = 10.0;
@@ -1365,8 +1366,8 @@ $(function(){
 			    		let tempinitHeight = me.initHeight + eventData.deltaY/Math.abs(eventData.deltaY);
 			    		if(tempinitHeight <= 10.0)
 			    			me.initHeight = 10.0;
-			    		else if(tempinitHeight >= 50.0)
-			    			me.initHeight = 50.0;
+			    		else if(tempinitHeight >= maxHeight)
+			    			me.initHeight = maxHeight;
 			    		else
 			    			me.initHeight = tempinitHeight;
 			    		me.init();
@@ -1442,8 +1443,8 @@ $(function(){
 			    	let tempinitHeight = this.value;
 			    	if(tempinitHeight <= 10.0)
 			    		me.initHeight = 10.0;
-			    	else if(tempinitHeight >= 50.0)
-			    		me.initHeight = 50.0;
+			    	else if(tempinitHeight >= maxHeight)
+			    		me.initHeight = maxHeight;
 			    	else
 			    		me.initHeight = parseInt(tempinitHeight,10);
 			    	me.init();
@@ -1555,19 +1556,33 @@ $(function(){
              $(this.sliderBaseline).attr("id", "slider_"+id)
              
 
+             let originRange;
+             let originMaxs;
+             let originMins;
              this.sliderBaseline.on("mousedown", function(eventData){
                 $(this).addClass("selected");
+                originRange = me.maxs-me.mins;
+                originMaxs = me.maxs;
+                originMins = me.mins;
+
              });
              this.sliderBaseline.on("mousemove", function(eventData){
                 let originSlider = this;
+                let originBaseProp = ((originSlider.value-originMins)/originRange)
                 $(".sliderBaseline").each(function (){
                    let offset = $(this).offset();
                    let offsetOrigin = $(originSlider).offset();
                    if (offset.top>Math.min(eventData.pageY, offsetOrigin.top) && offset.top<Math.max(eventData.pageY, offsetOrigin.top)){
                        $(this).addClass("selected");
-                       $(this)[0].value = $(originSlider)[0].value;
                     }
                 })
+                for(let g in tableGraph){
+                    if(tableGraph[g].sliderBaseline[0].classList.contains("selected")){
+                        tableGraph[g].basecut = tableGraph[g].mins + ((tableGraph[g].maxs-tableGraph[g].mins)*originBaseProp);
+                        tableGraph[g].init();
+                        tableGraph[g].draw();
+                    }
+                }
              });
              this.sliderBaseline.on("mouseup", function(eventData){
                 $(".selected").each(function( index ) {
@@ -1589,7 +1604,7 @@ $(function(){
                 })
                 for(let g in tableGraph){
                     if(tableGraph[g].sliderZOOM[0].classList.contains("selected")){
-                        tableGraph[g].ZOOM = originSlider.value;
+                        tableGraph[g].ZOOM = parseFloat(originSlider.value);
                         tableGraph[g].init();
                         tableGraph[g].draw();
                     }
