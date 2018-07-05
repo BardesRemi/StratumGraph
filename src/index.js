@@ -41,7 +41,7 @@ let $ = require("jquery");
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
 let eventRecordTable = new Array();
-eventRecordTable.push(["Event type", "timer", "Value"]);
+eventRecordTable.push(["Event type", "Event kind", "Value", "timer"]);
 
 const maxZOOM = 15.0;
 const maxHeight = 100;
@@ -1215,10 +1215,10 @@ $(function(){
 	    this.polsfill = null;
 	  }
 
-      this.changeBaseline = function(newValue){
+      this.changeBaseline = function(newValue, eventKind){
         this.basecut = newValue;
         if(timerStart != null)
-            eventRecordTable.push([(this.name+" baseline"), (new Date()-timerStart), this.basecut])
+            eventRecordTable.push([(this.name+" baseline"), eventKind, this.basecut, (new Date()-timerStart)])
         console.log("baseline is changed")
         if(this.baselineType == "Stratum"){
             this.pols = this.setColor(this.pols)
@@ -1459,7 +1459,7 @@ $(function(){
                             else if(tempBasecut <= me.mins)
                                 tempBasecut = me.mins;
                         }
-                        me.changeBaseline(tempBasecut);
+                        me.changeBaseline(tempBasecut,"drag&drop inside graph");
 
                     eventData.preventDefault();
                     eventData.stopPropagation();
@@ -1555,7 +1555,7 @@ $(function(){
                                 tempBaseline = me.maxs;
                             else if(tempBaseline <= me.mins)
                                 tempBaseline = me.mins;
-                            me.changeBaseline(tempBaseline);
+                            me.changeBaseline(tempBaseline,"drag&drop scrolling");
                         }
                     }
                 }
@@ -1652,7 +1652,7 @@ $(function(){
 			    			tempBaseline = me.maxs;
 			    		else if(tempBaseline <= me.mins)
 			    			tempBaseline = me.mins;
-			    		me.changeBaseline(tempBaseline);
+			    		me.changeBaseline(tempBaseline,"wheel + altkey");
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
@@ -1709,7 +1709,7 @@ $(function(){
 				    	tempBaseline = me.mins;
 				    else
 				    	tempBaseline = parseFloat(tempBaseline,10);
-				    me.changeBaseline(tempBaseline);
+				    me.changeBaseline(tempBaseline, "slider");
 					//output.innerHTML = this.value;
 				}
 			});
@@ -1886,7 +1886,7 @@ $(function(){
                 for(let g in tableGraph){
                     if(tableGraph[g].sliderBaseline[0].classList.contains("selected")){
                         let tempBaseline = tableGraph[g].mins + ((tableGraph[g].maxs-tableGraph[g].mins)*originBaseProp);
-                        tableGraph[g].changeBaseline(tempBaseline);
+                        tableGraph[g].changeBaseline(tempBaseline, "all sliders");
                     }
                 }
              });
@@ -2177,17 +2177,17 @@ $(function(){
     var tabletest = graphsFromCSVTable("data/finance_data_used.csv", ZOOM, "Stratum", initHeight, [4,5,6,7,8]);
     console.log(tableGraph);
 
-
+ 
             //////////////////////////////////////////////////
             //              Expe timer gesture              //
             //////////////////////////////////////////////////  
     $("#timerStartButton").on('click', function(){
         if(timerStart==null){
             timerStart = new Date();
-            eventRecordTable.push(["Expe Begin", 0, "no value"]);
+            eventRecordTable.push(["Expe Begin","start pressed" ,0, "no value"]);
             timerLength = null;
         }
-        else{
+        else{ 
             console.log("il faut finir le test avant d'en commencer un nouveau");
         }
         console.log(timerStart);
@@ -2196,15 +2196,31 @@ $(function(){
     $("#timerEndButton").on('click', function(){
         if(timerStart!=null){
             timerLength = new Date() - timerStart;
-            eventRecordTable.push(["Expe End", timerLength, "no value"]);
+            eventRecordTable.push(["Expe End","end pressed" , timerLength, "no value"]);
             timerStart = null;
             console.log(eventRecordTable);
         }
         else{
             console.log("il faut commencer le test avant de vouloir le finir");
         }
-        console.log(timerStart);
-        console.log(timerLength);
+
+        let ws = new WebSocket ('ws://129.175.157.111:9000');
+        ws.onopen = function(){
+            ws.send('coucou');
+        }
+        ws.onmessage = function(msg){
+            if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
+              id = msg.data.slice(8);
+              ws.send(JSON.stringify(eventRecordTable)+id);
+            } else if (typeof msg.data == "string"){
+              console.log('LE SERVER ME DIT : '+msg.data);
+            
+            }
+        }
+        eventRecordTable = new Array();
+        eventRecordTable.push(["Event type", "Event kind", "Value", "timer"]);
     })
 });
+
+let id = -1;
 
