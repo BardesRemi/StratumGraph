@@ -40,6 +40,9 @@ let $ = require("jquery");
 	        //////////////////////////////////////////////////
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
+let eventRecordTable = new Array();
+eventRecordTable.push(["Event type", "timer", "Value"]);
+
 const maxZOOM = 15.0;
 const maxHeight = 100;
 const canvasWidth = 1700;
@@ -120,6 +123,7 @@ $(function(){
       if(this.baselineType == "Stratum"){
         this.baselineMethod = true;
         tempStrg = "<input type = 'checkbox' name = 'baselineMethodButton' checked>"
+        this.alternatDraw = true;
       }
       if(this.baselineType == "Horizon"){
         this.baselineMethod = false;
@@ -167,6 +171,8 @@ $(function(){
       this.baselineMethodButton = $(tempStrg)
 
       this.shadowButton = $("<input type = 'checkbox' name = 'shadowButton' checked>")
+
+      this.alternateButton = $("<input type = 'checkbox' name = 'alternateButton' checked>")
 
 	  this.getmins = function(){
 	    let mint = 0;
@@ -927,8 +933,97 @@ $(function(){
 
 	  }
 
-      //Draw the graph in his canvas (new animation)
-      this.draw3 = function(){
+        //Draw the graph in his canvas, only for horizon graphs
+        this.draw3 = function(){
+            if (this.can.height!=this.initHeight+this.addHeight && this.statu == "anim")
+                this.can.height = this.initHeight+this.addHeight ;
+            else if(this.statu == "unfold")
+                this.addHeight = this.initHeight*this.ZOOM - this.initHeight;
+                this.can.height = this.initHeight+this.addHeight ;
+
+            let ctx = this.can.getContext("2d");
+            ctx.fillStyle="#F0FF0F";  
+            ctx.clearRect(0,0,this.can.width, this.can.height);
+            let up = (this.maxs-this.baselvl)
+
+            let propup = this.ZOOM*(up/(this.maxs-this.mins));
+            let propupCeil = Math.ceil(propup);
+            if(propup == propupCeil)
+              propupCeil += 1.0;
+            let graphToDraw;
+            if(this.statu == "opti" || this.statu == "anim-opti")
+              graphToDraw = this.pols;
+            else
+              graphToDraw = this.polsfill;
+            for (let j in graphToDraw){
+              ctx.save();
+              if (graphToDraw[j].level>0){
+                ctx.fillStyle=graphToDraw[j].texture;
+                let shift = Math.ceil(((this.addHeight*((propupCeil-graphToDraw[j].level)/(this.ZOOM-1))))-Math.ceil((1.0-propup%1)*this.addHeight/(this.ZOOM-1)));
+                ctx.translate(0, 0-this.initHeight+graphToDraw[j].pty[0]*this.initHeight+shift
+                           );
+                ctx.beginPath();
+                  
+                ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
+               
+                for (let i=1; i<graphToDraw[j].ptx.length; i++)
+                  ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
+                ctx.closePath();
+              }
+              else {
+              ctx.fillStyle=graphToDraw[j].texture;
+              let anim = this.addHeight/(this.ZOOM-1)/this.initHeight;
+              if(anim > 0.995)
+                anim = 1.0;
+              ctx.translate(0, 0+Math.ceil((propup-1)*this.initHeight*anim)+this.addHeight/(this.ZOOM-1));
+              ctx.scale(1.0,-1);
+              ctx.translate(0, -this.initHeight
+                               -this.initHeight*Math.abs(graphToDraw[j].level+1)*anim
+                            );
+              ctx.beginPath();
+                
+              ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
+             
+              for (let i=1; i<graphToDraw[j].ptx.length; i++)
+                ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
+              ctx.closePath();
+              }
+              if(this.shadow){
+                  if(this.statu == "opti" || this.statu == "anim-opti"){
+                    ctx.shadowColor = graphToDraw[j].shadow;
+                    ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
+                    ctx.shadowOffsetX = 0;
+                    ctx.shadowOffsetY = 0;
+                  }
+                  else{
+                    ctx.shadowColor = graphToDraw[j].shadow;
+                    let blurEvol = Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight)));
+                    if(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))) > 0.98){
+                      blurEvol = 1.0;
+                    }
+                    ctx.shadowBlur = 1-blurEvol;
+                    ctx.shadowOffsetX = 0;
+                    ctx.shadowOffsetY = 0;
+                  }
+              }
+
+              ctx.fill();
+              ctx.restore();
+            }
+            if(this.baselineType=="Stratum" && this.statu=="unfold"){
+                ctx.save();
+                ctx.beginPath();
+                let basecutHeight = ((this.maxs-this.basecut)/((this.maxs-this.mins)/this.ZOOM))*this.initHeight;
+                ctx.moveTo(0,basecutHeight)
+                ctx.lineTo(this.can.width, basecutHeight )
+                ctx.stroke();
+                ctx.restore();
+            }
+            //console.timeEnd('someFunction');
+        }
+
+      //Draw the graph in his canvas (new animation), only for horizon graphs
+      this.draw4 = function(){
         //console.time('someFunction');
         if (this.can.height!=this.initHeight+this.addHeight && this.statu != "unfold")
             this.can.height = this.initHeight+this.addHeight ;
@@ -1074,14 +1169,18 @@ $(function(){
       }
 
 	  this.draw = function(){
-	  	if(this.drawingMethod == true){
-            if(this.baselineType=="Horizon" && this.alternatDraw)
+        if(this.baselineType == "Horizon" && this.alternatDraw){
+            if(this.drawingMethod == true)
                 this.draw3();
             else
-	  		    this.draw1();
+                this.draw4();
         }
-	  	else
-	  		this.draw2();
+        else{
+    	  	if(this.drawingMethod == true)
+    	  		this.draw1();
+    	  	else
+    	  		this.draw2();
+          }
 	  }
 
 	  //Must be call after each creation or modification of this object
@@ -1115,6 +1214,25 @@ $(function(){
 	    this.pols = this.allPolygons(true);
 	    this.polsfill = null;
 	  }
+
+      this.changeBaseline = function(newValue){
+        this.basecut = newValue;
+        if(timerStart != null)
+            eventRecordTable.push([(this.name+" baseline"), (new Date()-timerStart), this.basecut])
+        console.log("baseline is changed")
+        if(this.baselineType == "Stratum"){
+            this.pols = this.setColor(this.pols)
+            if(this.statu == "unfold")
+                this.polsfill = this.setColor(this.polsfill);
+            this.draw(); 
+        }
+        else{
+            this.init();
+            if(this.statu=="unfold")
+                this.polsfill = this.allPolygons(false);
+            this.draw();
+        }
+      }
 
 		this.initListener = function(){
 
@@ -1341,11 +1459,7 @@ $(function(){
                             else if(tempBasecut <= me.mins)
                                 tempBasecut = me.mins;
                         }
-                        me.basecut = tempBasecut;
-                        me.init();
-                        if(me.statu == "unfold")
-                            me.polsfill = me.allPolygons(false);
-                        me.draw();
+                        me.changeBaseline(tempBasecut);
 
                     eventData.preventDefault();
                     eventData.stopPropagation();
@@ -1438,15 +1552,10 @@ $(function(){
                         if(me.can.classList.contains("movingBaseline1")){
                             let tempBaseline = initialBaseline+(-1)*((eventData.pageY-dragStart.y)*((me.maxs-me.mins)/me.ZOOM/me.initHeight));
                             if(tempBaseline >= me.maxs)
-                                me.basecut = me.maxs;
+                                tempBaseline = me.maxs;
                             else if(tempBaseline <= me.mins)
-                                me.basecut = me.mins;
-                            else
-                                me.basecut = tempBaseline;
-                            me.init();
-                            if(me.statu=="unfold")
-                                me.polsfill = me.allPolygons(false);
-                            me.draw();
+                                tempBaseline = me.mins;
+                            me.changeBaseline(tempBaseline);
                         }
                     }
                 }
@@ -1540,15 +1649,10 @@ $(function(){
 			    	if(eventData.altKey){
 			    		let tempBaseline = me.basecut + (eventData.deltaY/Math.abs(eventData.deltaY))*0.15;
 			    		if(tempBaseline >= me.maxs)
-			    			me.basecut = me.maxs;
+			    			tempBaseline = me.maxs;
 			    		else if(tempBaseline <= me.mins)
-			    			me.basecut = me.mins;
-			    		else
-			    			me.basecut = tempBaseline;
-			    		me.init();
-			    		if(me.statu=="unfold")
-			    			me.polsfill = me.allPolygons(false);
-			    		me.draw();
+			    			tempBaseline = me.mins;
+			    		me.changeBaseline(tempBaseline);
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
@@ -1600,15 +1704,12 @@ $(function(){
 		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 			    	let tempBaseline = this.value;
 				    if(tempBaseline > me.maxs)
-				    	me.basecut = me.maxs;
+				    	tempBaseline = me.maxs;
 				    else if(tempBaseline < me.mins)
-				    	me.basecut = me.mins;
+				    	tempBaseline = me.mins;
 				    else
-				    	me.basecut = parseInt(tempBaseline,10);
-				    me.init();
-				   	if(me.statu=="unfold")
-				    	me.polsfill = me.allPolygons(false);
-				    me.draw();
+				    	tempBaseline = parseFloat(tempBaseline,10);
+				    me.changeBaseline(tempBaseline);
 					//output.innerHTML = this.value;
 				}
 			});
@@ -1620,7 +1721,7 @@ $(function(){
 			    	else if(tempZOOM <= 1.0)
 			    		me.ZOOM = 1.0;
 			    	else
-			    		me.ZOOM = parseInt(tempZOOM,10);
+			    		me.ZOOM = parseFloat(tempZOOM,10);
 			    	me.init();
 			    	if(me.statu=="unfold")
 			    		me.polsfill = me.allPolygons(false);
@@ -1636,7 +1737,7 @@ $(function(){
 			    	else if(tempinitHeight >= maxHeight)
 			    		me.initHeight = maxHeight;
 			    	else
-			    		me.initHeight = parseInt(tempinitHeight,10);
+			    		me.initHeight = parseFloat(tempinitHeight,10);
 			    	me.init();
 			    	if(me.statu=="unfold")
 			    		me.polsfill = me.allPolygons(false);
@@ -1708,21 +1809,27 @@ $(function(){
             })
 
             this.shadowButton.on('input', function(){
-                if(this.checked){
+                if(this.checked)
                     me.shadow = true;
-                    me.init();
-                    if(me.statu=="unfold")
-                        me.polsfill = me.allPolygons(false);
-                    me.draw();
-                }
-                else{
+                else
                     me.shadow = false;
-                    me.init();
-                    if(me.statu=="unfold")
-                        me.polsfill = me.allPolygons(false);
-                    me.draw();
-                }
+                me.init();
+                if(me.statu=="unfold")
+                    me.polsfill = me.allPolygons(false);
+                me.draw();
             })
+
+            this.alternateButton.on('input', function(){
+                if(this.checked)
+                    me.alternatDraw = true;
+                else
+                    me.alternatDraw = false;
+                me.init();
+                if(me.statu=="unfold")
+                    me.polsfill = me.allPolygons(false);
+                me.draw();
+            })
+
 
 			//adding different elements to the HTML
 			$("#myTable").find('tbody')
@@ -1745,6 +1852,8 @@ $(function(){
                         .append(this.baselineMethodButton)
                     ).append($('<td>')
                         .append(this.shadowButton)
+                    ).append($('<td>')
+                        .append(this.alternateButton)
                     )
 
 			    );
@@ -1776,9 +1885,8 @@ $(function(){
                 })
                 for(let g in tableGraph){
                     if(tableGraph[g].sliderBaseline[0].classList.contains("selected")){
-                        tableGraph[g].basecut = tableGraph[g].mins + ((tableGraph[g].maxs-tableGraph[g].mins)*originBaseProp);
-                        tableGraph[g].init();
-                        tableGraph[g].draw();
+                        let tempBaseline = tableGraph[g].mins + ((tableGraph[g].maxs-tableGraph[g].mins)*originBaseProp);
+                        tableGraph[g].changeBaseline(tempBaseline);
                     }
                 }
              });
@@ -1943,6 +2051,86 @@ $(function(){
 		finalResult.draw(true);
 	    return finalResult;
 	}
+
+    /*The CSV File must be in this shape :
+        first line "dates"
+        each lines after the first one : data
+        the 2 first column are the "name" of the line. */
+
+    function graphsFromCSVTable(filePath, ZOOM, BaseLineType, initHeight, tableint){
+        let tableResult = new Array();
+        let timeB;
+        let timeE;
+        let timetable = new Array();
+        let vals;
+        let lines;
+
+        $.ajax({
+            url:filePath,
+            async:false,
+            success:function(data){
+                lines = data.split(/\r?\n|\r/);
+                vals = lines[0].split(',');
+                for(let d in vals){
+                    if(d<2)
+                        continue;
+                    else{
+                        let split = vals[d].split('/');
+                        let date = split[1]+"-"+split[0]+"-"+split[2];
+                        if(d==2)
+                            timeB = new Date(date);
+                        else if(d==vals.length-1)
+                            timeE = new Date(date);
+                        timetable.push(new Date(date));
+                    }
+                }
+            }
+        });
+        for(let i in timetable){
+            timetable[i] = timetable[i] - timeB;
+            timetable[i] = timetable[i]/(timeE-timeB);
+        }
+
+        for(let i in tableint){
+            let parseResult = new Object({
+                name : 'pouet',
+                timeBegin : timeB,
+                timeEnd : timeE,
+                time : timetable,
+                valueMax : 0,
+                valueMin : 1000000,
+                value : new Array()
+            })
+            vals = lines[tableint[parseInt(i)]+1].split(',');
+            for(let d in vals){
+                if(d<2)
+                    parseResult.name = vals[d];
+                else{
+                    let val = parseFloat(vals[d]);
+                    parseResult.value.push(val);
+                }
+            }
+
+            for(let i in parseResult.value){
+                if(parseResult.value[i] > parseResult.valueMax)
+                    parseResult.valueMax = parseResult.value[i];
+                else if(parseResult.value[i] < parseResult.valueMin)
+                    parseResult.valueMin = parseResult.value[i];
+            }
+            let finalResult = new Graph((parseResult.valueMax+parseResult.valueMin)/2, ZOOM, 1,
+                                 parseResult.value, parseResult.time, BaseLineType, 0, parseResult.time.length-1,
+                                 initHeight, parseResult.name);
+            tableResult.push(finalResult);
+        }
+        console.log(tableResult)
+        for(let i in tableResult){
+            tableResult[i].init();
+            tableResult[i].initListener();
+            tableResult[i].draw(true);
+        }
+        console.log("done");
+        return tableResult;
+    }
 	        //////////////////////////////////////////////////
 	        //          Creation of multiple Graphs         //
 	        //////////////////////////////////////////////////
@@ -1985,6 +2173,8 @@ $(function(){
 	var parseTest3Str = graphFromCSV("data/GOOGL.csv", ZOOM, "Stratum", initHeight);
 	var parseTest4Hor = graphFromCSV("data/MSFT.csv", ZOOM, "Horizon", initHeight);
 	var parseTest4Str = graphFromCSV("data/MSFT.csv", ZOOM, "Stratum", initHeight);
+
+    var tabletest = graphsFromCSVTable("data/finance_data_used.csv", ZOOM, "Stratum", initHeight, [4,5,6,7,8]);
     console.log(tableGraph);
 
 
@@ -1994,6 +2184,7 @@ $(function(){
     $("#timerStartButton").on('click', function(){
         if(timerStart==null){
             timerStart = new Date();
+            eventRecordTable.push(["Expe Begin", 0, "no value"]);
             timerLength = null;
         }
         else{
@@ -2005,8 +2196,9 @@ $(function(){
     $("#timerEndButton").on('click', function(){
         if(timerStart!=null){
             timerLength = new Date() - timerStart;
-            console.log(tableGraph);
+            eventRecordTable.push(["Expe End", timerLength, "no value"]);
             timerStart = null;
+            console.log(eventRecordTable);
         }
         else{
             console.log("il faut commencer le test avant de vouloir le finir");
@@ -2015,3 +2207,4 @@ $(function(){
         console.log(timerLength);
     })
 });
+
