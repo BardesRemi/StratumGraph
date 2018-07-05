@@ -9,13 +9,47 @@ const autoprefixer      = require('autoprefixer');
 const PATHS = {
   app: path.join(__dirname, 'src'),
   images:path.join(__dirname,'src/assets/'),
-  build: path.join(__dirname, 'dist')
+  build: path.join(__dirname, 'docs')
 };
 
 const options = {
   host:'129.175.157.111',
   port:'1666'
 };
+
+let ws = require("ws");
+var fs = require('fs');
+
+let wsServer = new ws.Server({port:9000}) 
+
+wsServer.on('connection', function (myws, req){
+  console.log("ws connected")
+  //console.log(req);
+
+  myws.on('message', function (msg, type){
+    console.log("LE CLIENT ME DIT : "+msg);
+    if (msg=='coucou'){
+      let idselected =0;
+      while (fs.existsSync("expe/expe"+idselected+".json"))
+        idselected++;
+
+      myws.send("bonjour " +idselected)
+    }else if (msg.slice(0,2)=="[[") {
+      console.log(msg)
+      let arr = eval(msg.slice(0,msg.indexOf(']]')+2));
+      let id  = msg.slice(msg.indexOf(']]')+2)
+      console.log(id)
+
+      fs.appendFile('expe/expe'+id+'.json', JSON.stringify(arr, null, 2), function (err) {
+        if (err) throw err;
+        console.log('Saved!');
+      }); 
+    }
+  })
+
+});
+
+  console.log("server listening")
 
 module.exports = {
   entry: {
