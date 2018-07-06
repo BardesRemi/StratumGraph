@@ -40,6 +40,19 @@ let $ = require("jquery");
 	        //////////////////////////////////////////////////
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
+let ws = new WebSocket ('ws://129.175.157.111:9000');
+ws.onmessage = function(msg){
+    if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
+      id = msg.data.slice(8);
+      console.log("my id is "+id)
+    }
+}
+ws.onopen = function(){
+    ws.send('coucou');
+}
+
+let startEndCounter = 1;
+
 let eventRecordTable = new Array();
 eventRecordTable.push(["Event type", "Event kind", "Value", "timer"]);
 
@@ -1221,6 +1234,7 @@ $(function(){
             eventRecordTable.push([(this.name+" baseline"), eventKind, this.basecut, (new Date()-timerStart)])
         console.log("baseline is changed")
         if(this.baselineType == "Stratum"){
+            this.sliderBaseline[0].value = this.basecut;
             this.pols = this.setColor(this.pols)
             if(this.statu == "unfold")
                 this.polsfill = this.setColor(this.polsfill);
@@ -1232,6 +1246,71 @@ $(function(){
                 this.polsfill = this.allPolygons(false);
             this.draw();
         }
+      }
+
+      this.changeZoom = function(newValue, eventKind){
+        this.ZOOM = newValue;
+        console.log("ZOOM is changed")
+        if(timerStart != null)
+            eventRecordTable.push([(this.name+" ZOOM"), eventKind, this.ZOOM, (new Date()-timerStart)]);
+        this.init();
+        if(this.statu=="unfold")
+            this.polsfill = this.allPolygons(false);
+        this.draw();
+      }
+
+      this.FoldUnfold = function(eventKind){
+        let changes= "";
+        let me = this;
+        console.log("Fold/unfold button pressed");
+        if(this.statu == "opti"){ 
+            changes = "unfold";
+            this.initHeight=this.can.height;
+            this.timer = setInterval(function(){
+                if(me.addHeight<=me.initHeight ||me.addHeight >= me.initHeight*(me.ZOOM-2))
+                    me.addHeight++;
+                else
+                    me.addHeight= me.addHeight*1.03;
+                me.statu="anim";
+                if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
+                    clearInterval(me.timer);
+                    me.statu="unfold";
+                }
+                if(me.polsfill == null)
+                    me.polsfill = me.allPolygons(false);
+                me.draw(false);
+            }, 12);
+        }
+        if(this.statu == "unfold" || this.statu == "anim"){
+            changes = "fold";
+            if (this.timer!=null)
+                clearInterval(this.timer);
+            this.timer = setInterval(function(){
+                me.statu="anim";
+                if(me.addHeight<=0){
+                    clearInterval(me.timer);
+                    me.timer = null;
+                    me.statu="opti";
+                }
+                else{
+                    if(me.addHeight<=me.initHeight ||me.addHeight >= me.initHeight*(me.ZOOM-2))
+                        me.addHeight--;
+                    else
+                        me.addHeight= me.addHeight*0.97;
+                }
+                me.draw();
+            }, 12);
+        }
+        if(timerStart != null)
+            eventRecordTable.push([(this.name+" Fold/Unfold"), eventKind, changes, (new Date()-timerStart)]);
+      }
+
+      this.shadowSwap = function(newValue, eventKind){
+        this.shadow = newValue
+        console.log("shadow swap");
+        if(timerStart != null)
+            eventRecordTable.push([(this.name+" switch shadow"), eventKind, newValue, (new Date()-timerStart)]);
+        this.draw();
       }
 
 		this.initListener = function(){
@@ -1492,42 +1571,7 @@ $(function(){
             });
 
             this.statusButton.on('click', function(){
-                if(me.statu == "opti"){ 
-                    me.initHeight=me.can.height;
-                    me.timer = setInterval(function(){
-                        if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
-                            me.addHeight++;
-                        else
-                            me.addHeight= me.addHeight*1.03;
-                        me.statu="anim";
-                        if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
-                            clearInterval(me.timer);
-                            me.statu="unfold";
-                        }
-                        if(me.polsfill == null)
-                            me.polsfill = me.allPolygons(false);
-                        me.draw(false);
-                    }, 12);
-                }
-                if(me.statu == "unfold" || me.statu == "anim"){
-                    if (me.timer!=null)
-                        clearInterval(me.timer);
-                    me.timer = setInterval(function(){
-                        me.statu="anim";
-                        if(me.addHeight<=0){
-                            clearInterval(me.timer);
-                            me.timer = null;
-                            me.statu="opti";
-                        }
-                        else{
-                            if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
-                                me.addHeight--;
-                            else
-                                me.addHeight= me.addHeight*0.97;
-                        }
-                        me.draw();
-                    }, 12);
-                }
+                me.FoldUnfold("button pressed");
              });
 
 
@@ -1634,15 +1678,12 @@ $(function(){
 			    	if(eventData.shiftKey){
 			    		let tempZOOM = me.ZOOM + (eventData.deltaY/Math.abs(eventData.deltaY))*0.15;
 			    		if(tempZOOM >= maxZOOM)
-			    			me.ZOOM = maxZOOM;
+			    			tempZOOM = maxZOOM;
 			    		else if(tempZOOM <= 1.0)
-			    			me.ZOOM = 1.0;
+			    			tempZOOM = 1.0;
 			    		else
-			    			me.ZOOM = tempZOOM;
-			    		me.init();
-			    		if(me.statu=="unfold")
-			    			me.polsfill = me.allPolygons(false);
-			    		me.draw();
+			    			tempZOOM = tempZOOM;
+			    		me.changeZoom(tempZOOM,"wheel + shiftkey")
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
@@ -1717,15 +1758,12 @@ $(function(){
 		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 			    	let tempZOOM = this.value;
 				    if(tempZOOM >= maxZOOM)
-			    		me.ZOOM = maxZOOM;
+			    		tempZOOM = maxZOOM;
 			    	else if(tempZOOM <= 1.0)
-			    		me.ZOOM = 1.0;
+			    		tempZOOM = 1.0;
 			    	else
-			    		me.ZOOM = parseFloat(tempZOOM,10);
-			    	me.init();
-			    	if(me.statu=="unfold")
-			    		me.polsfill = me.allPolygons(false);
-			    	me.draw();
+			    		tempZOOM = parseFloat(tempZOOM,10);
+			    	me.changeZoom(tempZOOM,"slider")
 					//output.innerHTML = this.value;
 				}
 			});
@@ -1810,13 +1848,9 @@ $(function(){
 
             this.shadowButton.on('input', function(){
                 if(this.checked)
-                    me.shadow = true;
+                    me.shadowSwap(true,"box checked");
                 else
-                    me.shadow = false;
-                me.init();
-                if(me.statu=="unfold")
-                    me.polsfill = me.allPolygons(false);
-                me.draw();
+                    me.shadowSwap(false,"box unchecked");
             })
 
             this.alternateButton.on('input', function(){
@@ -1910,9 +1944,8 @@ $(function(){
                 })
                 for(let g in tableGraph){
                     if(tableGraph[g].sliderZOOM[0].classList.contains("selected")){
-                        tableGraph[g].ZOOM = parseFloat(originSlider.value);
-                        tableGraph[g].init();
-                        tableGraph[g].draw();
+                        let tempZOOM = parseFloat(originSlider.value);
+                        tableGraph[g].changeZoom(tempZOOM, "all sliders");
                     }
                 }
              });
@@ -2184,7 +2217,7 @@ $(function(){
     $("#timerStartButton").on('click', function(){
         if(timerStart==null){
             timerStart = new Date();
-            eventRecordTable.push(["Expe Begin","start pressed" ,0, "no value"]);
+            eventRecordTable.push([("Expe Begin number "+startEndCounter),"start pressed" , "no value",0]);
             timerLength = null;
         }
         else{ 
@@ -2196,29 +2229,26 @@ $(function(){
     $("#timerEndButton").on('click', function(){
         if(timerStart!=null){
             timerLength = new Date() - timerStart;
-            eventRecordTable.push(["Expe End","end pressed" , timerLength, "no value"]);
+            eventRecordTable.push([("Expe End number "+startEndCounter),"end pressed" , "no value", timerLength]);
             timerStart = null;
             console.log(eventRecordTable);
+            ws.send(JSON.stringify(eventRecordTable)+id);
+
+            ws.onmessage = function(msg){
+                if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
+                  id = msg.data.slice(8);
+                } else if (typeof msg.data == "string"){
+                  console.log('LE SERVER ME DIT : '+msg.data);
+                
+                }
+            }
+            eventRecordTable = new Array();
+            eventRecordTable.push(["Event type", "Event kind", "Value", "timer"]);
+            startEndCounter++;
         }
         else{
             console.log("il faut commencer le test avant de vouloir le finir");
         }
-
-        let ws = new WebSocket ('ws://129.175.157.111:9000');
-        ws.onopen = function(){
-            ws.send('coucou');
-        }
-        ws.onmessage = function(msg){
-            if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
-              id = msg.data.slice(8);
-              ws.send(JSON.stringify(eventRecordTable)+id);
-            } else if (typeof msg.data == "string"){
-              console.log('LE SERVER ME DIT : '+msg.data);
-            
-            }
-        }
-        eventRecordTable = new Array();
-        eventRecordTable.push(["Event type", "Event kind", "Value", "timer"]);
     })
 });
 
