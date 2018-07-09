@@ -44,6 +44,8 @@ wsServer.on('connection', function (myws, req){
         if (err) throw err;
         console.log('Saved!');
       }); 
+    }else if(msg=='start'){
+      //create file avec [
     }
   })
 
