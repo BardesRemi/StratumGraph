@@ -222,7 +222,7 @@ $(function(){
 	    return 0;
 	  }
 
-	  this.computePolygons = function(basecut,optim,mul,min,max){
+	  this.computePolygons = function(basecut,optim,mul,min,max,pedestal,timeSkip){
 	    // no positive polygon when basecut is so high
 	    if (mul==1 && basecut==max) {return new Array();}
 	    // no negative polygon when basecut is so low
@@ -284,7 +284,7 @@ $(function(){
 	    polystack[n0].pty.push(1.0-val0%1.0);
 
 	    var pt, pval; // variable to store the previous values of t and val
-
+        pt = -1000000;
 	    for (var i=this.start; i<=this.end; i++) {
 
 	      if (isNaN(this.tabledata[i])){
@@ -292,6 +292,9 @@ $(function(){
 	        continue;
 	      }
 	      var t   = this.timepos[i];
+          if(timeSkip>0 && t < pt + timeSkip)
+            continue;
+          
 
 	      var val = ((this.tabledata[i]-this.baselvl)*mul)*scaleY/(max-min);
 	      var n   = Math.floor(val); // band index
@@ -687,17 +690,17 @@ $(function(){
 	  }
 
 	  //generate the whole graphs depending on @BaseLineType Must be use to generate this.pols or this.polsfill
-	  this.allPolygons = function(optim){
+	  this.allPolygons = function(optim,pedestal,timeSkip){
 	    if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
-	      let res = this.computePolygons(this.baselvl,optim,1,this.mins,this.maxs);
+	      let res = this.computePolygons(this.baselvl,optim,1,this.mins,this.maxs,pedestal,timeSkip);
 	      return this.setColor(res);
 	    }
 	          
 	    else {
 	      if(this.baselineType == "Horizon"){
 	      let res = new Array();
-	      res = res.concat(this.computePolygons(this.baselvl,optim,1,this.basecut,this.maxs));
-	      res = res.concat(this.computePolygons(this.baselvl,optim,-1, this.mins, this.basecut));
+	      res = res.concat(this.computePolygons(this.baselvl,optim,1,this.basecut,this.maxs,0,timeSkip));
+	      res = res.concat(this.computePolygons(this.baselvl,optim,-1, this.mins, this.basecut,0,timeSkip));
 	      return this.setColor(res);
 	      }
 	      else
@@ -709,16 +712,21 @@ $(function(){
 
 	  //Draw the graph in his canvas
 	  this.draw1 = function(){
-	    //console.time('someFunction');
+	    console.log('draw1');
 	    if (this.can.height!=this.initHeight+this.addHeight && this.statu == "anim")
 	    	this.can.height = this.initHeight+this.addHeight ;
-	  	else if(this.statu == "unfold")
+	  	else if(this.statu == "unfold"){
 	  		this.addHeight = this.initHeight*this.ZOOM - this.initHeight;
 	  		this.can.height = this.initHeight+this.addHeight ;
-
+        }
+        else if(this.statu == "opti" && this.can.height!=this.initHeight)
+            this.can.height = this.initHeight;
 	    let ctx = this.can.getContext("2d");
 	    ctx.fillStyle="#F0FF0F";  
 	    ctx.clearRect(0,0,this.can.width, this.can.height);
+
+        console.log('  '+ this.can.height+" "+this.initHeight+" "+this.addHeight);
+
 	    let up = (this.maxs-this.baselvl)
 
 	    let propup = this.ZOOM*(up/(this.maxs-this.mins));
@@ -802,12 +810,14 @@ $(function(){
 	  //Draw the graph in his canvas (new animation)
 	  this.draw2 = function(){
 	  	//console.time('someFunction');
-	    if (this.can.height!=this.initHeight+this.addHeight && this.statu != "unfold")
+	    if (this.can.height!=this.initHeight+this.addHeight && this.statu == "anim")
 	    	this.can.height = this.initHeight+this.addHeight ;
 	  	else if(this.statu == "unfold"){
 	  		this.addHeight = Math.ceil(this.initHeight*this.ZOOM - this.initHeight);
 	  		this.can.height = this.initHeight+this.addHeight ;
 	  	}
+        else if(this.statu == "opti" && this.can.height!=this.initHeight)
+            this.can.height = this.initHeight;
 
 	    let ctx = this.can.getContext("2d");
 	    ctx.fillStyle="#F0FF0F";  
@@ -854,7 +864,7 @@ $(function(){
 		        ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
 		       
 		        for (let i=1; i<graphToDraw[j].ptx.length; i++)
-		          ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
+                    ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
 		        ctx.closePath();
 	     	}
 	      	else {
@@ -950,9 +960,12 @@ $(function(){
         this.draw3 = function(){
             if (this.can.height!=this.initHeight+this.addHeight && this.statu == "anim")
                 this.can.height = this.initHeight+this.addHeight ;
-            else if(this.statu == "unfold")
+            else if(this.statu == "unfold"){
                 this.addHeight = this.initHeight*this.ZOOM - this.initHeight;
                 this.can.height = this.initHeight+this.addHeight ;
+            }
+            else if(this.statu == "opti" && this.can.height!=this.initHeight)
+                this.can.height = this.initHeight;
 
             let ctx = this.can.getContext("2d");
             ctx.fillStyle="#F0FF0F";  
@@ -1038,12 +1051,14 @@ $(function(){
       //Draw the graph in his canvas (new animation), only for horizon graphs
       this.draw4 = function(){
         //console.time('someFunction');
-        if (this.can.height!=this.initHeight+this.addHeight && this.statu != "unfold")
+        if (this.can.height!=this.initHeight+this.addHeight && this.statu == "anim")
             this.can.height = this.initHeight+this.addHeight ;
         else if(this.statu == "unfold"){
             this.addHeight = Math.ceil(this.initHeight*this.ZOOM - this.initHeight);
             this.can.height = this.initHeight+this.addHeight ;
         }
+        else if(this.statu == "opti" && this.can.height!=this.initHeight)
+            this.can.height = this.initHeight;
 
         let ctx = this.can.getContext("2d");
         ctx.fillStyle="#F0FF0F";  
@@ -1224,7 +1239,7 @@ $(function(){
 	    else
 	    	this.maxlvl = 1;
 	    this.baselvl = this.getBaselvl();
-	    this.pols = this.allPolygons(true);
+	    this.pols = this.allPolygons(true,0,0);
 	    this.polsfill = null;
 	  }
 
@@ -1243,7 +1258,7 @@ $(function(){
         else{
             this.init();
             if(this.statu=="unfold")
-                this.polsfill = this.allPolygons(false);
+                this.polsfill = this.allPolygons(false,0,0);
             this.draw();
         }
       }
@@ -1255,7 +1270,17 @@ $(function(){
             eventRecordTable.push([(this.name+" ZOOM"), eventKind, this.ZOOM, (new Date()-timerStart)]);
         this.init();
         if(this.statu=="unfold")
-            this.polsfill = this.allPolygons(false);
+            this.polsfill = this.allPolygons(false,0,0);
+        this.draw();
+      }
+
+      this.changeInitHeigth = function(newValue, eventKind){
+        this.initHeight = newValue;
+        console.log("initHeight is changed")
+        if(timerStart != null)
+            eventRecordTable.push([(this.name+" initHeight"), eventKind, this.initHeight, (new Date()-timerStart)]);
+        this.sliderInitHeight[0].value = this.initHeight;
+        this.pols = this.setColor(this.pols)
         this.draw();
       }
 
@@ -1265,7 +1290,7 @@ $(function(){
         console.log("Fold/unfold button pressed");
         if(this.statu == "opti"){ 
             changes = "unfold";
-            this.initHeight=this.can.height;
+            me.polsfill = null;
             this.timer = setInterval(function(){
                 if(me.addHeight<=me.initHeight ||me.addHeight >= me.initHeight*(me.ZOOM-2))
                     me.addHeight++;
@@ -1273,22 +1298,30 @@ $(function(){
                     me.addHeight= me.addHeight*1.03;
                 me.statu="anim";
                 if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
-                    clearInterval(me.timer);
                     me.statu="unfold";
+                    clearInterval(me.timer);
                 }
-                if(me.polsfill == null)
-                    me.polsfill = me.allPolygons(false);
-                me.draw(false);
+                if(me.statu=="anim"){
+                    if(me.polsfill == null)
+                        me.polsfill = me.allPolygons(false,0,0.01);
+                    me.draw(false);
+                }
+                else{
+                    me.polsfill = me.allPolygons(false,0,0);
+                    me.draw(false);
+                }
             }, 12);
         }
         if(this.statu == "unfold" || this.statu == "anim"){
             changes = "fold";
+            me.polsfill = null;
             if (this.timer!=null)
                 clearInterval(this.timer);
             this.timer = setInterval(function(){
                 me.statu="anim";
                 if(me.addHeight<=0){
                     clearInterval(me.timer);
+                    me.polsfill = null;
                     me.timer = null;
                     me.statu="opti";
                 }
@@ -1298,7 +1331,15 @@ $(function(){
                     else
                         me.addHeight= me.addHeight*0.97;
                 }
-                me.draw();
+                if(me.statu=="anim"){
+                    if(me.polsfill == null)
+                        me.polsfill = me.allPolygons(false,0,0.01);
+                    me.draw(false);
+                }
+                else{
+                    me.polsfill = me.allPolygons(false,0,0);
+                    me.draw(false);
+                }
             }, 12);
         }
         if(timerStart != null)
@@ -1683,7 +1724,7 @@ $(function(){
 			    			tempZOOM = 1.0;
 			    		else
 			    			tempZOOM = tempZOOM;
-			    		me.changeZoom(tempZOOM,"wheel + shiftkey")
+			    		me.changeZoom(tempZOOM,"wheel + shift key")
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
@@ -1700,15 +1741,12 @@ $(function(){
 			    	if(eventData.ctrlKey){
 			    		let tempinitHeight = me.initHeight + eventData.deltaY/Math.abs(eventData.deltaY);
 			    		if(tempinitHeight <= 10.0)
-			    			me.initHeight = 10.0;
+			    			tempinitHeight = 10.0;
 			    		else if(tempinitHeight >= maxHeight)
-			    			me.initHeight = maxHeight;
+			    			tempinitHeight = maxHeight;
 			    		else
-			    			me.initHeight = tempinitHeight;
-			    		me.init();
-			    		if(me.statu=="unfold")
-			    			me.polsfill = me.allPolygons(false);
-			    		me.draw();
+			    			tempinitHeight = tempinitHeight;
+			    		me.changeInitHeigth(tempinitHeight,"wheel + ctrl key")
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
@@ -1771,16 +1809,12 @@ $(function(){
 		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 			    	let tempinitHeight = this.value;
 			    	if(tempinitHeight <= 10.0)
-			    		me.initHeight = 10.0;
+			    		tempinitHeight = 10.0;
 			    	else if(tempinitHeight >= maxHeight)
-			    		me.initHeight = maxHeight;
+			    		tempinitHeight = maxHeight;
 			    	else
-			    		me.initHeight = parseFloat(tempinitHeight,10);
-			    	me.init();
-			    	if(me.statu=="unfold")
-			    		me.polsfill = me.allPolygons(false);
-			    	me.draw();
-					//output.innerHTML = this.value;
+			    		tempinitHeight = parseFloat(tempinitHeight,10);
+			    	me.changeInitHeigth(tempinitHeight,"slider")
 				}
 			});
 
@@ -1969,9 +2003,8 @@ $(function(){
                 })
                 for(let g in tableGraph){
                     if(tableGraph[g].sliderInitHeight[0].classList.contains("selected")){
-                        tableGraph[g].initHeight = parseInt(originSlider.value);
-                        tableGraph[g].init();
-                        tableGraph[g].draw();
+                        let tempinitHeight = parseInt(originSlider.value);
+                        tableGraph[g].changeInitHeigth(tempinitHeight,"all sliders")
                     }
                 }
              });
@@ -2052,13 +2085,10 @@ $(function(){
 		    		for(let i in parseResult.time){
 		    			parseResult.time[i] = parseResult.time[i] - parseResult.timeBegin;
 		    			parseResult.time[i] = parseResult.time[i]/(parseResult.timeEnd-parseResult.timeBegin);
-
 		    			if(i!=0 && i!=parseResult.time.length-1){
-		    				if(Math.round(tempValueTable[tempValueTable.length-1])!=Math.round(parseResult.value[i])){
-		    					tempTimeTable.push(parseResult.time[i])
-		    					tempValueTable.push(parseFloat(parseResult.value[i]))
-		    				}
-		    			}
+	    					tempTimeTable.push(parseResult.time[i])
+	    					tempValueTable.push(parseFloat(parseResult.value[i]))
+		    			} 
 		    			else{
 		    				tempTimeTable.push(parseResult.time[i])
 		    				tempValueTable.push(parseFloat(parseResult.value[i]))
@@ -2219,6 +2249,7 @@ $(function(){
             timerStart = new Date();
             eventRecordTable.push([("Expe Begin number "+startEndCounter),"start pressed" , "no value",0]);
             timerLength = null;
+            ws.send("start");
         }
         else{ 
             console.log("il faut finir le test avant d'en commencer un nouveau");
@@ -2249,6 +2280,18 @@ $(function(){
         else{
             console.log("il faut commencer le test avant de vouloir le finir");
         }
+    })
+
+    $("#expeEnd").on('click', function(){
+        if(timerStart!=null){
+            console.log("il faut finir le test avant de mettre fin à l'expe");
+        }
+        else if(timerLength == null){ 
+            console.log("il faut fair le test avant d'essayer de le finir");
+        }else{
+            console.
+        }
+        console.log(timerStart);
     })
 });
 
