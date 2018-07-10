@@ -2243,55 +2243,65 @@ $(function(){
  
             //////////////////////////////////////////////////
             //              Expe timer gesture              //
-            //////////////////////////////////////////////////  
+            ////////////////////////////////////////////////// 
+let finished = false; 
     $("#timerStartButton").on('click', function(){
-        if(timerStart==null){
-            timerStart = new Date();
-            eventRecordTable.push([("Expe Begin number "+startEndCounter),"start pressed" , "no value",0]);
-            timerLength = null;
-            ws.send("start");
+        if(!finished){
+            if(timerStart==null){
+                timerStart = new Date();
+                eventRecordTable.push([("Expe Begin number "+startEndCounter),"start pressed" , "no value",0]);
+                timerLength = null;
+                ws.send("start");
+            }
+            else{ 
+                console.log("il faut finir le test avant d'en commencer un nouveau");
+            }
+            console.log(timerStart);
         }
-        else{ 
-            console.log("il faut finir le test avant d'en commencer un nouveau");
-        }
-        console.log(timerStart);
     })
 
     $("#timerEndButton").on('click', function(){
-        if(timerStart!=null){
-            timerLength = new Date() - timerStart;
-            eventRecordTable.push([("Expe End number "+startEndCounter),"end pressed" , "no value", timerLength]);
-            timerStart = null;
-            console.log(eventRecordTable);
-            ws.send(JSON.stringify(eventRecordTable)+id);
+        if(!finished){
+            if(timerStart!=null){
+                timerLength = new Date() - timerStart;
+                eventRecordTable.push([("Expe End number "+startEndCounter),"end pressed" , "no value", timerLength]);
+                timerStart = null;
+                console.log(eventRecordTable);
+                if(startEndCounter>1)
+                    ws.send("number");
+                ws.send(JSON.stringify(eventRecordTable));
 
-            ws.onmessage = function(msg){
-                if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
-                  id = msg.data.slice(8);
-                } else if (typeof msg.data == "string"){
-                  console.log('LE SERVER ME DIT : '+msg.data);
-                
+                ws.onmessage = function(msg){
+                    if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
+                      id = msg.data.slice(8);
+                    } else if (typeof msg.data == "string"){
+                      console.log('LE SERVER ME DIT : '+msg.data);
+                    
+                    }
                 }
+                eventRecordTable = new Array();
+                eventRecordTable.push(["Event type", "Event kind", "Value", "timer"]);
+                startEndCounter++;
             }
-            eventRecordTable = new Array();
-            eventRecordTable.push(["Event type", "Event kind", "Value", "timer"]);
-            startEndCounter++;
-        }
-        else{
-            console.log("il faut commencer le test avant de vouloir le finir");
+            else{
+                console.log("il faut commencer le test avant de vouloir le finir");
+            }
         }
     })
 
     $("#expeEnd").on('click', function(){
-        if(timerStart!=null){
-            console.log("il faut finir le test avant de mettre fin à l'expe");
+        if (!finished){
+            if(timerStart!=null){
+                console.log("il faut finir le test avant de mettre fin à l'expe");
+            }
+            else if(timerLength == null){ 
+                console.log("il faut fair le test avant d'essayer de le finir");
+            }else{
+                console.log("l'expe est finie")
+                finished = true;
+                ws.send("expe finish")
+            }
         }
-        else if(timerLength == null){ 
-            console.log("il faut fair le test avant d'essayer de le finir");
-        }else{
-            console.
-        }
-        console.log(timerStart);
     })
 });
 
