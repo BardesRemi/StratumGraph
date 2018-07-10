@@ -71,7 +71,8 @@ wsServer.on('connection', function (myws, req){
 
 module.exports = {
   entry: {
-    app: PATHS.app
+    app: PATHS.app,
+    table: path.join(PATHS.app,'table.js')
   },
   output: {
     path: PATHS.build,
