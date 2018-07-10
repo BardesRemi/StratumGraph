@@ -44,7 +44,11 @@ let ws = new WebSocket ('ws://129.175.157.111:9000');
 ws.onmessage = function(msg){
     if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
       id = msg.data.slice(8);
-      console.log("my id is "+id)
+      console.log("My id is "+id)
+    }
+    else if (typeof msg.data == "string" && msg.data.indexOf("expe done ")>=0){
+       let file = msg.data.slice(10); 
+       window.location.href  ="table.html?file="+file;
     }
 }
 ws.onopen = function(){
@@ -2271,14 +2275,14 @@ let finished = false;
                     ws.send("number");
                 ws.send(JSON.stringify(eventRecordTable));
 
-                ws.onmessage = function(msg){
+                /*ws.onmessage = function(msg){
                     if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
                       id = msg.data.slice(8);
                     } else if (typeof msg.data == "string"){
                       console.log('LE SERVER ME DIT : '+msg.data);
                     
                     }
-                }
+                }*/
                 eventRecordTable = new Array();
                 eventRecordTable.push(["Event type", "Event kind", "Value", "timer"]);
                 startEndCounter++;
@@ -2300,7 +2304,6 @@ let finished = false;
                 console.log("l'expe est finie")
                 finished = true;
                 ws.send("expe finish")
-                window.location.href  ="table.html";
             }
         }
     })
