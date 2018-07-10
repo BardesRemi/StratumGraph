@@ -5,9 +5,11 @@ const htmlPlugin        = require('html-webpack-plugin');
 const openBrowserPlugin = require('open-browser-webpack-plugin');
 const dashboardPlugin   = require('webpack-dashboard/plugin');
 const autoprefixer      = require('autoprefixer');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const PATHS = {
   app: path.join(__dirname, 'src'),
+  app2: path.join(__dirname, 'src/table/'),
   images:path.join(__dirname,'src/assets/'),
   build: path.join(__dirname, 'docs')
 };
@@ -52,9 +54,11 @@ wsServer.on('connection', function (myws, req){
 
     }else if(msg =="expe finish"){
       console.log(id)
-      fs.appendFile('expe/expe'+id+'.json', "]", function (err) {
+      let filename = 'expe/expe'+id+'.json'; 
+      fs.appendFile(filename, "]", function (err) {
         if (err) throw err;
-        console.log('Saved!');
+        console.log('Saved !!!');
+        myws.send("expe done " +filename)
       });
     }else if(msg=="number"){
       console.log(id)
@@ -72,11 +76,11 @@ wsServer.on('connection', function (myws, req){
 module.exports = {
   entry: {
     app: PATHS.app,
-    table: path.join(PATHS.app,'table.js')
+    table: './src/table.js'
   },
   output: {
     path: PATHS.build,
-    filename: 'bundle.[hash].js'
+    filename: '[name].[hash].js'
   },
   devServer: {
       historyApiFallback: true,
@@ -137,11 +141,24 @@ module.exports = {
     new webpack.HotModuleReplacementPlugin({
         multiStep: true
     }),
-    new htmlPlugin({
+    new HtmlWebpackPlugin({
+      inject: 'body',
+      chunks: ['table'],
+      template: 'src/table.html',
+      filename: 'table.html'
+    }),
+    new HtmlWebpackPlugin({
+      inject: 'body',
+      chunks: ['app'],
+      template: 'src/index.html',
+      filename: 'index.html'
+    }),
+
+    /*new htmlPlugin({
       template:path.join(PATHS.app,'index.html'),
       inject:'body'
-    }),
-    /*new openBrowserPlugin({
+    })
+    new openBrowserPlugin({
       url: `http://${options.host}:${options.port}`
     })*/
   ]
