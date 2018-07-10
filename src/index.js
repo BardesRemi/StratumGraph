@@ -2300,6 +2300,7 @@ let finished = false;
                 console.log("l'expe est finie")
                 finished = true;
                 ws.send("expe finish")
+                window.location.href  ="table.html";
             }
         }
     })
