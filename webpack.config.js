@@ -19,6 +19,7 @@ const options = {
 
 let ws = require("ws");
 var fs = require('fs');
+let id = "";
 
 let wsServer = new ws.Server({port:9000}) 
 
@@ -34,18 +35,33 @@ wsServer.on('connection', function (myws, req){
         idselected++;
 
       myws.send("bonjour " +idselected)
+      id = idselected.toString();
+      fs.writeFile('expe/expe'+id+'.json', "[", (err) => {
+        if (err) throw err;
+
+        console.log("The file was succesfully saved!");
+      });
     }else if (msg.slice(0,2)=="[[") {
-      console.log(msg)
       let arr = eval(msg.slice(0,msg.indexOf(']]')+2));
-      let id  = msg.slice(msg.indexOf(']]')+2)
       console.log(id)
 
       fs.appendFile('expe/expe'+id+'.json', JSON.stringify(arr, null, 2), function (err) {
         if (err) throw err;
         console.log('Saved!');
-      }); 
-    }else if(msg=='start'){
-      //create file avec [
+      });
+
+    }else if(msg =="expe finish"){
+      console.log(id)
+      fs.appendFile('expe/expe'+id+'.json', "]", function (err) {
+        if (err) throw err;
+        console.log('Saved!');
+      });
+    }else if(msg=="number"){
+      console.log(id)
+      fs.appendFile('expe/expe'+id+'.json', ",", function (err) {
+        if (err) throw err;
+        console.log('Saved!');
+      });
     }
   })
 
