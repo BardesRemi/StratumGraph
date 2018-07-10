@@ -40,7 +40,8 @@ let $ = require("jquery");
 	        //////////////////////////////////////////////////
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
-let ws = new WebSocket ('ws://129.175.157.111:9000');
+//let ws = new WebSocket ('ws://129.175.157.111:9000');
+let ws = new WebSocket ('ws://localhost:9000');
 ws.onmessage = function(msg){
     if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
       id = msg.data.slice(8);
@@ -131,6 +132,7 @@ $(function(){
 	  this.timer = null;
 	  this.maxs;
 	  this.mins;
+	  this.minValue;
 	  this.maxlvl = 1;
 	  this.minlvl = 1;
 	  this.statu = "opti";
@@ -149,6 +151,7 @@ $(function(){
       }
       
       this.shadow = true
+      this.pedestal = 0
 
       this.namehtml = $("<span id='title"+$("#myTable tr").length+"'class='title'>"+this.name+"_"+$("#myTable tr").length+"</span>")
 
@@ -180,6 +183,8 @@ $(function(){
 	  	this.sliderInitHeight.min  = 10.0;
 	  	this.sliderInitHeight.max  = 50.0;
 	  	this.sliderInitHeight.step = 1;*/
+
+	  this.sliderPedestal = $("<input class='sliderInitHeight' type='range' min='0.0' max='100.0' step='1'>");
 
 	  this.statusButton = $("<button class='superbutton' type='button'>fold / unfold</button>");
 
@@ -226,7 +231,7 @@ $(function(){
 	    return 0;
 	  }
 
-	  this.computePolygons = function(basecut,optim,mul,min,max,pedestal,timeSkip){
+	  this.computePolygons = function(basecut,optim,mul,min,max,timeSkip){
 	    // no positive polygon when basecut is so high
 	    if (mul==1 && basecut==max) {return new Array();}
 	    // no negative polygon when basecut is so low
@@ -694,17 +699,20 @@ $(function(){
 	  }
 
 	  //generate the whole graphs depending on @BaseLineType Must be use to generate this.pols or this.polsfill
-	  this.allPolygons = function(optim,pedestal,timeSkip){
+	  this.allPolygons = function(optim,timeSkip){
 	    if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
-	      let res = this.computePolygons(this.baselvl,optim,1,this.mins,this.maxs,pedestal,timeSkip);
+	      /*let baselvl = this.mins - ((this.maxs-this.mins)/this.ZOOM/this.initHeight)*pedestal;
+	      console.log(((this.maxs-this.mins)/this.ZOOM/this.initHeight)*pedestal)
+	      console.log(baselvl)*/
+	      let res = this.computePolygons(this.baselvl,optim,1,this.mins,this.maxs,timeSkip);
 	      return this.setColor(res);
 	    }
 	          
 	    else {
 	      if(this.baselineType == "Horizon"){
 	      let res = new Array();
-	      res = res.concat(this.computePolygons(this.baselvl,optim,1,this.basecut,this.maxs,0,timeSkip));
-	      res = res.concat(this.computePolygons(this.baselvl,optim,-1, this.mins, this.basecut,0,timeSkip));
+	      res = res.concat(this.computePolygons(this.baselvl,optim,1,this.basecut,this.maxs,timeSkip));
+	      res = res.concat(this.computePolygons(this.baselvl,optim,-1, this.mins, this.basecut,timeSkip));
 	      return this.setColor(res);
 	      }
 	      else
@@ -716,7 +724,6 @@ $(function(){
 
 	  //Draw the graph in his canvas
 	  this.draw1 = function(){
-	    console.log('draw1');
 	    if (this.can.height!=this.initHeight+this.addHeight && this.statu == "anim")
 	    	this.can.height = this.initHeight+this.addHeight ;
 	  	else if(this.statu == "unfold"){
@@ -728,8 +735,6 @@ $(function(){
 	    let ctx = this.can.getContext("2d");
 	    ctx.fillStyle="#F0FF0F";  
 	    ctx.clearRect(0,0,this.can.width, this.can.height);
-
-        console.log('  '+ this.can.height+" "+this.initHeight+" "+this.addHeight);
 
 	    let up = (this.maxs-this.baselvl)
 
@@ -1217,8 +1222,12 @@ $(function(){
 
 	  //Must be call after each creation or modification of this object
 	  this.init = function(){
-	    this.mins = this.getmins();
+	    this.minValue = this.getmins();
 	    this.maxs = this.getmaxs();
+	    //if(this.pedestal > 0){
+	    	this.mins = this.minValue - ((this.maxs-this.minValue)/this.ZOOM/this.initHeight)*this.pedestal;
+	    	console.log(this.mins)
+	    //}
 	    this.sliderBaseline[0].min  = Math.ceil(this.mins-1);
 	  	this.sliderBaseline[0].max  = Math.ceil(this.maxs+1);
 	    this.sliderBaseline[0].value = this.basecut;
@@ -1243,7 +1252,7 @@ $(function(){
 	    else
 	    	this.maxlvl = 1;
 	    this.baselvl = this.getBaselvl();
-	    this.pols = this.allPolygons(true,0,0);
+	    this.pols = this.allPolygons(true,0);
 	    this.polsfill = null;
 	  }
 
@@ -1269,6 +1278,42 @@ $(function(){
 
       this.changeZoom = function(newValue, eventKind){
         this.ZOOM = newValue;
+        console.log("ZOOM is changed")
+        if(timerStart != null)
+            eventRecordTable.push([(this.name+" ZOOM"), eventKind, this.ZOOM, (new Date()-timerStart)]);
+        this.init();
+
+        if(this.statu=="unfold")
+            this.polsfill = this.allPolygons(false,0,0);
+        this.draw();
+      }
+
+      this.changeZoomStable = function(newValue, eventKind){
+        console.log("ZOOM is changing "+this.pedestal)
+
+        let diff = this.basecut-this.mins;
+        let hBand = (this.maxs-this.mins)/this.ZOOM;
+        let diff2 = diff/hBand
+        let visBasecut = (diff2-Math.floor(diff2))
+        this.ZOOM = newValue;
+        diff = this.basecut-this.mins;
+        hBand = (this.maxs-this.mins)/this.ZOOM;
+        diff2 = diff/hBand
+        let visBasecut2 = (diff2-Math.floor(diff2))
+
+        let newpedestal = this.pedestal-(visBasecut2-visBasecut)*this.initHeight
+        this.ZOOM +=((newpedestal-this.pedestal)/this.initHeight);
+        this.pedestal = newpedestal;
+        this.mins = this.minValue - ((this.maxs-this.minValue)/this.ZOOM/this.initHeight)*this.pedestal;
+
+        diff = this.basecut-this.mins;
+        hBand = (this.maxs-this.mins)/this.ZOOM;
+        diff2 = diff/hBand
+        let visBasecut3 = (diff2-Math.floor(diff2))
+
+
+        console.log("  visible baseline "+visBasecut+" "+visBasecut2+" "+visBasecut3)
+      	//this.pedestal = 
         console.log("ZOOM is changed")
         if(timerStart != null)
             eventRecordTable.push([(this.name+" ZOOM"), eventKind, this.ZOOM, (new Date()-timerStart)]);
@@ -1728,7 +1773,7 @@ $(function(){
 			    			tempZOOM = 1.0;
 			    		else
 			    			tempZOOM = tempZOOM;
-			    		me.changeZoom(tempZOOM,"wheel + shift key")
+			    		me.changeZoomStable(tempZOOM,"wheel + shift key")
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
@@ -1819,6 +1864,14 @@ $(function(){
 			    	else
 			    		tempinitHeight = parseFloat(tempinitHeight,10);
 			    	me.changeInitHeigth(tempinitHeight,"slider")
+				}
+			});
+			this.sliderPedestal.on('input', function() {
+		    	if(me.statu!="anim" && me.statu!="anim-opti"){
+			    	me.ZOOM +=((this.value-me.pedestal)/me.initHeight);
+			    	me.pedestal = this.value;
+			    	me.init();
+			    	me.draw();
 				}
 			});
 
@@ -1912,6 +1965,8 @@ $(function(){
 			            .append(this.statusButton)
 			        ).append($('<td>')
 			            .append($(this.can))
+			        ).append($('<td>')
+			        	.append(this.sliderPedestal)
 			        ).append($('<td>')
 			        	.append(this.sliderBaseline)
 			        ).append($('<td>')
@@ -2189,7 +2244,6 @@ $(function(){
                                  initHeight, parseResult.name);
             tableResult.push(finalResult);
         }
-        console.log(tableResult)
         for(let i in tableResult){
             tableResult[i].init();
             tableResult[i].initListener();
@@ -2215,13 +2269,22 @@ $(function(){
 
 
 	var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, "first");
-	var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, "scnd");
+	var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, 500, "scnd");
 	test1.init();
+	test2.pedestal = 150;
+	test2.basecut = 26.5;
+	test2.ZOOM -=(test2.pedestal/test2.initHeight);
 	test2.init();
 	test1.initListener();
 	test2.initListener();
 	test1.draw(true);
 	test2.draw(true);
+
+	let diff = test2.basecut-test2.mins;
+    let hBand = (test2.maxs-test2.mins)/test2.ZOOM;
+    let diff2 = diff/hBand
+    let visBasecut = (diff2-Math.floor(diff2))
+    console.log("visBasecut="+(visBasecut*500));
 
 	var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, "third");
 	var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, "fourth");
@@ -2260,7 +2323,6 @@ let finished = false;
             else{ 
                 console.log("il faut finir le test avant d'en commencer un nouveau");
             }
-            console.log(timerStart);
         }
     })
 
