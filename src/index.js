@@ -40,8 +40,8 @@ let $ = require("jquery");
 	        //////////////////////////////////////////////////
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
-//let ws = new WebSocket ('ws://129.175.157.111:9000');
-let ws = new WebSocket ('ws://localhost:9000');
+let ws = new WebSocket ('ws://129.175.157.111:9000');
+//let ws = new WebSocket ('ws://localhost:9000');
 ws.onmessage = function(msg){
     if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
       id = msg.data.slice(8);
@@ -152,6 +152,7 @@ $(function(){
       
       this.shadow = true
       this.pedestal = 0
+      this.ZOOMStable = false 
 
       this.namehtml = $("<span id='title"+$("#myTable tr").length+"'class='title'>"+this.name+"_"+$("#myTable tr").length+"</span>")
 
@@ -195,6 +196,8 @@ $(function(){
       this.shadowButton = $("<input type = 'checkbox' name = 'shadowButton' checked>")
 
       this.alternateButton = $("<input type = 'checkbox' name = 'alternateButton' checked>")
+
+      this.ZOOMStableButton = $("<input type = 'checkbox' name = 'ZOOMStableButton' checked>")
 
 	  this.getmins = function(){
 	    let mint = 0;
@@ -1233,6 +1236,7 @@ $(function(){
 	    this.sliderBaseline[0].value = this.basecut;
 	    this.sliderZOOM[0].value = this.ZOOM;
 	  	this.sliderInitHeight[0].value = this.initHeight;
+        this.sliderPedestal[0].value = this.pedestal;
 	    if(this.baselineType == "Stratum" || this.baselineType == "Stratum0"){
 	        this.scaleYpos = this.ZOOM;
 	        this.minlvl = 1;
@@ -1277,6 +1281,13 @@ $(function(){
       }
 
       this.changeZoom = function(newValue, eventKind){
+        if (this.ZOOMStable)
+            this.changeZoomStable(newValue, eventKind);
+        else
+            this.changeZoomUnstable(newValue, eventKind);
+      }
+
+      this.changeZoomUnstable = function(newValue, eventKind){
         this.ZOOM = newValue;
         console.log("ZOOM is changed")
         if(timerStart != null)
@@ -1773,7 +1784,7 @@ $(function(){
 			    			tempZOOM = 1.0;
 			    		else
 			    			tempZOOM = tempZOOM;
-			    		me.changeZoomStable(tempZOOM,"wheel + shift key")
+			    		me.changeZoom(tempZOOM,"wheel + shift key")
 			    		eventData.stopImmediatePropagation();
 			    		return false;
 			    	}
@@ -1955,6 +1966,13 @@ $(function(){
                 me.draw();
             })
 
+            this.ZOOMStableButton.on('input', function(){
+                if(this.checked)
+                    me.ZOOMStable = true;
+                else
+                    me.ZOOMStable = false;
+            })
+
 
 			//adding different elements to the HTML
 			$("#myTable").find('tbody')
@@ -1981,6 +1999,8 @@ $(function(){
                         .append(this.shadowButton)
                     ).append($('<td>')
                         .append(this.alternateButton)
+                    ).append($('<td>')
+                        .append(this.ZOOMStableButton)
                     )
 
 			    );
