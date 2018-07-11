@@ -46,6 +46,7 @@ ws.onmessage = function(msg){
     if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
       id = msg.data.slice(8);
       console.log("My id is "+id)
+      $("#titleSpan").text("this is the experiment number : " + id);
     }
     else if (typeof msg.data == "string" && msg.data.indexOf("expe done ")>=0){
        let file = msg.data.slice(10); 
@@ -2289,22 +2290,13 @@ $(function(){
 
 
 	var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, "first");
-	var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, 500, "scnd");
+	var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, "scnd");
 	test1.init();
-	test2.pedestal = 150;
-	test2.basecut = 26.5;
-	test2.ZOOM -=(test2.pedestal/test2.initHeight);
 	test2.init();
 	test1.initListener();
 	test2.initListener();
 	test1.draw(true);
 	test2.draw(true);
-
-	let diff = test2.basecut-test2.mins;
-    let hBand = (test2.maxs-test2.mins)/test2.ZOOM;
-    let diff2 = diff/hBand
-    let visBasecut = (diff2-Math.floor(diff2))
-    console.log("visBasecut="+(visBasecut*500));
 
 	var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, "third");
 	var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, "fourth");
@@ -2366,7 +2358,6 @@ let finished = false;
                     }
                 }*/
                 eventRecordTable = new Array();
-                eventRecordTable.push(["Event type", "Event kind", "Value", "timer"]);
                 startEndCounter++;
             }
             else{
