@@ -17,4 +17,26 @@ th {
 
 td{
     height: 20px;
+    width: 300px;
 }
+
+.newEntrie{
+    background: #F70;
+}
+
+.foldUnfold{
+    background: #F47;
+}
+
+.baseline{
+    background: #BBB;
+}
+
+.ZOOM{
+    background: #1A1;
+}
+
+.initHeight{
+    background: #484;
+}
+

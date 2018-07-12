@@ -60,7 +60,6 @@ ws.onopen = function(){
 let startEndCounter = 1;
 
 let eventRecordTable = new Array();
-eventRecordTable.push(["Event type", "Event kind", "Value", "timer"]);
 
 const maxZOOM = 15.0;
 const maxHeight = 100;
@@ -139,19 +138,20 @@ $(function(){
 	  this.statu = "opti";
 	  this.drawingMethod = true
       this.baselineMethod
+      this.shadow
       let tempStrg
       if(this.baselineType == "Stratum"){
         this.baselineMethod = true;
         tempStrg = "<input type = 'checkbox' name = 'baselineMethodButton' checked>"
         this.alternatDraw = true;
+        this.shadow = true
       }
       if(this.baselineType == "Horizon"){
         this.baselineMethod = false;
         tempStrg = "<input type = 'checkbox' name = 'baselineMethodButton'>"
         this.alternatDraw = true;
+        this.shadow = false
       }
-      
-      this.shadow = true
       this.pedestal = 0
       this.ZOOMStable = false 
 
@@ -613,9 +613,9 @@ $(function(){
 	                imgData.data[4*((this.initHeight-1)-k)+3]=255;
 	              }
 	              else{
-	                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[240][0];
-	                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[240][1];
-	                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[240][2];
+	                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[220][0];
+	                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[220][1];
+	                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[220][2];
 	                imgData.data[4*((this.initHeight-1)-k)+3]=255;
 	              }
 	            }
@@ -630,9 +630,9 @@ $(function(){
 	                imgData.data[4*((this.initHeight-1)-k)+3]=255;
 	              }
 	              else{
-	                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[240-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
-	                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[240-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
-	                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[240-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
+	                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
+	                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
+	                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
 	                imgData.data[4*((this.initHeight-1)-k)+3]=255;
 	              }
 	            }
@@ -1012,13 +1012,17 @@ $(function(){
               else {
               ctx.fillStyle=graphToDraw[j].texture;
               let anim = this.addHeight/(this.ZOOM-1)/this.initHeight;
-              if(anim > 0.995)
+              if(anim > 0.990)
                 anim = 1.0;
+              let shift=0
+              if(anim > 0){
+                shift = -this.initHeight-this.initHeight*Math.abs(graphToDraw[j].level+1)*anim
+              }else{
+                shift = -this.initHeight
+              }
               ctx.translate(0, 0+Math.ceil((propup-1)*this.initHeight*anim)+this.addHeight/(this.ZOOM-1));
               ctx.scale(1.0,-1);
-              ctx.translate(0, -this.initHeight
-                               -this.initHeight*Math.abs(graphToDraw[j].level+1)*anim
-                            );
+              ctx.translate(0, shift);
               ctx.beginPath();
                 
               ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
@@ -1232,7 +1236,7 @@ $(function(){
 	    	this.mins = this.minValue - ((this.maxs-this.minValue)/this.ZOOM/this.initHeight)*this.pedestal;
 	    	console.log(this.mins)
 	    //}
-	    this.sliderBaseline[0].min  = Math.ceil(this.mins-1);
+	    this.sliderBaseline[0].min  = Math.ceil(this.minValue-1);
 	  	this.sliderBaseline[0].max  = Math.ceil(this.maxs+1);
 	    this.sliderBaseline[0].value = this.basecut;
 	    this.sliderZOOM[0].value = this.ZOOM;
@@ -1778,7 +1782,7 @@ $(function(){
 		    	eventData.preventDefault()
 		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 			    	if(eventData.shiftKey){
-			    		let tempZOOM = me.ZOOM + (eventData.deltaY/Math.abs(eventData.deltaY))*0.15;
+			    		let tempZOOM = me.ZOOM + (eventData.deltaY/Math.abs(eventData.deltaY))*(-0.15);
 			    		if(tempZOOM >= maxZOOM)
 			    			tempZOOM = maxZOOM;
 			    		else if(tempZOOM <= 1.0)
@@ -2316,7 +2320,8 @@ $(function(){
 	var parseTest4Hor = graphFromCSV("data/MSFT.csv", ZOOM, "Horizon", initHeight);
 	var parseTest4Str = graphFromCSV("data/MSFT.csv", ZOOM, "Stratum", initHeight);
 
-    var tabletest = graphsFromCSVTable("data/finance_data_used.csv", ZOOM, "Stratum", initHeight, [4,5,6,7,8]);
+    var tabletestSG = graphsFromCSVTable("data/finance_data_used.csv", ZOOM, "Stratum", initHeight, [4,5,6,7,8]);
+    var tabletestHG = graphsFromCSVTable("data/finance_data_used.csv", ZOOM, "Horizon", initHeight, [4,5,6,7,8]);
     console.log(tableGraph);
 
  
@@ -2342,7 +2347,7 @@ let finished = false;
         if(!finished){
             if(timerStart!=null){
                 timerLength = new Date() - timerStart;
-                eventRecordTable.push([("Expe End number "+startEndCounter),"end pressed" , "no value", timerLength]);
+                eventRecordTable.push([("Expe End number "+startEndCounter),"stop pressed" , "no value", timerLength]);
                 timerStart = null;
                 console.log(eventRecordTable);
                 if(startEndCounter>1)
@@ -2383,4 +2388,27 @@ let finished = false;
 });
 
 let id = -1;
+
+            //////////////////////////////////////////////////
+            //               Expe table tasks               //
+            //////////////////////////////////////////////////
+
+function generateIntTab(stop){
+    let res = new Array();
+    for(let i =0; i < stop; i++){
+        let num;
+        do{
+            num = Math.floor((181)*Math.random())+1;
+        }while(res.includes(num));
+        res.push(num);
+    }
+    return res;
+}
+
+var tableTasks = new Array();
+tableTasks.push(["id","graphs to use", "dates", "good answer", "test type", "graphs value", "differences"]);
+tableTasks.push([1,generateIntTab(32),[],"","MAX",[],0]);
+
+console.log(tableTasks);
+
 
