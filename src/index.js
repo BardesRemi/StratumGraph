@@ -2277,6 +2277,81 @@ $(function(){
         console.log("done");
         return tableResult;
     }
+
+
+    function TableDataFromCSVTable(filePath){
+        let tableResult = new Array();
+        let timeB;
+        let timeE;
+        let timetable = new Array();
+        let vals;
+        let lines;
+
+        $.ajax({
+            url:filePath,
+            async:false,
+            success:function(data){
+                lines = data.split(/\r?\n|\r/);
+                vals = lines[0].split(',');
+                for(let d in vals){
+                    if(d<2)
+                        continue;
+                    else{
+                        let split = vals[d].split('/');
+                        let date = split[1]+"-"+split[0]+"-"+split[2];
+                        if(d==2)
+                            timeB = new Date(date);
+                        else if(d==vals.length-1)
+                            timeE = new Date(date);
+                        timetable.push(new Date(date));
+                    }
+                }
+            }
+        });
+        for(let i in timetable){
+            timetable[i] = timetable[i] - timeB;
+            timetable[i] = timetable[i]/(timeE-timeB);
+        }
+
+        for(let i in tableint){
+            let parseResult = new Object({
+                name : 'pouet',
+                timeBegin : timeB,
+                timeEnd : timeE,
+                time : timetable,
+                valueMax : 0,
+                valueMin : 1000000,
+                value : new Array()
+            })
+            vals = lines[tableint[parseInt(i)]+1].split(',');
+            for(let d in vals){
+                if(d<2)
+                    parseResult.name = vals[d];
+                else{
+                    let val = parseFloat(vals[d]);
+                    parseResult.value.push(val);
+                }
+            }
+
+            for(let i in parseResult.value){
+                if(parseResult.value[i] > parseResult.valueMax)
+                    parseResult.valueMax = parseResult.value[i];
+                else if(parseResult.value[i] < parseResult.valueMin)
+                    parseResult.valueMin = parseResult.value[i];
+            }
+            let finalResult = new Graph((parseResult.valueMax+parseResult.valueMin)/2, ZOOM, 1,
+                                 parseResult.value, parseResult.time, BaseLineType, 0, parseResult.time.length-1,
+                                 initHeight, parseResult.name);
+            tableResult.push(finalResult);
+        }
+        for(let i in tableResult){
+            tableResult[i].init();
+            tableResult[i].initListener();
+            tableResult[i].draw(true);
+        }
+        console.log("done");
+        return tableResult;
+    }
 	        //////////////////////////////////////////////////
 	        //          Creation of multiple Graphs         //
 	        //////////////////////////////////////////////////
@@ -2288,8 +2363,8 @@ $(function(){
 	  time[i] = i/255;
 	}
 
-	let ZOOM = 13.5
-	var initHeight = 35;
+	let ZOOM = 8.0
+	var initHeight = 25;
 	let BASELINE = 28.76;
 
 
@@ -2393,22 +2468,125 @@ let id = -1;
             //               Expe table tasks               //
             //////////////////////////////////////////////////
 
-function generateIntTab(stop){
+function generateIntTab(stop, maxInt){
     let res = new Array();
     for(let i =0; i < stop; i++){
         let num;
         do{
-            num = Math.floor((181)*Math.random())+1;
+            num = Math.floor((maxInt)*Math.random())+1;
         }while(res.includes(num));
         res.push(num);
     }
     return res;
 }
 
+function generateAnswer(tableint, tabTime){
+    let tableResult = new Array();
+    let timeB;
+    let timeE;
+    let timetable = new Array();
+    let vals;
+    let lines;
+    let graphsValue = new Array();
+    let maxValue;
+    let scndMaxValue;
+    let differences;
+
+    $.ajax({
+        url:"data/finance_data_used.csv",
+        async:false,
+        success:function(data){
+            lines = data.split(/\r?\n|\r/);
+            vals = lines[0].split(',');
+            for(let d in vals){
+                if(d<2)
+                    continue;
+                else{
+                    let split = vals[d].split('/');
+                    let date = split[1]+"-"+split[0]+"-"+split[2];
+                    if(d==2)
+                        timeB = new Date(date);
+                    else if(d==vals.length-1)
+                        timeE = new Date(date);
+                    timetable.push(new Date(date));
+                }
+            }
+        }
+    });
+    for(let i in timetable){
+        timetable[i] = timetable[i] - timeB;
+        timetable[i] = timetable[i]/(timeE-timeB);
+    }
+
+    for(let i in tableint){
+        let parseResult = new Object({
+            name : 'pouet',
+            valueMax : 0,
+            valueMin : 1000000,
+            value : new Array()
+        })
+        vals = lines[tableint[parseInt(i)]+1].split(',');
+        for(let d in vals){
+            if(d<2)
+                parseResult.name = vals[d];
+            else{
+                let val = parseFloat(vals[d]);
+                parseResult.value.push(val);
+            }
+        }
+
+        for(let i in parseResult.value){
+            if(parseResult.value[i] > parseResult.valueMax)
+                parseResult.valueMax = parseResult.value[i];
+            else if(parseResult.value[i] < parseResult.valueMin)
+                parseResult.valueMin = parseResult.value[i];
+        }
+        tableResult.push(parseResult);
+    }
+    for(let i in tableint){
+        graphsValue.push(tableResult[i].value[tabTime[i]]);
+    }
+    for(let i in graphsValue){
+        if(i==0){
+            maxValue = graphsValue[i];
+            scndMaxValue = maxValue;
+        }
+        else{
+            if(maxValue < graphsValue[i]){
+                scndMaxValue = maxValue;
+                maxValue = graphsValue[i];
+            }
+            else if(scndMaxValue < graphsValue[i]){
+                scndMaxValue = graphsValue[i];
+            }
+        }
+    }
+    differences = maxValue - scndMaxValue;
+    console.log(tableResult)
+    console.log(graphsValue)
+    console.log(maxValue +" "+scndMaxValue+" "+ differences)
+}
+
 var tableTasks = new Array();
 tableTasks.push(["id","graphs to use", "dates", "good answer", "test type", "graphs value", "differences"]);
-tableTasks.push([1,generateIntTab(32),[],"","MAX",[],0]);
+tableTasks.push([1,generateIntTab(32, 181),generateIntTab(32,250),"","MAX",[],0]);
+generateAnswer(tableTasks[1][1],tableTasks[1][2])
 
 console.log(tableTasks);
 
-
+/*
+idée pour l'expé :
+test Same "alternatif" :
+    - on à 28 graphs != (distracteur).
+    - on prend un des 28 graph à partir de lui on génère 4 "faux jumeaux". et 1 de ces faux jumeaux sera notre cible.
+    - on garde le même "jeu" de 26 graphs d'une question à l'autre, mais on change juste le graphs d'origine pour les jumeaux
+    - les modifs faites aux jumeaux ne doivent pas dépasser une "bande" de hauteur, et 5% de la longueur puis symétrie.
+    - durant cette phase aucune interactions possible.
+    - une fois que le "cobaye" à selectionner le graphs qu'il pense être le bon. Tous les distracteurs se grisent ne
+        laissant que la cible et le "modèle". Là le cobaye doit modifier la baseline du modèle pour qu'au final elle soit
+        le plus possible au même endroit que sur la cible.
+    - 4 éléments à mesurer. 
+        - le temps pour trouver le jumeau du modèle.
+        - le jumeau selectionné par le cobaye.
+        - le temps pour mettre la baseline au bon endroit.
+        - le taux de différence entre les deux baseline.
