@@ -2509,7 +2509,7 @@ function graphGeneration(ZOOM, BaseLineType, initHeight, tableint){
     let targetTemp = tableResult[targetInd]
     console.log(targetTemp)
     console.log("le nom de la cible est : " + targetTemp.name);
-    let target = new Graph(targetTemp.basecut, targetTemp.ZOOM, 1, targetTemp.tabledata, targetTemp.timepos, targetTemp.baselineType, 0, targetTemp.end, 
+    let target = new Graph(targetTemp.basecut+4, targetTemp.ZOOM, 1, targetTemp.tabledata, targetTemp.timepos, targetTemp.baselineType, 0, targetTemp.end, 
     	targetTemp.initHeight, "target")
     tableResult.push(target);
     for(let i in tableResult){
