@@ -5,7 +5,7 @@ let $ = require("jquery");
 	        //////////////////////////////////////////////////
 	        //       List of differents color Scaling       //
 	        //////////////////////////////////////////////////
-	    
+
 	    let magentaScale = colors.oneColor("magentaScale");
 	    let heatScale    = colors.oneColor("heatScale"); //stratum graph > 0
 	    let btcScale     = colors.oneColor("btcScale");  //stratum graph < 0
@@ -49,7 +49,7 @@ ws.onmessage = function(msg){
       $("#titleSpan").text("this is the experiment number : " + id);
     }
     else if (typeof msg.data == "string" && msg.data.indexOf("expe done ")>=0){
-       let file = msg.data.slice(10); 
+       let file = msg.data.slice(10);
        window.location.href  ="table.html?file="+file;
     }
 }
@@ -69,7 +69,7 @@ let timerStart = null;
 let timerLength = null;
 
 let dragGraph = null;
-let dragStart = null; 
+let dragStart = null;
 let initialBaseline = null;
 let windowInteractionStatus = null;
 
@@ -86,7 +86,7 @@ $(function(){
 	$(".adjuster").on('click',function(){
 		adj($(this.parentNode));
 	})
-	
+
 
     	    //////////////////////////////////////////////////
 	        //        		calculating method  		    //
@@ -153,7 +153,7 @@ $(function(){
         this.shadow = false
       }
       this.pedestal = 0
-      this.ZOOMStable = false 
+      this.ZOOMStable = false
 
       this.namehtml = $("<span id='title"+$("#myTable tr").length+"'class='title'>"+this.name+"_"+$("#myTable tr").length+"</span>")
 
@@ -203,7 +203,7 @@ $(function(){
 	  this.getmins = function(){
 	    let mint = 0;
 	    for (let i=1; i<this.tabledata.length-1; i++){
-	      if (this.tabledata[i] < this.tabledata[mint]) mint =i; 
+	      if (this.tabledata[i] < this.tabledata[mint]) mint =i;
 	    }
 	    return this.tabledata[mint];
 	  }
@@ -289,10 +289,10 @@ $(function(){
 
 	    polystack[n0].ptx = new Array();
 	    polystack[n0].pty = new Array();
-	            
+
 	    polystack[n0].ptx.push(this.timepos[this.start]);
 	    polystack[n0].pty.push(1.0);
-	            
+
 	    polystack[n0].ptx.push(this.timepos[this.start]);
 	    polystack[n0].pty.push(1.0-val0%1.0);
 
@@ -307,27 +307,27 @@ $(function(){
 	      var t   = this.timepos[i];
           if(timeSkip>0 && t < pt + timeSkip)
             continue;
-          
+
 
 	      var val = ((this.tabledata[i]-this.baselvl)*mul)*scaleY/(max-min);
 	      var n   = Math.floor(val); // band index
 
-	      if (n==n0 ){ 
+	      if (n==n0 ){
 	          // staying at the same level
 	          // If straight canvas useless to add additional points on underlying polygon
 	          //if (n0>0) {
 	          //  polystack[n0-1].ptx.push(t);
 	          //  polystack[n0-1].pty.push(0);
 	          //}
-	          
+
 	        if (n0>=0) {
 	          polystack[n0].ptx.push(t);
 	          polystack[n0].pty.push(1.0-val%1.0);
 	        }
 	        else {
-	          //console.log("WARNING: negative n0")  
+	          //console.log("WARNING: negative n0")
 	        }
-	      } 
+	      }
 	      else if (n<n0){// going down one or MANY level(s)
 	        while (n<n0){
 	          var w1 = pval-n0
@@ -351,11 +351,11 @@ $(function(){
 	            else {
 	            	//console.log("WARNING: flat polygon");
 	        	}
-	          } 
+	          }
 	          else{
 	            //console.log("WARNING: negative n0");
 	          }
-	            
+
 
 	          if (n0>0) {
 	            polystack[n0-1].ptx.push(newt);
@@ -380,7 +380,7 @@ $(function(){
 	          polystack[n0].ptx.push(t);
 	          polystack[n0].pty.push(1.0-val%1.0);
 	        }
-	      } 
+	      }
 	      else if(n>n0) { // going up one or MANY level
 	        while (n>n0){
 	          var w1 = (n0+1)-pval;
@@ -399,14 +399,14 @@ $(function(){
 	              miny = Math.min(miny, pol.pty[l]);
 	              maxy = Math.max(maxy, pol.pty[l]);
 	            }
-	                    
+
 	            if (miny!=maxy) {
 	              locPolylist.push(pol);
 	            }
 	            else {
 	            	//console.log("WARNING: flat polygon");
 	        	}
-	                    
+
 	            polystack[n0-1]=null;
 	          }
 
@@ -417,7 +417,7 @@ $(function(){
 	          if (n0>=0) {
 	            polystack[n0].ptx.push(newt);
 	            polystack[n0].pty.push(0);
-	          } 
+	          }
 	          else{
 	            //console.log("WARNING: negative n0");
 	          }
@@ -435,7 +435,7 @@ $(function(){
 	        if (n0>=0) {
 	          polystack[n0].ptx.push(t);
 	          polystack[n0].pty.push(1.0-val%1.0);
-	        } 
+	        }
 	        else {
 	            //console.log("WARNING: flat polygon");
 	        }
@@ -444,12 +444,12 @@ $(function(){
 	      pt   = t;
 	    }
 	    if (n0>=0) {// finish the on going polygon at the last level
-	      polystack[n0].ptx.push(this.timepos[this.end]); 
+	      polystack[n0].ptx.push(this.timepos[this.end]);
 	      polystack[n0].pty.push(1.0-val%1.0);
 	      polystack[n0].ptx.push(this.timepos[this.end]);
 	      polystack[n0].pty.push(1.0);
 	    }
-	            
+
 	    if (n0>0) {// finish on going polygons at the last level
 	      let lvl = n0;
 	      if(!optim){
@@ -495,7 +495,7 @@ $(function(){
 	      }
 	    }
 	    if (n0>=0) {
-	    // finish the on going polygon 
+	    // finish the on going polygon
 	      var pol = polystack[n0];
 	      var miny = pol.pty[0];
 	      var maxy = pol.pty[0];
@@ -509,7 +509,7 @@ $(function(){
 	      else {
 	        //console.log("WARNING: flat polygon");
 	    	}
-	    } 
+	    }
 	    else{
 	          //console.log("WARNING: negative n0");
 	    }
@@ -711,7 +711,7 @@ $(function(){
 	      let res = this.computePolygons(this.baselvl,optim,1,this.mins,this.maxs,timeSkip);
 	      return this.setColor(res);
 	    }
-	          
+
 	    else {
 	      if(this.baselineType == "Horizon"){
 	      let res = new Array();
@@ -737,7 +737,7 @@ $(function(){
         else if(this.statu == "opti" && this.can.height!=this.initHeight)
             this.can.height = this.initHeight;
 	    let ctx = this.can.getContext("2d");
-	    ctx.fillStyle="#F0FF0F";  
+	    ctx.fillStyle="#F0FF0F";
 	    ctx.clearRect(0,0,this.can.width, this.can.height);
 
 	    let up = (this.maxs-this.baselvl)
@@ -759,9 +759,9 @@ $(function(){
 	        ctx.translate(0, 0-this.initHeight+graphToDraw[j].pty[0]*this.initHeight+shift
 	                   );
 	        ctx.beginPath();
-	          
+
 	        ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
-	       
+
 	        for (let i=1; i<graphToDraw[j].ptx.length; i++)
 	          ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
 	        ctx.closePath();
@@ -779,9 +779,9 @@ $(function(){
 	                       -this.initHeight*Math.abs(graphToDraw[j].level+1)*anim
 	                    );
 	      ctx.beginPath();
-	        
+
 	      ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
-	     
+
 	      for (let i=1; i<graphToDraw[j].ptx.length; i++)
 	        ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
 	      ctx.closePath();
@@ -833,7 +833,7 @@ $(function(){
             this.can.height = this.initHeight;
 
 	    let ctx = this.can.getContext("2d");
-	    ctx.fillStyle="#F0FF0F";  
+	    ctx.fillStyle="#F0FF0F";
 	    ctx.clearRect(0,0,this.can.width, this.can.height);
 	    let up = (this.maxs-this.baselvl)
 
@@ -873,9 +873,9 @@ $(function(){
 		        ctx.translate(0, 0-this.initHeight+graphToDraw[j].pty[0]*this.initHeight+shift
 		                   );
 		        ctx.beginPath();
-		          
+
 		        ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
-		       
+
 		        for (let i=1; i<graphToDraw[j].ptx.length; i++)
                     ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
 		        ctx.closePath();
@@ -927,9 +927,9 @@ $(function(){
 				if(tranAfterRota)
 					ctx.translate(0, shiftAfterRot);
 			    ctx.beginPath();
-			        
+
 			    ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
-			     
+
 			    for (let i=1; i<graphToDraw[j].ptx.length; i++)
 			    	ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
 			    ctx.closePath();
@@ -981,7 +981,7 @@ $(function(){
                 this.can.height = this.initHeight;
 
             let ctx = this.can.getContext("2d");
-            ctx.fillStyle="#F0FF0F";  
+            ctx.fillStyle="#F0FF0F";
             ctx.clearRect(0,0,this.can.width, this.can.height);
             let up = (this.maxs-this.baselvl)
 
@@ -1002,9 +1002,9 @@ $(function(){
                 ctx.translate(0, 0-this.initHeight+graphToDraw[j].pty[0]*this.initHeight+shift
                            );
                 ctx.beginPath();
-                  
+
                 ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
-               
+
                 for (let i=1; i<graphToDraw[j].ptx.length; i++)
                   ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
                 ctx.closePath();
@@ -1024,9 +1024,9 @@ $(function(){
               ctx.scale(1.0,-1);
               ctx.translate(0, shift);
               ctx.beginPath();
-                
+
               ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
-             
+
               for (let i=1; i<graphToDraw[j].ptx.length; i++)
                 ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
               ctx.closePath();
@@ -1078,7 +1078,7 @@ $(function(){
             this.can.height = this.initHeight;
 
         let ctx = this.can.getContext("2d");
-        ctx.fillStyle="#F0FF0F";  
+        ctx.fillStyle="#F0FF0F";
         ctx.clearRect(0,0,this.can.width, this.can.height);
         let up = (this.maxs-this.baselvl)
 
@@ -1118,9 +1118,9 @@ $(function(){
                 ctx.translate(0, 0-this.initHeight+graphToDraw[j].pty[0]*this.initHeight+shift
                            );
                 ctx.beginPath();
-                  
+
                 ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
-               
+
                 for (let i=1; i<graphToDraw[j].ptx.length; i++)
                   ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
                 ctx.closePath();
@@ -1171,9 +1171,9 @@ $(function(){
                 if(tranAfterRota)
                     ctx.translate(0, shiftAfterRot);
                 ctx.beginPath();
-                    
+
                 ctx.moveTo(graphToDraw[j].ptx[0]*this.can.width, graphToDraw[j].pty[0]*this.initHeight);
-                 
+
                 for (let i=1; i<graphToDraw[j].ptx.length; i++)
                     ctx.lineTo(graphToDraw[j].ptx[i]*this.can.width, graphToDraw[j].pty[i]*this.initHeight);
                 ctx.closePath();
@@ -1275,7 +1275,7 @@ $(function(){
             this.pols = this.setColor(this.pols)
             if(this.statu == "unfold")
                 this.polsfill = this.setColor(this.polsfill);
-            this.draw(); 
+            this.draw();
         }
         else{
             this.init();
@@ -1329,7 +1329,7 @@ $(function(){
 
 
         console.log("  visible baseline "+visBasecut+" "+visBasecut2+" "+visBasecut3)
-      	//this.pedestal = 
+      	//this.pedestal =
         console.log("ZOOM is changed")
         if(timerStart != null)
             eventRecordTable.push([(this.name+" ZOOM"), eventKind, this.ZOOM, (new Date()-timerStart)]);
@@ -1353,7 +1353,7 @@ $(function(){
         let changes= "";
         let me = this;
         console.log("Fold/unfold button pressed");
-        if(this.statu == "opti"){ 
+        if(this.statu == "opti"){
             changes = "unfold";
             me.polsfill = null;
             this.timer = setInterval(function(){
@@ -1518,7 +1518,7 @@ $(function(){
 					        		me.statu= "anim";
 					        	if(me.basecut>=tempBasecut){
 					        		me.basecut = tempBasecut;
-						            clearInterval(me.timer); 
+						            clearInterval(me.timer);
 						            me.statu=oldStatu;
 						        }
 				        	}
@@ -1688,7 +1688,7 @@ $(function(){
 				});
                 if(windowInteractionStatus == "movingGraph"){
                 	if (dragGraph!=null && dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y)>20){
-    	  
+
                 	  $(".title").each(function( index ) {
     					 let offset = $(this).offset()
                 	  	 if(eventData.pageY>offset.top && eventData.pageY<offset.top+$(this).height())
@@ -1716,7 +1716,7 @@ $(function(){
 
                     $(".movingBaseline1").each(function(index){
                         $(this).removeClass("movingBaseline1")
-                    }); 
+                    });
 
                     dragGraph = null;
                     dragStart = null;
@@ -1753,7 +1753,7 @@ $(function(){
 	            	dragGraph = null;
 	            	dragStart = null;
                     windowInteractionStatus = null
-	            	
+
             	    eventData.preventDefault();
             	    eventData.stopPropagation();
                     return true;
@@ -1767,7 +1767,7 @@ $(function(){
                     });
                     dragGraph = null;
                     dragStart = null;
-                    
+
                     eventData.preventDefault();
                     eventData.stopPropagation();
                     return true;
@@ -1779,7 +1779,11 @@ $(function(){
 
 		   	//wheel interactions
 		    this.can.addEventListener("wheel", function(eventData){
+		    	console.log("wheel "+eventData.deltaY+" "+eventData.deltaX)
 		    	eventData.preventDefault()
+		    	if (eventData.deltaY==0) {
+		    		return;
+		    	}
 		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 			    	if(eventData.shiftKey){
 			    		let tempZOOM = me.ZOOM + (eventData.deltaY/Math.abs(eventData.deltaY))*(-0.15);
@@ -1893,7 +1897,7 @@ $(function(){
 
 			//button interactions
 			/*this.statusButton.on('click', function(){
-		    	if(me.statu == "opti"){	
+		    	if(me.statu == "opti"){
 				    me.initHeight=me.can.height;
 				    me.timer = setInterval(function(){
 				        if(me.addHeight<=me.initHeight || me.addHeight >= me.initHeight*(me.ZOOM-2))
@@ -2013,7 +2017,7 @@ $(function(){
              let id = $("#myTable tr").length-1
              $(this.can).attr("id", "canvas_"+id)
              $(this.sliderBaseline).attr("id", "slider_"+id)
-             
+
 
              let originRange;
              let originMaxs;
@@ -2103,14 +2107,14 @@ $(function(){
 	}
 			//////////////////////////////////////////////////
 	        //          	Parsing a CSV file   	        //
-	        //////////////////////////////////////////////////	
+	        //////////////////////////////////////////////////
 
 	/*
 		The CSV File must be in this shape :
 		first line "titles" of each columns
 		first column must be a date (with the right format)
 		Last column must be the data
-		"parsing" session can be change for 
+		"parsing" session can be change for
 	*/
 	function graphFromCSV(filePath, ZOOM, BaseLineType, initHeight){
 		let parseResult = new Object({
@@ -2172,7 +2176,7 @@ $(function(){
 		    			if(i!=0 && i!=parseResult.time.length-1){
 	    					tempTimeTable.push(parseResult.time[i])
 	    					tempValueTable.push(parseFloat(parseResult.value[i]))
-		    			} 
+		    			}
 		    			else{
 		    				tempTimeTable.push(parseResult.time[i])
 		    				tempValueTable.push(parseFloat(parseResult.value[i]))
@@ -2186,7 +2190,7 @@ $(function(){
 		    			parseResult.valueMax = parseResult.value[i];
 		    		else if(parseResult.value[i] < parseResult.valueMin)
 		    			parseResult.valueMin = parseResult.value[i];
-		    	}  
+		    	}
 	        }
 	    });
 	    console.log("done");
@@ -2459,11 +2463,11 @@ $(function(){
 
     const DATATABLE = tableDataFromCSVTable("data/finance_data_used.csv");
 
- 
+
             //////////////////////////////////////////////////
             //              Expe timer gesture              //
-            ////////////////////////////////////////////////// 
-let finished = false; 
+            //////////////////////////////////////////////////
+let finished = false;
     $("#timerStartButton").on('click', function(){
         if(!finished){
             if(timerStart==null){
@@ -2472,7 +2476,7 @@ let finished = false;
                 timerLength = null;
                 ws.send("start");
             }
-            else{ 
+            else{
                 console.log("il faut finir le test avant d'en commencer un nouveau");
             }
         }
@@ -2494,7 +2498,7 @@ let finished = false;
                       id = msg.data.slice(8);
                     } else if (typeof msg.data == "string"){
                       console.log('LE SERVER ME DIT : '+msg.data);
-                    
+
                     }
                 }*/
                 eventRecordTable = new Array();
@@ -2511,7 +2515,7 @@ let finished = false;
             if(timerStart!=null){
                 console.log("il faut finir le test avant de mettre fin à l'expe");
             }
-            else if(timerLength == null){ 
+            else if(timerLength == null){
                 console.log("il faut fair le test avant d'essayer de le finir");
             }else{
                 console.log("l'expe est finie")
@@ -2645,7 +2649,7 @@ test Same "alternatif" :
     - une fois que le "cobaye" à selectionner le graphs qu'il pense être le bon. Tous les distracteurs se grisent ne
         laissant que la cible et le "modèle". Là le cobaye doit modifier la baseline du modèle pour qu'au final elle soit
         le plus possible au même endroit que sur la cible.
-    - 4 éléments à mesurer. 
+    - 4 éléments à mesurer.
         - le temps pour trouver le jumeau du modèle.
         - le jumeau selectionné par le cobaye.
         - le temps pour mettre la baseline au bon endroit.
