@@ -2352,6 +2352,51 @@ $(function(){
         console.log("done");
         return tableResult;
     }
+
+
+    function tableDataFromCSVTable(filePath){
+
+        let timeB;
+        let timeE;
+        let timeTable = new Array();
+        let dataTable
+        let vals;
+        let lines;
+
+        $.ajax({
+            url:filePath,
+            async:false,
+            success:function(data){
+                lines = data.split(/\r?\n|\r/);
+                vals = lines[0].split(',');
+                for(let d in vals){
+                    if(d<2)
+                        continue;
+                    else{
+                        let split = vals[d].split('/');
+                        let date = split[1]+"-"+split[0]+"-"+split[2];
+                        if(d==2)
+                            timeB = new Date(date);
+                        else if(d==vals.length-1)
+                            timeE = new Date(date);
+                        timeTable.push(new Date(date));
+                    }
+                }
+                for(let i=1 ; i<lines.length ; i++){
+                    vals = lines[i].split(',');
+                    let tempTabLine = new Array();
+                    for(let d in vals){
+                        tempTabLine.push(vals[d]);
+                    }
+
+                }
+            }
+        });
+        for(let i in timeTable){
+            timeTable[i] = timeTable[i] - timeB;
+            timeTable[i] = timeTable[i]/(timeE-timeB);
+        }
+    }
 	        //////////////////////////////////////////////////
 	        //          Creation of multiple Graphs         //
 	        //////////////////////////////////////////////////
