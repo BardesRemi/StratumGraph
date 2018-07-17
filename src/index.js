@@ -40,8 +40,8 @@ let $ = require("jquery");
 	        //////////////////////////////////////////////////
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
-let ws = new WebSocket ('ws://129.175.157.111:9000');
-//let ws = new WebSocket ('ws://localhost:9000');
+//let ws = new WebSocket ('ws://129.175.157.111:9000');
+let ws = new WebSocket ('ws://localhost:9000');
 ws.onmessage = function(msg){
     if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
       id = msg.data.slice(8);
@@ -789,7 +789,7 @@ $(function(){
 	      if(this.shadow){
     	      if(this.statu == "opti" || this.statu == "anim-opti"){
     	    	ctx.shadowColor = graphToDraw[j].shadow;
-    	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
+    	        ctx.shadowBlur = 2//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
     	        ctx.shadowOffsetX = 0;
     	        ctx.shadowOffsetY = 0;
     	      }
@@ -937,7 +937,7 @@ $(function(){
 	      if(this.shadow){
     	      if(this.statu == "opti" || this.statu == "anim-opti"){
     	    	ctx.shadowColor = graphToDraw[j].shadow;
-    	        ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
+    	        ctx.shadowBlur = 2//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
     	        ctx.shadowOffsetX = 0;
     	        ctx.shadowOffsetY = 0;
     	      }
@@ -1034,7 +1034,7 @@ $(function(){
               if(this.shadow){
                   if(this.statu == "opti" || this.statu == "anim-opti"){
                     ctx.shadowColor = graphToDraw[j].shadow;
-                    ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
+                    ctx.shadowBlur = 2//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
                     ctx.shadowOffsetX = 0;
                     ctx.shadowOffsetY = 0;
                   }
@@ -1181,7 +1181,7 @@ $(function(){
           if(this.shadow){
               if(this.statu == "opti" || this.statu == "anim-opti"){
                 ctx.shadowColor = graphToDraw[j].shadow;
-                ctx.shadowBlur = 1//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
+                ctx.shadowBlur = 2//1-(Math.min(1, (this.addHeight/((this.ZOOM-1)*this.initHeight))));
                 ctx.shadowOffsetX = 0;
                 ctx.shadowOffsetY = 0;
               }
@@ -1360,7 +1360,7 @@ $(function(){
                 if(me.addHeight<=me.initHeight ||me.addHeight >= me.initHeight*(me.ZOOM-2))
                     me.addHeight++;
                 else
-                    me.addHeight= me.addHeight*1.03;
+                    me.addHeight= me.addHeight*1.1;
                 me.statu="anim";
                 if(me.addHeight>=Math.floor((me.ZOOM-1)*me.initHeight)){
                     me.statu="unfold";
@@ -1394,7 +1394,7 @@ $(function(){
                     if(me.addHeight<=me.initHeight ||me.addHeight >= me.initHeight*(me.ZOOM-2))
                         me.addHeight--;
                     else
-                        me.addHeight= me.addHeight*0.97;
+                        me.addHeight= me.addHeight*0.90;
                 }
                 if(me.statu=="anim"){
                     if(me.polsfill == null)
@@ -2359,7 +2359,8 @@ $(function(){
         let timeB;
         let timeE;
         let timeTable = new Array();
-        let dataTable
+        let dataTable = new Array();
+        let resTable = new Array();
         let vals;
         let lines;
 
@@ -2370,8 +2371,11 @@ $(function(){
                 lines = data.split(/\r?\n|\r/);
                 vals = lines[0].split(',');
                 for(let d in vals){
-                    if(d<2)
-                        continue;
+                    if(d==0)
+                        timeTable.push("dates");
+                    else if(d==1){
+                    	continue;
+                    }
                     else{
                         let split = vals[d].split('/');
                         let date = split[1]+"-"+split[0]+"-"+split[2];
@@ -2385,17 +2389,26 @@ $(function(){
                 for(let i=1 ; i<lines.length ; i++){
                     vals = lines[i].split(',');
                     let tempTabLine = new Array();
-                    for(let d in vals){
+                    for(let d=1 ; d<vals.length-2 ; d++){
                         tempTabLine.push(vals[d]);
                     }
-
+                    dataTable.push(tempTabLine);
                 }
             }
         });
         for(let i in timeTable){
-            timeTable[i] = timeTable[i] - timeB;
-            timeTable[i] = timeTable[i]/(timeE-timeB);
+        	if(i==0)
+        		continue;
+        	else{
+        		timeTable[i] = timeTable[i] - timeB;
+            	timeTable[i] = timeTable[i]/(timeE-timeB);
+        	}
         }
+        resTable.push(timeTable);
+        for(let i in dataTable){
+        	resTable.push(dataTable[i]);
+        }
+        return resTable
     }
 	        //////////////////////////////////////////////////
 	        //          Creation of multiple Graphs         //
@@ -2443,6 +2456,8 @@ $(function(){
     var tabletestSG = graphsFromCSVTable("data/finance_data_used.csv", ZOOM, "Stratum", initHeight, [4,5,6,7,8]);
     var tabletestHG = graphsFromCSVTable("data/finance_data_used.csv", ZOOM, "Horizon", initHeight, [4,5,6,7,8]);
     console.log(tableGraph);
+
+    const DATATABLE = tableDataFromCSVTable("data/finance_data_used.csv");
 
  
             //////////////////////////////////////////////////
