@@ -2279,7 +2279,7 @@ $(function(){
     }
 
 
-    function TableDataFromCSVTable(filePath){
+    function graphsFromCSVTable(filePath, ZOOM, BaseLineType, initHeight, tableint){
         let tableResult = new Array();
         let timeB;
         let timeE;
@@ -2589,4 +2589,4 @@ test Same "alternatif" :
         - le temps pour trouver le jumeau du modèle.
         - le jumeau selectionné par le cobaye.
         - le temps pour mettre la baseline au bon endroit.
-        - le taux de différence entre les deux baseline.
+        - le taux de différence entre les deux baseline.*/
