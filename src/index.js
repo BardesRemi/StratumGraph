@@ -198,7 +198,7 @@ $(function(){
 
       this.alternateButton = $("<input type = 'checkbox' name = 'alternateButton' checked>")
 
-      this.ZOOMStableButton = $("<input type = 'checkbox' name = 'ZOOMStableButton' checked>")
+      this.ZOOMStableButton = $("<input type = 'checkbox' name = 'ZOOMStableButton'>")
 
 	  this.getmins = function(){
 	    let mint = 0;
@@ -1234,7 +1234,6 @@ $(function(){
 	    this.maxs = this.getmaxs();
 	    //if(this.pedestal > 0){
 	    	this.mins = this.minValue - ((this.maxs-this.minValue)/this.ZOOM/this.initHeight)*this.pedestal;
-	    	console.log(this.mins)
 	    //}
 	    this.sliderBaseline[0].min  = Math.ceil(this.minValue-1);
 	  	this.sliderBaseline[0].max  = Math.ceil(this.maxs+1);
@@ -1781,70 +1780,70 @@ $(function(){
 		    this.can.addEventListener("wheel", function(eventData){
 		    	console.log("wheel "+eventData.deltaY+" "+eventData.deltaX)
 		    	eventData.preventDefault()
-		    	if (eventData.deltaY==0) {
-		    		return;
-		    	}
-		    	if(me.statu!="anim" && me.statu!="anim-opti"){
-			    	if(eventData.shiftKey){
-			    		let tempZOOM = me.ZOOM + (eventData.deltaY/Math.abs(eventData.deltaY))*(-0.15);
-			    		if(tempZOOM >= maxZOOM)
-			    			tempZOOM = maxZOOM;
-			    		else if(tempZOOM <= 1.0)
-			    			tempZOOM = 1.0;
-			    		else
-			    			tempZOOM = tempZOOM;
-			    		me.changeZoom(tempZOOM,"wheel + shift key")
-			    		eventData.stopImmediatePropagation();
-			    		return false;
+
+		    	if(eventData.deltaY != 0){
+			    	if(me.statu!="anim" && me.statu!="anim-opti"){
+				    	if(eventData.shiftKey){
+				    		let tempZOOM = me.ZOOM + (eventData.deltaY/Math.abs(eventData.deltaY))*(-0.15);
+				    		if(tempZOOM >= maxZOOM)
+				    			tempZOOM = maxZOOM;
+				    		else if(tempZOOM <= 1.0)
+				    			tempZOOM = 1.0;
+				    		else
+				    			tempZOOM = tempZOOM;
+				    		me.changeZoom(tempZOOM,"wheel + shift key")
+				    		eventData.stopImmediatePropagation();
+				    		return false;
+				    	}
+				    	if(eventData.altKey){
+				    		let tempBaseline = me.basecut + (eventData.deltaY/Math.abs(eventData.deltaY))*0.15;
+				    		if(tempBaseline >= me.maxs)
+				    			tempBaseline = me.maxs;
+				    		else if(tempBaseline <= me.mins)
+				    			tempBaseline = me.mins;
+				    		me.changeBaseline(tempBaseline,"wheel + altkey");
+				    		eventData.stopImmediatePropagation();
+				    		return false;
+				    	}
+				    	if(eventData.ctrlKey){
+				    		let tempinitHeight = me.initHeight + eventData.deltaY/Math.abs(eventData.deltaY);
+				    		if(tempinitHeight <= 10.0)
+				    			tempinitHeight = 10.0;
+				    		else if(tempinitHeight >= maxHeight)
+				    			tempinitHeight = maxHeight;
+				    		else
+				    			tempinitHeight = tempinitHeight;
+				    		me.changeInitHeigth(tempinitHeight,"wheel + ctrl key")
+				    		eventData.stopImmediatePropagation();
+				    		return false;
+				    	}
+				    	/*if(eventData.shiftKey && eventData.ctrlKey){
+				    		let beforeInitHeight = me.initHeight;
+				    		let tempinitHeight = me.initHeight + Math.ceil(eventData.deltaY/3);
+				    		let changepx;
+				    		if(tempinitHeight <= 10.0){
+				    			me.initHeight = 10.0;
+				    			changepx = beforeInitHeight - 10.0;
+				    		}
+				    		else if(tempinitHeight >= 50.0){
+				    			me.initHeight = 50.0;
+				    			changepx = beforeInitHeight - 50.0;
+				    		}
+				    		else{
+				    			me.initHeight = tempinitHeight;
+				    			changepx = beforeInitHeight - tempinitHeight;
+				    			me.ZOOM = me.ZOOM + (me.initHeight*me.ZOOM)/(tempinitHeight*me.ZOOM);
+				    		}
+				    		console.log(changepx);
+				    		me.init();
+				    		if(me.statu=="unfold")
+				    			me.polsfill = me.allPolygons(false);
+				    		me.draw();
+				    		eventData.stopImmediatePropagation();
+				    		return false;
+				    	}*/
 			    	}
-			    	if(eventData.altKey){
-			    		let tempBaseline = me.basecut + (eventData.deltaY/Math.abs(eventData.deltaY))*0.15;
-			    		if(tempBaseline >= me.maxs)
-			    			tempBaseline = me.maxs;
-			    		else if(tempBaseline <= me.mins)
-			    			tempBaseline = me.mins;
-			    		me.changeBaseline(tempBaseline,"wheel + altkey");
-			    		eventData.stopImmediatePropagation();
-			    		return false;
-			    	}
-			    	if(eventData.ctrlKey){
-			    		let tempinitHeight = me.initHeight + eventData.deltaY/Math.abs(eventData.deltaY);
-			    		if(tempinitHeight <= 10.0)
-			    			tempinitHeight = 10.0;
-			    		else if(tempinitHeight >= maxHeight)
-			    			tempinitHeight = maxHeight;
-			    		else
-			    			tempinitHeight = tempinitHeight;
-			    		me.changeInitHeigth(tempinitHeight,"wheel + ctrl key")
-			    		eventData.stopImmediatePropagation();
-			    		return false;
-			    	}
-			    	/*if(eventData.shiftKey && eventData.ctrlKey){
-			    		let beforeInitHeight = me.initHeight;
-			    		let tempinitHeight = me.initHeight + Math.ceil(eventData.deltaY/3);
-			    		let changepx;
-			    		if(tempinitHeight <= 10.0){
-			    			me.initHeight = 10.0;
-			    			changepx = beforeInitHeight - 10.0;
-			    		}
-			    		else if(tempinitHeight >= 50.0){
-			    			me.initHeight = 50.0;
-			    			changepx = beforeInitHeight - 50.0;
-			    		}
-			    		else{
-			    			me.initHeight = tempinitHeight;
-			    			changepx = beforeInitHeight - tempinitHeight;
-			    			me.ZOOM = me.ZOOM + (me.initHeight*me.ZOOM)/(tempinitHeight*me.ZOOM);
-			    		}
-			    		console.log(changepx);
-			    		me.init();
-			    		if(me.statu=="unfold")
-			    			me.polsfill = me.allPolygons(false);
-			    		me.draw();
-			    		eventData.stopImmediatePropagation();
-			    		return false;
-			    	}*/
-		    	}
+			    }
 		    });
 
 		    //slider interactions
