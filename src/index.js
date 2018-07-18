@@ -1233,7 +1233,8 @@ $(function(){
 	    this.minValue = this.getmins();
 	    this.maxs = this.getmaxs();
 	    //if(this.pedestal > 0){
-	    	this.mins = this.minValue - ((this.maxs-this.minValue)/this.ZOOM/this.initHeight)*this.pedestal;
+
+	    this.mins = this.minValue - ((this.maxs-this.minValue)/(this.ZOOM-this.pedestal/this.initHeight)/this.initHeight)*this.pedestal;
 	    //}
 	    this.sliderBaseline[0].min  = Math.ceil(this.minValue-1);
 	  	this.sliderBaseline[0].max  = Math.ceil(this.maxs+1);
@@ -1293,7 +1294,6 @@ $(function(){
 
       this.changeZoomUnstable = function(newValue, eventKind){
         this.ZOOM = newValue;
-        console.log("ZOOM is changed")
         if(timerStart != null)
             eventRecordTable.push([(this.name+" ZOOM"), eventKind, this.ZOOM, (new Date()-timerStart)]);
         this.init();
@@ -1304,32 +1304,36 @@ $(function(){
       }
 
       this.changeZoomStable = function(newValue, eventKind){
-        console.log("ZOOM is changing "+this.pedestal)
 
         let diff = this.basecut-this.mins;
-        let hBand = (this.maxs-this.mins)/this.ZOOM;
+        let hBand = (this.maxs-this.mins)/(this.ZOOM); //fred
         let diff2 = diff/hBand
         let visBasecut = (diff2-Math.floor(diff2))
+
+
         this.ZOOM = newValue;
-        diff = this.basecut-this.mins;
-        hBand = (this.maxs-this.mins)/this.ZOOM;
+        //fix by fred: the mins must be recomputed here because the zoom changed ... the new mins also changed accordingly
+        this.mins = this.minValue - ((this.maxs-this.minValue)/(this.ZOOM-this.pedestal/this.initHeight)/this.initHeight)*this.pedestal;
+
+        diff  = this.basecut-this.mins;
+        hBand = (this.maxs-this.mins)/(this.ZOOM);
         diff2 = diff/hBand
         let visBasecut2 = (diff2-Math.floor(diff2))
 
         let newpedestal = this.pedestal-(visBasecut2-visBasecut)*this.initHeight
-        this.ZOOM +=((newpedestal-this.pedestal)/this.initHeight);
+
+        if (newpedestal<0) newpedestal +=this.initHeight;
+        if (newpedestal>this.initHeight) newpedestal -=this.initHeight;
+
+        this.ZOOM += ((newpedestal-this.pedestal)/this.initHeight);
         this.pedestal = newpedestal;
-        this.mins = this.minValue - ((this.maxs-this.minValue)/this.ZOOM/this.initHeight)*this.pedestal;
+        this.mins = this.minValue - ((this.maxs-this.minValue)/(this.ZOOM-this.pedestal/this.initHeight)/this.initHeight)*this.pedestal;
 
-        diff = this.basecut-this.mins;
-        hBand = (this.maxs-this.mins)/this.ZOOM;
-        diff2 = diff/hBand
-        let visBasecut3 = (diff2-Math.floor(diff2))
+        //diff = this.basecut-this.mins;
+        //hBand = (this.maxs-this.mins)/this.ZOOM;
+        //diff2 = diff/hBand
+        //let visBasecut3 = (diff2-Math.floor(diff2))
 
-
-        console.log("  visible baseline "+visBasecut+" "+visBasecut2+" "+visBasecut3)
-      	//this.pedestal =
-        console.log("ZOOM is changed")
         if(timerStart != null)
             eventRecordTable.push([(this.name+" ZOOM"), eventKind, this.ZOOM, (new Date()-timerStart)]);
         this.init();
@@ -1778,9 +1782,7 @@ $(function(){
 
 		   	//wheel interactions
 		    this.can.addEventListener("wheel", function(eventData){
-		    	console.log("wheel "+eventData.deltaY+" "+eventData.deltaX)
 		    	eventData.preventDefault()
-
 		    	if(eventData.deltaY != 0){
 			    	if(me.statu!="anim" && me.statu!="anim-opti"){
 				    	if(eventData.shiftKey){
@@ -1791,6 +1793,7 @@ $(function(){
 				    			tempZOOM = 1.0;
 				    		else
 				    			tempZOOM = tempZOOM;
+
 				    		me.changeZoom(tempZOOM,"wheel + shift key")
 				    		eventData.stopImmediatePropagation();
 				    		return false;
@@ -1975,9 +1978,9 @@ $(function(){
             })
 
             this.ZOOMStableButton.on('input', function(){
-                if(this.checked)
+                if(this.checked){
                     me.ZOOMStable = true;
-                else
+                }else
                     me.ZOOMStable = false;
             })
 
@@ -2444,6 +2447,10 @@ $(function(){
 	test4.init();
 	test3.initListener();
 	test4.initListener();
+
+
+  test4.init();
+
 	test3.draw(true);
 	test4.draw(true);
 
