@@ -40,8 +40,8 @@ let $ = require("jquery");
 	        //////////////////////////////////////////////////
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
-//let ws = new WebSocket ('ws://129.175.157.111:9000');
-let ws = new WebSocket ('ws://localhost:9000');
+let ws = new WebSocket ('ws://129.175.157.111:9000');
+//let ws = new WebSocket ('ws://localhost:9000');
 ws.onmessage = function(msg){
     if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
       id = msg.data.slice(8);
@@ -1987,7 +1987,7 @@ $(function(){
 
 			//adding different elements to the HTML
 			$("#myTable").find('tbody')
-			    .append($('<tr>')
+			    .append($('<tr class = "addedLine">')
 			    	.append($('<td>')
 			            .append(this.namehtml)
 			        ).append($('<td style="position:relative">')
@@ -2528,8 +2528,6 @@ function graphGeneration(ZOOM, BaseLineType, initHeight, tableint){
     }
     console.log(tableResult);
     console.log("done");
-
-
 }
 
 
@@ -2538,12 +2536,30 @@ function graphGeneration(ZOOM, BaseLineType, initHeight, tableint){
 
 var tableTasks = new Array();
 tableTasks.push(["id","graphs to use", "informations", "good answer", "test type", "graphs value", "differences"]);
-tableTasks.push([1,generateIntTab(29,181),"which is took as base",[7,4],"SAME alternat",[],0]);
+tableTasks.push([1,generateIntTab(32,181),"which is took as base",[7,4],"SAME alternat",[],0]);
 graphGeneration(5, "Stratum", 25, tableTasks[1][1]);
+
+var tableOrga = new Array();
+tableOrga.push(["userID","question number","taskNumber","informations"])
 
 console.log(tableTasks);
 console.log(tableGraph);
 
+
+function taskChange(userID, questionNumber){
+	tableGraph.length = 0;
+	$(".addedLine").remove();
+	for (let l in tableOrga){
+		if(tableOrga[l][0] == userID && tableOrga[l][1] == questionNumber){
+			for (let t in tableTasks){
+				//if the next tasks for the current user is found
+				if(tableOrga[l][2]==tableTasks[t][0]){
+					graphGeneration(5,"Stratum",25, tableTasks[t][1]);
+				}
+			}
+		}
+	}
+}
 /*
 idée pour l'expé :
 test Same "alternatif" :
