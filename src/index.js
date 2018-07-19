@@ -57,7 +57,7 @@ ws.onopen = function(){
     ws.send('coucou');
 }
 
-let startEndCounter = 1;
+let startEndCounter = 0;
 
 let eventRecordTable = new Array();
 
@@ -2480,6 +2480,24 @@ function generateIntTab(stop, maxInt){
     return res;
 }
 
+function shuffleTab(tab){
+	console.log(tab);
+	let res = new Array();
+	let copy = new Array();
+	copy = tab.slice(0);
+	while(copy.length > 1){
+		let num = Math.floor((copy.length)*Math.random());
+		res.push(copy[num]);
+		copy.splice(num,1);
+	}
+	res.push(copy[0])
+	copy.pop();
+	console.log(res);
+	console.log("this is tab (shouldn't have change)");
+	console.log(tab);
+	return res;
+}
+
 function graphGeneration(ZOOM, BaseLineType, initHeight, tableint){
 	let tableResult = new Array();
 	//crating graphs from table of integer
@@ -2530,31 +2548,47 @@ function graphGeneration(ZOOM, BaseLineType, initHeight, tableint){
     console.log("done");
 }
 
+function newQuestionGeneration(taskLine, OrgaLine){
 
+}
 
 
 
 var tableTasks = new Array();
 tableTasks.push(["id","graphs to use", "informations", "good answer", "test type", "graphs value", "differences"]);
-tableTasks.push([1,generateIntTab(32,181),"which is took as base",[7,4],"SAME alternat",[],0]);
-graphGeneration(5, "Stratum", 25, tableTasks[1][1]);
+tableTasks.push([1,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37, 177]
+				,"which is took as base",[7,4],"SAME alternat",[],0]);
+tableTasks.push([2,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37, 177]
+				,"which is took as base",[7,4],"SAME alternat",[],0]);
+//graphGeneration(5, "Stratum", 25, tableTasks[1][1]);
 
 var tableOrga = new Array();
+//information is a tab of param for the graph génération
 tableOrga.push(["userID","question number","taskNumber","informations"])
+tableOrga.push([0,0,1,[5,"Stratum",25]])
+tableOrga.push([0,1,1,[5,"Horizon",25]])
+tableOrga.push([1,0,2,[5,"Stratum",25]])
+tableOrga.push([1,1,2,[5,"Horizon",25]])
 
 console.log(tableTasks);
 console.log(tableGraph);
 
 
 function taskChange(userID, questionNumber){
+	//refreshing the displayed graphs
 	tableGraph.length = 0;
 	$(".addedLine").remove();
+
+	//searching the next task
 	for (let l in tableOrga){
 		if(tableOrga[l][0] == userID && tableOrga[l][1] == questionNumber){
 			for (let t in tableTasks){
+				console.log(l +" / "+ t)
 				//if the next tasks for the current user is found
 				if(tableOrga[l][2]==tableTasks[t][0]){
-					graphGeneration(5,"Stratum",25, tableTasks[t][1]);
+					console.log("question is generate")
+					console.log(tableTasks[t])
+					graphGeneration(tableOrga[l][3][0],tableOrga[l][3][1],tableOrga[l][3][2], shuffleTab(tableTasks[t][1]));
 				}
 			}
 		}
@@ -2588,6 +2622,8 @@ let finished = false;
                 eventRecordTable.push([("Expe Begin number "+startEndCounter),"start pressed" , "no value",0]);
                 timerLength = null;
                 ws.send("start");
+                if(startEndCounter == 0)
+                	taskChange(id,startEndCounter);
             }
             else{
                 console.log("il faut finir le test avant d'en commencer un nouveau");
@@ -2616,6 +2652,8 @@ let finished = false;
                 }*/
                 eventRecordTable = new Array();
                 startEndCounter++;
+                console.log(id, startEndCounter);
+                taskChange(id,startEndCounter)
             }
             else{
                 console.log("il faut commencer le test avant de vouloir le finir");
