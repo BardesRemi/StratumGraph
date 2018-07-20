@@ -14,7 +14,7 @@ body {
 .IG {
   border: 1px solid black;
   background: #FFF;
-  margin : 2px;
+  margin : 0px;
   /*display: block;*/
 }
 
@@ -40,6 +40,14 @@ table{
 th {
 	border : 1px solid black;
 	height: 30px;
+}
+
+tr{
+  height : 20px;
+}
+
+td{
+  padding : 0px;
 }
 
 .superbutton{
@@ -156,6 +164,10 @@ th {
 }
 
 .timerbutton {
-  height:40px;
-  width:75px;
+  height:55px;
+  width:105px;
+}
+
+.questionZone{
+  border:5px solid #FF7725;
 }

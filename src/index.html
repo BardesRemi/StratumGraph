@@ -6,12 +6,12 @@
     <title>Webpack App  1</title>
     <link rel="stylesheet" type="text/css" href="src/style.css">
   </head>
-  <body>
+  <body id="mybody">
     <span id="titleSpan"></span><br>
     <p>
     <table id="myTable">
     	<tbody>
-	    	<tr>
+	    	<tr class="header">
 	    		<th style="background-color:#0f0"><span class='lab'>name</span>&nbsp;<span class ="adjuster">-</span></th>
 	    		<th style="background-color:#0f0"><span class='lab'>Status</span>&nbsp;<span class ="adjuster">-</span></th>
 	    		<th>Graph</th>
@@ -28,8 +28,10 @@
     	</tbody>
     </table>
     </p>
-    <button id="timerStartButton" class="timerbutton" type='button'>start</button>
-    <button id="timerEndButton" class="timerbutton" type='button'>stop</button>
+    <button id="timerStartButton" class="timerbutton" type='button'>Next Question</button>
+    <button id="timerEndButton" class="timerbutton" type='button'>confirm</button>
     <button id="expeEnd" class="timerbutton" type='button'>Finish</button>
+    <br>
+    <p class="questionZone"></p>
   </body>
 </html>

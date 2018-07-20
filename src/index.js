@@ -1,6 +1,25 @@
 require('./style.css');
 let colors = require('./color.js');
 let $ = require("jquery");
+let q=window.location.href;
+q = q.slice(q.indexOf("/?")+2,q.indexOf("="));
+
+			//////////////////////////////////////////////////
+	        //       		Initiating the HTML  		    //
+	        //////////////////////////////////////////////////
+let isExpe = false
+
+if(q == "expe"){
+	isExpe = true
+	$(".header").remove();
+	$("#myTable").find('tbody')
+		    .append($('<tr class = "header">')
+		    	.append($('<th style="background-color:#0f0"><span class="lab">Name</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    	.append($('<th>Graph</th>'))
+		    	.append($('<th style="background-color:#0f0"><span class="lab">Answer</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    );
+
+}
 
 	        //////////////////////////////////////////////////
 	        //       List of differents color Scaling       //
@@ -44,6 +63,7 @@ let ws = new WebSocket ('ws://129.175.157.111:9000');
 //let ws = new WebSocket ('ws://localhost:9000');
 ws.onmessage = function(msg){
     if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
+      console.log("recieved msg is : " + msg.data)
       id = msg.data.slice(8);
       console.log("My id is "+id)
       $("#titleSpan").text("this is the experiment number : " + id);
@@ -155,6 +175,9 @@ $(function(){
       this.pedestal = 0
       this.ZOOMStable = false
 
+      this.isAnswer = false
+      this.interact = true
+
       this.namehtml = $("<span id='title"+$("#myTable tr").length+"'class='title'>"+this.name+"_"+$("#myTable tr").length+"</span>")
 
 
@@ -162,7 +185,11 @@ $(function(){
 	  this.can = document.createElement('canvas');
 	    this.can.width = canvasWidth;
 	    this.can.height = this.initHeight;
+	    this.can.grey = false;
 	    $(this.can).addClass("IG");
+
+	  //Answer button generation
+	  this.answerButton = $("<input type = 'radio' name = 'answerButton'																																																											 id='"+this.name+"answerButton"+"'>")
 
 	  //rangesliders generation
 	  this.sliderBaseline = $("<input class='sliderBaseline' type='range' step='0.01'>");
@@ -817,6 +844,10 @@ $(function(){
             ctx.stroke();
             ctx.restore();
 	    }
+	    if(this.can.grey){
+          	ctx.fillStyle='rgba(123,123,123,0.7)';
+		    ctx.fillRect(0,0,this.can.width, this.can.height);
+        }
 	    //console.timeEnd('someFunction');
 	  }
 
@@ -965,6 +996,10 @@ $(function(){
 	      	ctx.stroke();
 	      	ctx.restore();
 	    }
+	    if(this.can.grey){
+          	ctx.fillStyle='rgba(123,123,123,0.7)';
+		    ctx.fillRect(0,0,this.can.width, this.can.height);
+        }
 	    //console.timeEnd('someFunction');
 
 	  }
@@ -1062,6 +1097,10 @@ $(function(){
                 ctx.stroke();
                 ctx.restore();
             }
+            if(this.can.grey){
+	          	ctx.fillStyle='rgba(123,123,123,0.7)';
+			    ctx.fillRect(0,0,this.can.width, this.can.height);
+	        }
             //console.timeEnd('someFunction');
         }
 
@@ -1209,8 +1248,11 @@ $(function(){
             ctx.stroke();
             ctx.restore();
         }
+        if(this.can.grey){
+          	ctx.fillStyle='rgba(123,123,123,0.7)';
+		    ctx.fillRect(0,0,this.can.width, this.can.height);
+        }
         //console.timeEnd('someFunction');
-
       }
 
 	  this.draw = function(){
@@ -1551,6 +1593,8 @@ $(function(){
 
             this.can.addEventListener("mousedown", function(eventData){
                 eventData.preventDefault();
+                if(!me.interact)
+                	return false;
                 if(!me.baselineMethod){
                     $(this).addClass("movingBaseline1");
                     dragGraph = eventData.target;
@@ -1565,6 +1609,8 @@ $(function(){
             });
 
             this.can.addEventListener("mousemove", function(eventData){
+            	if(!me.interact)
+                	return false;
                 if(me.can.classList.contains("movingBaseline2")){
                     let tempBasecut;
                     let ptclick = {
@@ -1657,6 +1703,8 @@ $(function(){
             });
 
             this.namehtml.on("mousedown", function(eventData){
+            	if(!me.interact)
+                	return false;
             	eventData.preventDefault();
                 $(this).addClass("originGraph");
 
@@ -1667,6 +1715,8 @@ $(function(){
             });
 
             this.can.addEventListener("mouseup", function(eventData){
+            	if(!me.interact)
+                	return false;
                 if(me.can.classList.contains("movingBaseline2")){
 
                     $(".movingBaseline2").each(function(index){
@@ -1680,11 +1730,15 @@ $(function(){
             });
 
             this.statusButton.on('click', function(){
+            	if(!me.interact)
+                	return false;
                 me.FoldUnfold("button pressed");
              });
 
 
 			window.addEventListener("mousemove", function(eventData){
+				if(!me.interact)
+                	return false;
             	//eventData.preventDefault();
 				$(".destinationGraph").each(function( index ) {
 					$(this).removeClass("destinationGraph")
@@ -1715,6 +1769,8 @@ $(function(){
             });
 
             window.addEventListener("mouseup", function(eventData){
+            	if(!me.interact)
+                	return false;
                 if(windowInteractionStatus == "baselineGraph"){
 
                     $(".movingBaseline1").each(function(index){
@@ -1733,6 +1789,8 @@ $(function(){
             });
 
             this.namehtml.on("mouseup", function(eventData){
+            	if(!me.interact)
+                	return false;
 
 
             	if (dragGraph!=null && dist(eventData.pageX, eventData.pageY, dragStart.x, dragStart.y)>10){
@@ -1782,6 +1840,8 @@ $(function(){
 
 		   	//wheel interactions
 		    this.can.addEventListener("wheel", function(eventData){
+		    	if(!me.interact)
+                	return false;
 		    	eventData.preventDefault()
 		    	if(eventData.deltaY != 0){
 			    	if(me.statu!="anim" && me.statu!="anim-opti"){
@@ -1851,6 +1911,8 @@ $(function(){
 
 		    //slider interactions
 		    this.sliderBaseline.on('input', function() {
+		    	if(!me.interact)
+                	return false;
 		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 			    	let tempBaseline = this.value;
 				    if(tempBaseline > me.maxs)
@@ -1864,6 +1926,8 @@ $(function(){
 				}
 			});
 			this.sliderZOOM.on('input', function() {
+				if(!me.interact)
+                	return false;
 		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 			    	let tempZOOM = this.value;
 				    if(tempZOOM >= maxZOOM)
@@ -1877,6 +1941,8 @@ $(function(){
 				}
 			});
 			this.sliderInitHeight.on('input', function() {
+				if(!me.interact)
+                	return false;
 		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 			    	let tempinitHeight = this.value;
 			    	if(tempinitHeight <= 10.0)
@@ -1889,6 +1955,8 @@ $(function(){
 				}
 			});
 			this.sliderPedestal.on('input', function() {
+				if(!me.interact)
+                	return false;
 		    	if(me.statu!="anim" && me.statu!="anim-opti"){
 			    	me.ZOOM +=((this.value-me.pedestal)/me.initHeight);
 			    	me.pedestal = this.value;
@@ -1938,6 +2006,8 @@ $(function(){
 		     });*/
 
             this.animMethodButton.on('input', function(){
+            	if(!me.interact)
+                	return false;
                 if(this.checked)
                     me.drawingMethod = true;
                 else
@@ -1949,6 +2019,8 @@ $(function(){
             })
 
             this.baselineMethodButton.on('input', function(){
+            	if(!me.interact)
+                	return false;
                 if(this.checked)
                     me.baselineMethod = true;
                 else
@@ -1960,6 +2032,8 @@ $(function(){
             })
 
             this.shadowButton.on('input', function(){
+            	if(!me.interact)
+                	return false;
                 if(this.checked)
                     me.shadowSwap(true,"box checked");
                 else
@@ -1967,6 +2041,8 @@ $(function(){
             })
 
             this.alternateButton.on('input', function(){
+            	if(!me.interact)
+                	return false;
                 if(this.checked)
                     me.alternatDraw = true;
                 else
@@ -1978,53 +2054,20 @@ $(function(){
             })
 
             this.ZOOMStableButton.on('input', function(){
+            	if(!me.interact)
+                	return false;
                 if(this.checked){
                     me.ZOOMStable = true;
                 }else
                     me.ZOOMStable = false;
             })
 
-
-			//adding different elements to the HTML
-			$("#myTable").find('tbody')
-			    .append($('<tr class = "addedLine">')
-			    	.append($('<td>')
-			            .append(this.namehtml)
-			        ).append($('<td style="position:relative">')
-			            .append(this.statusButton)
-			        ).append($('<td>')
-			            .append($(this.can))
-			        ).append($('<td>')
-			        	.append(this.sliderPedestal)
-			        ).append($('<td>')
-			        	.append(this.sliderBaseline)
-			        ).append($('<td>')
-			        	.append(this.sliderZOOM)
-			        ).append($('<td>')
-			        	.append(this.sliderInitHeight)
-			        ).append($('<td>')
-                        .append(this.animMethodButton)
-                    ).append($('<td>')
-                        .append(this.baselineMethodButton)
-                    ).append($('<td>')
-                        .append(this.shadowButton)
-                    ).append($('<td>')
-                        .append(this.alternateButton)
-                    ).append($('<td>')
-                        .append(this.ZOOMStableButton)
-                    )
-
-			    );
-
-             let id = $("#myTable tr").length-1
-             $(this.can).attr("id", "canvas_"+id)
-             $(this.sliderBaseline).attr("id", "slider_"+id)
-
-
              let originRange;
              let originMaxs;
              let originMins;
              this.sliderBaseline.on("mousedown", function(eventData){
+             	if(!me.interact)
+                	return false;
                 $(this).addClass("selected");
                 originRange = me.maxs-me.mins;
                 originMaxs = me.maxs;
@@ -2032,6 +2075,8 @@ $(function(){
 
              });
              this.sliderBaseline.on("mousemove", function(eventData){
+             	if(!me.interact)
+                	return false;
                 let originSlider = this;
                 let originBaseProp = ((originSlider.value-originMins)/originRange)
                 $(".sliderBaseline").each(function (){
@@ -2049,15 +2094,21 @@ $(function(){
                 }
              });
              this.sliderBaseline.on("mouseup", function(eventData){
+             	if(!me.interact)
+                	return false;
                 $(".selected").each(function( index ) {
                         $(this).removeClass("selected")
                     });
              });
 
              this.sliderZOOM.on("mousedown", function(eventData){
+             	if(!me.interact)
+                	return false;
                 $(this).addClass("selected");
              });
              this.sliderZOOM.on("mousemove", function(eventData){
+             	if(!me.interact)
+                	return false;
                 let originSlider = this;
                 $(".sliderZOOM").each(function (){
                    let offset = $(this).offset();
@@ -2074,15 +2125,21 @@ $(function(){
                 }
              });
              this.sliderZOOM.on("mouseup", function(eventData){
+             	if(!me.interact)
+                	return false;
                 $(".selected").each(function( index ) {
                         $(this).removeClass("selected")
                     });
              });
 
              this.sliderInitHeight.on("mousedown", function(eventData){
+             	if(!me.interact)
+                	return false;
                 $(this).addClass("selected");
              });
              this.sliderInitHeight.on("mousemove", function(eventData){
+             	if(!me.interact)
+                	return false;
                 let originSlider = this;
                 $(".sliderInitHeight").each(function (){
                    let offset = $(this).offset();
@@ -2099,13 +2156,66 @@ $(function(){
                 }
              });
              this.sliderInitHeight.on("mouseup", function(eventData){
+             	if(!me.interact)
+                	return false;
                 $(".selected").each(function( index ) {
                         $(this).removeClass("selected")
                     });
              });
 
 	  	}
+
+		//adding different elements to the HTML
+
+		if(isExpe){
+			$("#myTable").find('tbody')
+			    .append($('<tr class = "addedLine">')
+			    	.append($('<td>')
+			            .append(this.namehtml)
+			        ).append($('<td>')
+			            .append($(this.can))
+			        ).append($('<td>')
+			            .append($(this.answerButton))
+			        )
+
+			    );
+		}
+		else{
+			$("#myTable").find('tbody')
+			    .append($('<tr class = "addedLine">')
+			    	.append($('<td>')
+			            .append(this.namehtml)
+			        ).append($('<td style="position:relative">')
+			            .append(this.statusButton)
+			        ).append($('<td>')
+			            .append($(this.can))
+			        ).append($('<td>')
+			        	.append(this.sliderPedestal)
+			        ).append($('<td>')
+			        	.append(this.sliderBaseline)
+			        ).append($('<td>')
+			        	.append(this.sliderZOOM)
+			        ).append($('<td>')
+			        	.append(this.sliderInitHeight)
+			        ).append($('<td>')
+		                .append(this.animMethodButton)
+		            ).append($('<td>')
+		                .append(this.baselineMethodButton)
+		            ).append($('<td>')
+		                .append(this.shadowButton)
+		            ).append($('<td>')
+		                .append(this.alternateButton)
+		            ).append($('<td>')
+		                .append(this.ZOOMStableButton)
+		            )
+
+			    );
+		}
         tableGraph.push(this);
+
+        let ident = $("#myTable tr").length-1
+	    $(this.can).attr("id", "canvas_"+ident)
+	    $(this.sliderBaseline).attr("id", "slider_"+ident)
 	}
 			//////////////////////////////////////////////////
 	        //          	Parsing a CSV file   	        //
@@ -2462,7 +2572,7 @@ $(function(){
     console.log(tableGraph);*/
 
             //////////////////////////////////////////////////
-            //               Expe table tasks               //
+            //             	   Expe only use                //
             //////////////////////////////////////////////////
 
 var DATATABLE = tableDataFromCSVTable("data/finance_data_used.csv");
@@ -2481,7 +2591,6 @@ function generateIntTab(stop, maxInt){
 }
 
 function shuffleTab(tab){
-	console.log(tab);
 	let res = new Array();
 	let copy = new Array();
 	copy = tab.slice(0);
@@ -2492,19 +2601,17 @@ function shuffleTab(tab){
 	}
 	res.push(copy[0])
 	copy.pop();
-	console.log(res);
-	console.log("this is tab (shouldn't have change)");
-	console.log(tab);
 	return res;
 }
 
-function graphGeneration(ZOOM, BaseLineType, initHeight, tableint){
+function graphGeneration(ZOOM, BaseLineType, initHeight, tableint, answerInd){
 	let tableResult = new Array();
+	console.log(typeof(answerInd));
 	//crating graphs from table of integer
 	for(let i in tableint){
 		tableint[i] = tableint[i]+1;
         let parseResult = new Object({
-            name : DATATABLE[tableint[i]][0],
+            name : i,
             time : DATATABLE[0],
             valueMax : 0,
             valueMin : 1000000,
@@ -2526,73 +2633,170 @@ function graphGeneration(ZOOM, BaseLineType, initHeight, tableint){
         /*console.log(parseResult.time)
         console.log(parseResult.value)
         console.log(parseResult.valueMax +" "+ parseResult.valueMin)*/
-        let finalResult = new Graph((parseResult.valueMax+parseResult.valueMin)/2, ZOOM, 1,
+        let finalResult;
+        if(typeof(answerInd)=="string" && answerInd == "Model"){
+        	finalResult = new Graph(parseResult.valueMin+3*((parseResult.valueMax-parseResult.valueMin)/4), ZOOM, 1,
+                                 parseResult.value, parseResult.time, BaseLineType, 0, parseResult.time.length-1,
+                                 initHeight, "Model");
+        }
+        else{
+        	finalResult = new Graph((parseResult.valueMax+parseResult.valueMin)/2, ZOOM, 1,
                                  parseResult.value, parseResult.time, BaseLineType, 0, parseResult.time.length-1,
                                  initHeight, parseResult.name);
+        }
+        if(typeof(answerInd)=="number" && answerInd+1 == tableint[i]){
+        	finalResult.isAnswer = true;
+        	console.log("le nom de la cible est : " + finalResult.name);
+        }
         tableResult.push(finalResult);
     }
-    let targetInd = generateIntTab(1, 29);
-    console.log(targetInd)
-    let targetTemp = tableResult[targetInd]
-    console.log(targetTemp)
-    console.log("le nom de la cible est : " + targetTemp.name);
-    let target = new Graph(targetTemp.basecut+4, targetTemp.ZOOM, 1, targetTemp.tabledata, targetTemp.timepos, targetTemp.baselineType, 0, targetTemp.end,
-    	targetTemp.initHeight, "target")
-    tableResult.push(target);
     for(let i in tableResult){
         tableResult[i].init();
         tableResult[i].initListener();
         tableResult[i].draw(true);
     }
-    console.log(tableResult);
+    console.log(tableGraph);
     console.log("done");
+    return tableResult;
+}
+
+function refreshGraphsDisplaying(){
+	tableGraph.length = 0;
+	$(".addedLine").remove();
+	$(".questionSentence").remove();
 }
 
 function newQuestionGeneration(taskLine, OrgaLine){
-
+	console.log("generation start");
+	eventRecordTable.push(["new question","tasks ID is",taskLine[0],("question is : "+taskLine[4])]);
+	if(taskLine[4] == "SAME alternat"){
+		console.log("question is Same alternat");
+		refreshGraphsDisplaying();
+		let questionGraphs = graphGeneration(OrgaLine[3][0],OrgaLine[3][1],OrgaLine[3][2], shuffleTab(taskLine[1]), taskLine[3]);
+		$("#myTable").find('tbody').append($('<tr class = "addedLine">'));
+		let target = graphGeneration(OrgaLine[3][0],OrgaLine[3][1],OrgaLine[3][2],[taskLine[3]], "Model");
+		for(let g in tableGraph){
+			tableGraph[g].interact=false;
+		}
+		$(".questionZone").append("<span class='questionSentence'> Trouvez le graph identique au graph nommé 'Model' ci dessus </span>");
+	}
+	else if(taskLine[4] == "Correct Baseline"){
+		console.log("question is Correct Baseline");
+		$(".questionSentence").remove();
+		for(let g in tableGraph){
+			console.log(typeof(tableGraph[g].name));
+			if(!(tableGraph[g].isAnswer || tableGraph[g].name == "Model")){
+				tableGraph[g].interact=false;
+				tableGraph[g].can.grey=true;
+				tableGraph[g].draw();
+			}
+			else{
+				if(tableGraph[g].name == "Model")
+					tableGraph[g].interact=true;
+			}
+		}
+		$(".questionZone").append("<span class='questionSentence'> Essayez de changer la basecut du graph 'Model' ci dessus, "
+		 						  +"afin qu'il soit le plus ressemblant possible au deuxième graph non grisé</span>");
+	}
 }
 
-
+var currentTasks;
+var currentOrgaLine;
 
 var tableTasks = new Array();
 tableTasks.push(["id","graphs to use", "informations", "good answer", "test type", "graphs value", "differences"]);
 tableTasks.push([1,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37, 177]
-				,"which is took as base",[7,4],"SAME alternat",[],0]);
-tableTasks.push([2,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37, 177]
-				,"which is took as base",[7,4],"SAME alternat",[],0]);
-//graphGeneration(5, "Stratum", 25, tableTasks[1][1]);
+				,"which is took as base",10,"SAME alternat",[],0]);
+tableTasks.push([2,[],"linked to the task 1",10,"Correct Baseline",[],0]);
+tableTasks.push([3,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37, 177]
+				,"which is took as base",117,"SAME alternat",[],0]);
+tableTasks.push([4,[],"linked to the task 3",10,"Correct Baseline",[],0]);
+tableTasks.push([5,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
+				,"which is took as base",175,"SAME alternat",[],0]);
+tableTasks.push([6,[],"linked to the task 5",10,"Correct Baseline",[],0]);
+tableTasks.push([7,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
+				,"which is took as base",47,"SAME alternat",[],0]);
+tableTasks.push([8,[],"linked to the task 7",10,"Correct Baseline",[],0]);
 
 var tableOrga = new Array();
 //information is a tab of param for the graph génération
 tableOrga.push(["userID","question number","taskNumber","informations"])
-tableOrga.push([0,0,1,[5,"Stratum",25]])
-tableOrga.push([0,1,1,[5,"Horizon",25]])
-tableOrga.push([1,0,2,[5,"Stratum",25]])
-tableOrga.push([1,1,2,[5,"Horizon",25]])
+tableOrga.push([0,0,1,[5,"Stratum",30]])
+tableOrga.push([0,1,2,[]])
+tableOrga.push([0,2,3,[5,"Horizon",30]])
+tableOrga.push([0,3,4,[]])
+tableOrga.push([0,4,5,[5,"Stratum",30]])
+tableOrga.push([0,5,6,[]])
+tableOrga.push([0,6,7,[5,"Horizon",30]])
+tableOrga.push([0,7,8,[]])
+
+tableOrga.push([1,0,1,[5,"Stratum",30]])
+tableOrga.push([1,1,2,[]])
+tableOrga.push([1,2,3,[5,"Horizon",30]])
+tableOrga.push([1,3,4,[]])
+tableOrga.push([1,4,5,[5,"Stratum",30]])
+tableOrga.push([1,5,6,[]])
+tableOrga.push([1,6,7,[5,"Horizon",30]])
+tableOrga.push([1,7,8,[]])
 
 console.log(tableTasks);
 console.log(tableGraph);
 
 
 function taskChange(userID, questionNumber){
-	//refreshing the displayed graphs
-	tableGraph.length = 0;
-	$(".addedLine").remove();
 
 	//searching the next task
 	for (let l in tableOrga){
 		if(tableOrga[l][0] == userID && tableOrga[l][1] == questionNumber){
 			for (let t in tableTasks){
-				console.log(l +" / "+ t)
 				//if the next tasks for the current user is found
 				if(tableOrga[l][2]==tableTasks[t][0]){
 					console.log("question is generate")
-					console.log(tableTasks[t])
-					graphGeneration(tableOrga[l][3][0],tableOrga[l][3][1],tableOrga[l][3][2], shuffleTab(tableTasks[t][1]));
+					currentTasks=tableTasks[t];
+					currentOrgaLine=tableOrga[l];
+					newQuestionGeneration(currentTasks,currentOrgaLine);
+					return true;
 				}
 			}
 		}
 	}
+	return false;
+}
+
+function questionIsAnswered(){
+	let answerForRecordTable = new Array();
+	if(currentTasks[4]== "SAME alternat"){
+		answerForRecordTable.push("Expected result was :");
+		for(let g in tableGraph){
+			if(tableGraph[g].isAnswer){
+				answerForRecordTable.push("graphs named : " + tableGraph[g].name);
+			}
+		}
+		answerForRecordTable.push("User Answered :");
+		for(let g in tableGraph){
+			if(tableGraph[g].answerButton[0].checked){
+				answerForRecordTable.push("graphs named : " + tableGraph[g].name);
+			}
+		}
+	}
+
+	else if(currentTasks[4]== "Correct Baseline"){
+		answerForRecordTable.push("Expected result was :");
+		for(let g in tableGraph){
+			if(tableGraph[g].isAnswer){
+				answerForRecordTable.push(tableGraph[g].name+ " basecut = "+tableGraph[g].basecut);
+			}
+		}
+		answerForRecordTable.push("User Answered :");
+		for(let g in tableGraph){
+			if(tableGraph[g].name == "Model"){
+				answerForRecordTable.push(tableGraph[g].name+ " basecut = "+tableGraph[g].basecut);
+			}
+		}
+	}
+	if(answerForRecordTable.length!=4)
+		answerForRecordTable.push("User failed");
+	eventRecordTable.push(answerForRecordTable);
 }
 /*
 idée pour l'expé :
@@ -2618,12 +2822,19 @@ let finished = false;
     $("#timerStartButton").on('click', function(){
         if(!finished){
             if(timerStart==null){
-                timerStart = new Date();
-                eventRecordTable.push([("Expe Begin number "+startEndCounter),"start pressed" , "no value",0]);
-                timerLength = null;
-                ws.send("start");
-                if(startEndCounter == 0)
-                	taskChange(id,startEndCounter);
+            	let end = taskChange(id,startEndCounter)
+            	if(!end){
+            		finished = true;
+            		refreshGraphsDisplaying();
+            		$(".questionZone").append("<span class='questionSentence'> L EXPE EST FINIE MERCI BEAUCOUP ! </span>");
+            	}
+            	else{
+            		timerStart = new Date();
+	                eventRecordTable.push([("Expe Begin number "+startEndCounter),"start pressed" , "no value",0]);
+	                timerLength = null;
+	                ws.send("start");
+	                $("#myTable").css("opacity","1.0");
+	            }
             }
             else{
                 console.log("il faut finir le test avant d'en commencer un nouveau");
@@ -2635,25 +2846,16 @@ let finished = false;
         if(!finished){
             if(timerStart!=null){
                 timerLength = new Date() - timerStart;
-                eventRecordTable.push([("Expe End number "+startEndCounter),"stop pressed" , "no value", timerLength]);
-                timerStart = null;
+                //adding the answer in the tab
+                questionIsAnswered();
+                eventRecordTable.push([("Expe End number "+startEndCounter),"stop pressed" , "no value", timerLength]);                timerStart = null;
                 console.log(eventRecordTable);
                 if(startEndCounter>1)
                     ws.send("number");
                 ws.send(JSON.stringify(eventRecordTable));
-
-                /*ws.onmessage = function(msg){
-                    if (typeof msg.data == "string" && msg.data.indexOf("bonjour ")>=0){
-                      id = msg.data.slice(8);
-                    } else if (typeof msg.data == "string"){
-                      console.log('LE SERVER ME DIT : '+msg.data);
-
-                    }
-                }*/
                 eventRecordTable = new Array();
                 startEndCounter++;
-                console.log(id, startEndCounter);
-                taskChange(id,startEndCounter)
+                $("#myTable").css("opacity","0.0");
             }
             else{
                 console.log("il faut commencer le test avant de vouloir le finir");
@@ -2663,17 +2865,12 @@ let finished = false;
 
     $("#expeEnd").on('click', function(){
         if (!finished){
-            if(timerStart!=null){
-                console.log("il faut finir le test avant de mettre fin à l'expe");
-            }
-            else if(timerLength == null){
-                console.log("il faut fair le test avant d'essayer de le finir");
-            }else{
-                console.log("l'expe est finie")
-                finished = true;
-                ws.send("expe finish")
-            }
+            console.log("il faut finir le test avant de mettre fin à l'expe");
+        }else{
+            console.log("l'expe est finie")
+            ws.send("expe finish")
         }
+
     })
 });
 

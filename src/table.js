@@ -4,12 +4,16 @@ let $ = require("jquery");
 let q=window.location.href;
 q = q.slice(q.indexOf("file=")+5);
 
+console.log(q)
 $(function(){
+    console.log("hello")
     $.ajax({
         url:"expe/expe0.json",
         async:false,
         success:function(data){
+            console.log("hello")
             for(let tab in data){
+                console.log("on est dans la boucle")
                 for(let line in data[tab]){
                     let $txt = $("<tr>")
                     if(data[tab][line][1] == "start pressed" || data[tab][line][1] == "stop pressed")
@@ -22,6 +26,10 @@ $(function(){
                         $txt = $("<tr class='ZOOM'>")
                     if(data[tab][line][0].slice(-10) == "initHeight")
                         $txt = $("<tr class='initHeight'>")
+                    if(data[tab][line][0] == "Expected result was :")
+                        $txt = $("<tr class='answer'>")
+                    if(data[tab][line][0] == "new question")
+                        $txt = $("<tr class='question'>")
                     $("#myTable").find('tbody')
                         .append($txt
                             .append($('<td>')
@@ -37,10 +45,8 @@ $(function(){
                         );
                 }
                 $("#myTable").find('tbody')
-                        .append($('<br>')
-                        );
+                        .append($('<br>'));
             }
         }
     })
-    console.log(q)
 });
