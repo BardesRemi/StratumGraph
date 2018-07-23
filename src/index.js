@@ -7,19 +7,36 @@ q = q.slice(q.indexOf("/?")+2,q.indexOf("="));
 			//////////////////////////////////////////////////
 	        //       		Initiating the HTML  		    //
 	        //////////////////////////////////////////////////
-let isExpe = false
+let isExpe = 0
 
-if(q == "expe"){
-	isExpe = true
-	$(".header").remove();
-	$("#myTable").find('tbody')
+function htmlChange(){
+	if(isExpe==2){
+		$(".header").remove();
+		$("#myTable").find('tbody')
 		    .append($('<tr class = "header">')
 		    	.append($('<th style="background-color:#0f0"><span class="lab">Name</span>&nbsp;<span class ="adjuster">-</span></th>'))
 		    	.append($('<th>Graph</th>'))
 		    	.append($('<th style="background-color:#0f0"><span class="lab">Answer</span>&nbsp;<span class ="adjuster">-</span></th>'))
 		    );
-
+	}
+	else if(isExpe==1){
+		$(".header").remove();
+		$("#myTable").find('tbody')
+		    .append($('<tr class = "header">')
+		    	.append($('<th style="background-color:#0f0"><span class="lab">Name</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    	.append($('<th style="background-color:#0f0"><span class="lab">Status</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    	.append($('<th>Graph</th>'))
+		    	.append($('<th style="background-color:#0f0"><span class="lab">Baseline</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    	.append($('<th style="background-color:#0f0"><span class="lab">ZOOM</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    );
+	}
 }
+
+if(q == "expe"){
+	isExpe = 1
+}
+
+htmlChange();
 
 	        //////////////////////////////////////////////////
 	        //       List of differents color Scaling       //
@@ -2167,7 +2184,7 @@ $(function(){
 
 		//adding different elements to the HTML
 
-		if(isExpe){
+		if(isExpe==2){
 			$("#myTable").find('tbody')
 			    .append($('<tr class = "addedLine">')
 			    	.append($('<td>')
@@ -2176,6 +2193,23 @@ $(function(){
 			            .append($(this.can))
 			        ).append($('<td>')
 			            .append($(this.answerButton))
+			        )
+
+			    );
+		}
+		else if(isExpe==1){
+			$("#myTable").find('tbody')
+			    .append($('<tr class = "addedLine">')
+			    	.append($('<td>')
+			            .append(this.namehtml)
+			        ).append($('<td style="position:relative">')
+			            .append(this.statusButton)
+			        ).append($('<td>')
+			            .append($(this.can))
+			        ).append($('<td>')
+			        	.append(this.sliderBaseline)
+			        ).append($('<td>')
+			        	.append(this.sliderZOOM)
 			        )
 
 			    );
@@ -2536,7 +2570,7 @@ $(function(){
 	let BASELINE = 28.76;
 
 
-	/*var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, "first");
+	var test1 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, "first");
 	var test2 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, "scnd");
 	test1.init();
 	test2.init();
@@ -2545,7 +2579,7 @@ $(function(){
 	test1.draw(true);
 	test2.draw(true);
 
-	var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, "third");
+	/*var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, "third");
 	var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, "fourth");
 	test3.init();
 	test4.init();
@@ -2678,7 +2712,7 @@ function newQuestionGeneration(taskLine, OrgaLine){
 		for(let g in tableGraph){
 			tableGraph[g].interact=false;
 		}
-		$(".questionZone").append("<span class='questionSentence'> Trouvez le graph identique au graph nommé 'Model' ci dessus </span>");
+		$(".questionZone").append("<span class='questionSentence'> Parmis les graph au dessus, trouvez le graph identique au graph nommé 'Model' ci dessus </span>");
 	}
 	else if(taskLine[4] == "Correct Baseline"){
 		console.log("question is Correct Baseline");
@@ -2710,13 +2744,25 @@ tableTasks.push([1,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 1
 tableTasks.push([2,[],"linked to the task 1",10,"Correct Baseline",[],0]);
 tableTasks.push([3,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37, 177]
 				,"which is took as base",117,"SAME alternat",[],0]);
-tableTasks.push([4,[],"linked to the task 3",10,"Correct Baseline",[],0]);
-tableTasks.push([5,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
+tableTasks.push([4,[],"linked to the task 3",117,"Correct Baseline",[],0]);
+tableTasks.push([5,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37, 177]
+				,"which is took as base",149,"SAME alternat",[],0]);
+tableTasks.push([6,[],"linked to the task 1",149,"Correct Baseline",[],0]);
+tableTasks.push([7,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37, 177]
+				,"which is took as base",70,"SAME alternat",[],0]);
+tableTasks.push([8,[],"linked to the task 3",70,"Correct Baseline",[],0]);
+tableTasks.push([9,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
 				,"which is took as base",175,"SAME alternat",[],0]);
-tableTasks.push([6,[],"linked to the task 5",10,"Correct Baseline",[],0]);
-tableTasks.push([7,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
+tableTasks.push([10,[],"linked to the task 5",175,"Correct Baseline",[],0]);
+tableTasks.push([11,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
 				,"which is took as base",47,"SAME alternat",[],0]);
-tableTasks.push([8,[],"linked to the task 7",10,"Correct Baseline",[],0]);
+tableTasks.push([12,[],"linked to the task 7",47,"Correct Baseline",[],0]);
+tableTasks.push([13,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
+				,"which is took as base",30,"SAME alternat",[],0]);
+tableTasks.push([14,[],"linked to the task 5",30,"Correct Baseline",[],0]);
+tableTasks.push([15,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
+				,"which is took as base",98,"SAME alternat",[],0]);
+tableTasks.push([16,[],"linked to the task 7",98,"Correct Baseline",[],0]);
 
 var tableOrga = new Array();
 //information is a tab of param for the graph génération
@@ -2729,6 +2775,30 @@ tableOrga.push([0,4,5,[5,"Stratum",30]])
 tableOrga.push([0,5,6,[]])
 tableOrga.push([0,6,7,[5,"Horizon",30]])
 tableOrga.push([0,7,8,[]])
+tableOrga.push([0,8,9,[5,"Stratum",30]])
+tableOrga.push([0,9,10,[]])
+tableOrga.push([0,10,11,[5,"Horizon",30]])
+tableOrga.push([0,11,12,[]])
+tableOrga.push([0,12,13,[5,"Stratum",30]])
+tableOrga.push([0,13,14,[]])
+tableOrga.push([0,14,15,[5,"Horizon",30]])
+tableOrga.push([0,15,16,[]])
+tableOrga.push([0,16,1,[8.5,"Stratum",30]])
+tableOrga.push([0,17,2,[]])
+tableOrga.push([0,18,3,[8.5,"Horizon",30]])
+tableOrga.push([0,19,4,[]])
+tableOrga.push([0,20,5,[8.5,"Stratum",30]])
+tableOrga.push([0,21,6,[]])
+tableOrga.push([0,22,7,[8.5,"Horizon",30]])
+tableOrga.push([0,23,8,[]])
+tableOrga.push([0,24,9,[8.5,"Stratum",30]])
+tableOrga.push([0,25,10,[]])
+tableOrga.push([0,26,11,[8.5,"Horizon",30]])
+tableOrga.push([0,27,12,[]])
+tableOrga.push([0,28,13,[8.5,"Stratum",30]])
+tableOrga.push([0,29,14,[]])
+tableOrga.push([0,30,15,[8.5,"Horizon",30]])
+tableOrga.push([0,31,16,[]])
 
 tableOrga.push([1,0,1,[5,"Stratum",30]])
 tableOrga.push([1,1,2,[]])
@@ -2822,6 +2892,8 @@ let finished = false;
     $("#timerStartButton").on('click', function(){
         if(!finished){
             if(timerStart==null){
+            	if(isExpe != 2)
+            		isExpe = 2;
             	let end = taskChange(id,startEndCounter)
             	if(!end){
             		finished = true;
@@ -2850,7 +2922,7 @@ let finished = false;
                 questionIsAnswered();
                 eventRecordTable.push([("Expe End number "+startEndCounter),"stop pressed" , "no value", timerLength]);                timerStart = null;
                 console.log(eventRecordTable);
-                if(startEndCounter>1)
+                if(startEndCounter>0)
                     ws.send("number");
                 ws.send(JSON.stringify(eventRecordTable));
                 eventRecordTable = new Array();

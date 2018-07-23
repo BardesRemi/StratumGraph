@@ -10,10 +10,13 @@ $(function(){
     $.ajax({
         url:"expe/expe0.json",
         async:false,
+        error:function(data){
+            console.log(data);
+        },
         success:function(data){
-            console.log("hello")
+            console.log("it was a succes")
             for(let tab in data){
-                console.log("on est dans la boucle")
+                console.log("loop")
                 for(let line in data[tab]){
                     let $txt = $("<tr>")
                     if(data[tab][line][1] == "start pressed" || data[tab][line][1] == "stop pressed")
@@ -50,3 +53,4 @@ $(function(){
         }
     })
 });
+console.log("end of js file");
