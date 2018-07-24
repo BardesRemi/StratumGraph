@@ -2693,7 +2693,7 @@ function generateIntTab(stop, maxInt){
 }
 
 function shuffleTab(tab){
-  let rng = new RNG(20);
+  let rng = new RNG(25);
 
 	let res = new Array();
 	let copy = new Array();
@@ -2913,6 +2913,18 @@ tableTasks.push([22,[],"linked to the task 21",149,"Correct Baseline",[],0]);
 tableTasks.push([23,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
 				,"which is took as base", 70, "twin search",[],0])
 tableTasks.push([24,[],"linked to the task 23",70,"Correct Baseline",[],0]);
+tableTasks.push([25,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57]
+				,"which is took as base",175,"twin search",[],0]);
+tableTasks.push([26,[],"linked to the task 25",175,"Correct Baseline",[],0]);
+tableTasks.push([27,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57]
+				,"which is took as base",47,"twin search",[],0]);
+tableTasks.push([28,[],"linked to the task 27",47,"Correct Baseline",[],0]);
+tableTasks.push([29,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57]
+				,"which is took as base",30,"twin search",[],0]);
+tableTasks.push([30,[],"linked to the task 29",30,"Correct Baseline",[],0]);
+tableTasks.push([31,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57]
+				,"which is took as base",98,"twin search",[],0]);
+tableTasks.push([32,[],"linked to the task 31",98,"Correct Baseline",[],0]);
 
 var tableOrga = new Array();
 //information is a tab of param for the graph génération
@@ -2991,6 +3003,30 @@ tableOrga.push([2,4,21,[5,"Stratum",30]])
 tableOrga.push([2,5,22,[]])
 tableOrga.push([2,6,23,[5,"Horizon",30]])
 tableOrga.push([2,7,24,[]])
+tableOrga.push([2,8,25,[5,"Stratum",30]])
+tableOrga.push([2,9,26,[]])
+tableOrga.push([2,10,27,[5,"Horizon",30]])
+tableOrga.push([2,11,28,[]])
+tableOrga.push([2,12,29,[5,"Stratum",30]])
+tableOrga.push([2,13,30,[]])
+tableOrga.push([2,14,31,[5,"Horizon",30]])
+tableOrga.push([2,15,32,[]])
+tableOrga.push([2,16,17,[10,"Stratum",30]])
+tableOrga.push([2,17,18,[]])
+tableOrga.push([2,18,19,[10,"Horizon",30]])
+tableOrga.push([2,19,20,[]])
+tableOrga.push([2,20,21,[10,"Stratum",30]])
+tableOrga.push([2,21,22,[]])
+tableOrga.push([2,22,23,[10,"Horizon",30]])
+tableOrga.push([2,23,24,[]])
+tableOrga.push([2,24,25,[10,"Stratum",30]])
+tableOrga.push([2,25,26,[]])
+tableOrga.push([2,26,27,[10,"Horizon",30]])
+tableOrga.push([2,27,28,[]])
+tableOrga.push([2,28,29,[10,"Stratum",30]])
+tableOrga.push([2,29,30,[]])
+tableOrga.push([2,30,31,[10,"Horizon",30]])
+tableOrga.push([2,31,32,[]])
 
 console.log(tableTasks);
 console.log(tableGraph);
