@@ -9,6 +9,9 @@ q = q.slice(q.indexOf("/?")+2,q.indexOf("="));
 	        //////////////////////////////////////////////////
 let isExpe = 0
 
+
+
+
 function htmlChange(){
 	if(isExpe==2){
 		$(".header").remove();
@@ -94,9 +97,40 @@ ws.onopen = function(){
     ws.send('coucou');
 }
 
+function RNG(seed) {
+  // LCG using GCC's constants
+  this.m = 0x80000000; // 2**31;
+  this.a = 1103515245;
+  this.c = 12345;
+
+  this.state = seed ? seed : Math.floor(Math.random() * (this.m - 1));
+}
+RNG.prototype.nextInt = function() {
+  this.state = (this.a * this.state + this.c) % this.m;
+  return this.state;
+}
+RNG.prototype.nextFloat = function() {
+  // returns in range [0,1]
+  return this.nextInt() / (this.m - 1);
+}
+RNG.prototype.nextRange = function(start, end) {
+  // returns in range [start, end): including start, excluding end
+  // can't modulu nextInt because of weak randomness in lower bits
+  var rangeSize = end - start;
+  var randomUnder1 = this.nextInt() / this.m;
+  return start + Math.floor(randomUnder1 * rangeSize);
+}
+RNG.prototype.choice = function(array) {
+  return array[this.nextRange(0, array.length)];
+}
+
+
+
+
 let startEndCounter = 0;
 
 let eventRecordTable = new Array();
+
 
 const maxZOOM = 15.0;
 const maxHeight = 100;
@@ -173,7 +207,7 @@ $(function(){
 	  this.maxlvl = 1;
 	  this.minlvl = 1;
 	  this.statu = "opti";
-	  this.drawingMethod = true
+	  this.drawingMethod = false
       this.baselineMethod
       this.shadow
       let tempStrg
@@ -1486,7 +1520,10 @@ $(function(){
 			let me = this;
 
 		    //adding to the canvas : onclick listener | seting the baseline
-		    /*this.can.addEventListener('click',function(eventData){
+		    this.can.addEventListener('click',function(eventData){
+		    	if(!me.interact || me.baselineType=="Horizon")
+                	return false;
+
 		    	eventData.preventDefault()
 		    	let tempBasecut;
 		    	let ptclick = {
@@ -1569,6 +1606,7 @@ $(function(){
 			    		else if(tempBasecut <= me.mins)
 			    			tempBasecut = me.mins;
 		    		}
+		    		/*
 		    		if (me.statu=="unfold" || me.statu == "opti") {
 		    			let oldStatu = me.statu
 				        me.timer = setInterval(function(){
@@ -1602,11 +1640,12 @@ $(function(){
 					            me.polsfill = me.allPolygons(false);
 					        me.draw();
 				    	}, 12);
-				    }
+				    }*/
+				    me.changeBaseline(tempBasecut,"click on graph");
 		    	}
 		    	eventData.stopImmediatePropagation();
 			    return false;
-		    });*/
+		    });
 
             this.can.addEventListener("mousedown", function(eventData){
                 eventData.preventDefault();
@@ -2180,7 +2219,36 @@ $(function(){
                     });
              });
 
+             //interaction of the answer button
+             this.answerButton.on("click", function(eventData){
+             	if(currentTasks[4] == "SAME alternat" || currentTasks[4] == "twin search"){
+             		if(!finished){
+			            if(timerStart!=null){
+			                timerLength = new Date() - timerStart;
+			                //adding the answer in the tab
+			                questionIsAnswered();
+			                timerStart = null;
+			                console.log(eventRecordTable);
+			                if(startEndCounter>0)
+			                    ws.send("number");
+			                ws.send(JSON.stringify(eventRecordTable));
+			                eventRecordTable = new Array();
+			                startEndCounter++;
+
+			                let end = taskChange(id,startEndCounter)
+							timerStart = new Date();
+
+			                eventRecordTable.push([("Expe Begin number "+startEndCounter),"start pressed" , "no value",0]);
+			                timerLength = null;
+			                ws.send("start");
+			                $("#timerEndButton").css("display","block");
+			            }
+			        }
+             	}
+             })
+
 	  	}
+
 
 		//adding different elements to the HTML
 
@@ -2625,11 +2693,13 @@ function generateIntTab(stop, maxInt){
 }
 
 function shuffleTab(tab){
+  let rng = new RNG(20);
+
 	let res = new Array();
 	let copy = new Array();
 	copy = tab.slice(0);
 	while(copy.length > 1){
-		let num = Math.floor((copy.length)*Math.random());
+		let num = rng.nextRange(0, copy.length-1);
 		res.push(copy[num]);
 		copy.splice(num,1);
 	}
@@ -2638,9 +2708,8 @@ function shuffleTab(tab){
 	return res;
 }
 
-function graphGeneration(ZOOM, BaseLineType, initHeight, tableint, answerInd){
+function graphGenTaskSameAltCo(ZOOM, BaseLineType, initHeight, tableint, answerInd){
 	let tableResult = new Array();
-	console.log(typeof(answerInd));
 	//crating graphs from table of integer
 	for(let i in tableint){
 		tableint[i] = tableint[i]+1;
@@ -2662,11 +2731,6 @@ function graphGeneration(ZOOM, BaseLineType, initHeight, tableint, answerInd){
         	}
         	parseResult.value.push(parseFloat(DATATABLE[tableint[i]][v]))
         }
-
-        //basecut, ZOOM, add, tabledata, timepos, baselineType, start, end, initHeight, name
-        /*console.log(parseResult.time)
-        console.log(parseResult.value)
-        console.log(parseResult.valueMax +" "+ parseResult.valueMin)*/
         let finalResult;
         if(typeof(answerInd)=="string" && answerInd == "Model"){
         	finalResult = new Graph(parseResult.valueMin+3*((parseResult.valueMax-parseResult.valueMin)/4), ZOOM, 1,
@@ -2694,6 +2758,63 @@ function graphGeneration(ZOOM, BaseLineType, initHeight, tableint, answerInd){
     return tableResult;
 }
 
+function graphGenTasTwinSearchCi(ZOOM, BaseLineType, initHeight, tableint, answerInd){
+	let tableResult = new Array();
+	let done = 0;
+	let rng = new RNG(20);
+	//crating graphs from table of integer
+	for(let i in tableint){
+		tableint[i] = tableint[i]+1;
+        let parseResult = new Object({
+            name : parseInt(i)+parseInt(done),
+            time : DATATABLE[0],
+            valueMax : 0,
+            valueMin : 1000000,
+            value : new Array()
+        })
+        for(let v in DATATABLE[tableint[i]]){
+        	if(v == 0)
+        		continue;
+        	if(DATATABLE[tableint[i]][v]>parseResult.valueMax){
+        		parseResult.valueMax = parseFloat(DATATABLE[tableint[i]][v])
+        	}
+        	else if(DATATABLE[tableint[i]][v]<parseResult.valueMin){
+        		parseResult.valueMin = parseFloat(DATATABLE[tableint[i]][v])
+        	}
+        	parseResult.value.push(parseFloat(DATATABLE[tableint[i]][v]))
+        }
+        let finalResult;
+    	finalResult = new Graph(parseResult.valueMin+3*((parseResult.valueMax-parseResult.valueMin)/4), ZOOM, 1,
+                             parseResult.value, parseResult.time, BaseLineType, 0, parseResult.time.length-1,
+                             initHeight, parseResult.name);
+    	if(rng.nextFloat() > 0.5)
+    		finalResult.basecut = parseResult.valueMin+1*((parseResult.valueMax-parseResult.valueMin)/4)
+        if(typeof(answerInd)=="number" && answerInd+1 == tableint[i]){
+        	finalResult.isAnswer = true;
+        	let finalResult2 = new Graph(parseResult.valueMin+3*((parseResult.valueMax-parseResult.valueMin)/4), ZOOM, 1,
+                                 parseResult.value, parseResult.time, BaseLineType, 0, parseResult.time.length-1,
+                                 initHeight, (parseInt(parseResult.name)+1));
+        	finalResult2.isAnswer = true;
+        	if(finalResult2.basecut == finalResult.basecut)
+        		finalResult2.basecut = parseResult.valueMin+1*((parseResult.valueMax-parseResult.valueMin)/4)
+
+			tableResult.push(finalResult);
+			tableResult.push(finalResult2);
+			done++;
+        }
+        else
+       		tableResult.push(finalResult);
+    }
+    for(let i in tableResult){
+        tableResult[i].init();
+        tableResult[i].initListener();
+        tableResult[i].draw(true);
+    }
+    console.log(tableGraph);
+    console.log("done");
+    return tableResult;
+}
+
 function refreshGraphsDisplaying(){
 	tableGraph.length = 0;
 	$(".addedLine").remove();
@@ -2706,9 +2827,9 @@ function newQuestionGeneration(taskLine, OrgaLine){
 	if(taskLine[4] == "SAME alternat"){
 		console.log("question is Same alternat");
 		refreshGraphsDisplaying();
-		let questionGraphs = graphGeneration(OrgaLine[3][0],OrgaLine[3][1],OrgaLine[3][2], shuffleTab(taskLine[1]), taskLine[3]);
+		let questionGraphs = graphGenTaskSameAltCo(OrgaLine[3][0],OrgaLine[3][1],OrgaLine[3][2], shuffleTab(taskLine[1]), taskLine[3]);
 		$("#myTable").find('tbody').append($('<tr class = "addedLine">'));
-		let target = graphGeneration(OrgaLine[3][0],OrgaLine[3][1],OrgaLine[3][2],[taskLine[3]], "Model");
+		let target = graphGenTaskSameAltCo(OrgaLine[3][0],OrgaLine[3][1],OrgaLine[3][2],[taskLine[3]], "Model");
 		for(let g in tableGraph){
 			tableGraph[g].interact=false;
 		}
@@ -2717,6 +2838,7 @@ function newQuestionGeneration(taskLine, OrgaLine){
 	else if(taskLine[4] == "Correct Baseline"){
 		console.log("question is Correct Baseline");
 		$(".questionSentence").remove();
+		let nb = 0;
 		for(let g in tableGraph){
 			console.log(typeof(tableGraph[g].name));
 			if(!(tableGraph[g].isAnswer || tableGraph[g].name == "Model")){
@@ -2727,10 +2849,26 @@ function newQuestionGeneration(taskLine, OrgaLine){
 			else{
 				if(tableGraph[g].name == "Model")
 					tableGraph[g].interact=true;
+				if(tableGraph[g].isAnswer){
+					if(nb>0)
+						tableGraph[g].interact=true;
+					else
+						nb++;
+				}
 			}
 		}
 		$(".questionZone").append("<span class='questionSentence'> Essayez de changer la basecut du graph 'Model' ci dessus, "
 		 						  +"afin qu'il soit le plus ressemblant possible au deuxième graph non grisé</span>");
+	}
+	else if(taskLine[4] == "twin search"){
+		console.log("question is twin search");
+		refreshGraphsDisplaying();
+		let questionGraphs = graphGenTasTwinSearchCi(OrgaLine[3][0],OrgaLine[3][1],OrgaLine[3][2], shuffleTab(taskLine[1]), taskLine[3]);
+		for(let g in tableGraph){
+			tableGraph[g].interact=false;
+		}
+		$(".questionZone").append("<span class='questionSentence'> Parmis les graph au dessus, deux d'entre eux sont identique lesquels ?"
+								+" (il suffit d'en selectionner 1 des deux) ci dessus </span>");
 	}
 }
 
@@ -2763,42 +2901,54 @@ tableTasks.push([14,[],"linked to the task 5",30,"Correct Baseline",[],0]);
 tableTasks.push([15,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
 				,"which is took as base",98,"SAME alternat",[],0]);
 tableTasks.push([16,[],"linked to the task 7",98,"Correct Baseline",[],0]);
+tableTasks.push([17,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
+				,"which is took as base", 10, "twin search",[],0])
+tableTasks.push([18,[],"linked to the task 17",10,"Correct Baseline",[],0]);
+tableTasks.push([19,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
+				,"which is took as base", 117, "twin search",[],0])
+tableTasks.push([20,[],"linked to the task 19",117,"Correct Baseline",[],0]);
+tableTasks.push([21,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
+				,"which is took as base", 149, "twin search",[],0])
+tableTasks.push([22,[],"linked to the task 21",149,"Correct Baseline",[],0]);
+tableTasks.push([23,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
+				,"which is took as base", 70, "twin search",[],0])
+tableTasks.push([24,[],"linked to the task 23",70,"Correct Baseline",[],0]);
 
 var tableOrga = new Array();
 //information is a tab of param for the graph génération
 tableOrga.push(["userID","question number","taskNumber","informations"])
 tableOrga.push([0,0,1,[5,"Stratum",30]])
 tableOrga.push([0,1,2,[]])
-tableOrga.push([0,2,3,[5,"Horizon",30]])
-tableOrga.push([0,3,4,[]])
-tableOrga.push([0,4,5,[5,"Stratum",30]])
-tableOrga.push([0,5,6,[]])
-tableOrga.push([0,6,7,[5,"Horizon",30]])
-tableOrga.push([0,7,8,[]])
-tableOrga.push([0,8,9,[5,"Stratum",30]])
-tableOrga.push([0,9,10,[]])
-tableOrga.push([0,10,11,[5,"Horizon",30]])
-tableOrga.push([0,11,12,[]])
-tableOrga.push([0,12,13,[5,"Stratum",30]])
-tableOrga.push([0,13,14,[]])
-tableOrga.push([0,14,15,[5,"Horizon",30]])
-tableOrga.push([0,15,16,[]])
-tableOrga.push([0,16,1,[8.5,"Stratum",30]])
-tableOrga.push([0,17,2,[]])
-tableOrga.push([0,18,3,[8.5,"Horizon",30]])
-tableOrga.push([0,19,4,[]])
-tableOrga.push([0,20,5,[8.5,"Stratum",30]])
-tableOrga.push([0,21,6,[]])
-tableOrga.push([0,22,7,[8.5,"Horizon",30]])
-tableOrga.push([0,23,8,[]])
-tableOrga.push([0,24,9,[8.5,"Stratum",30]])
-tableOrga.push([0,25,10,[]])
-tableOrga.push([0,26,11,[8.5,"Horizon",30]])
-tableOrga.push([0,27,12,[]])
-tableOrga.push([0,28,13,[8.5,"Stratum",30]])
-tableOrga.push([0,29,14,[]])
-tableOrga.push([0,30,15,[8.5,"Horizon",30]])
-tableOrga.push([0,31,16,[]])
+//tableOrga.push([0,2,3,[5,"Horizon",30]])
+//tableOrga.push([0,3,4,[]])
+tableOrga.push([0,2,5,[5,"Stratum",30]])
+tableOrga.push([0,3,6,[]])
+//tableOrga.push([0,6,7,[5,"Horizon",30]])
+//tableOrga.push([0,7,8,[]])
+tableOrga.push([0,4,9,[5,"Stratum",30]])
+tableOrga.push([0,5,10,[]])
+//tableOrga.push([0,10,11,[5,"Horizon",30]])
+//tableOrga.push([0,11,12,[]])
+tableOrga.push([0,6,13,[5,"Stratum",30]])
+tableOrga.push([0,7,14,[]])
+//tableOrga.push([0,14,15,[5,"Horizon",30]])
+//tableOrga.push([0,15,16,[]])
+tableOrga.push([0,8,1,[10,"Stratum",30]])
+tableOrga.push([0,9,2,[]])
+//tableOrga.push([0,18,3,[8.5,"Horizon",30]])
+//tableOrga.push([0,19,4,[]])
+tableOrga.push([0,10,5,[10,"Stratum",30]])
+tableOrga.push([0,11,6,[]])
+//tableOrga.push([0,22,7,[8.5,"Horizon",30]])
+//tableOrga.push([0,23,8,[]])
+tableOrga.push([0,12,9,[10,"Stratum",30]])
+tableOrga.push([0,13,10,[]])
+//tableOrga.push([0,26,11,[8.5,"Horizon",30]])
+//tableOrga.push([0,27,12,[]])
+tableOrga.push([0,14,13,[10,"Stratum",30]])
+tableOrga.push([0,15,14,[]])
+//tableOrga.push([0,30,15,[8.5,"Horizon",30]])
+//tableOrga.push([0,31,16,[]])
 
 tableOrga.push([1,0,1,[5,"Stratum",30]])
 tableOrga.push([1,1,2,[]])
@@ -2808,6 +2958,39 @@ tableOrga.push([1,4,5,[5,"Stratum",30]])
 tableOrga.push([1,5,6,[]])
 tableOrga.push([1,6,7,[5,"Horizon",30]])
 tableOrga.push([1,7,8,[]])
+tableOrga.push([1,8,9,[5,"Stratum",30]])
+tableOrga.push([1,9,10,[]])
+tableOrga.push([1,10,11,[5,"Horizon",30]])
+tableOrga.push([1,11,12,[]])
+tableOrga.push([1,12,13,[5,"Stratum",30]])
+tableOrga.push([1,13,14,[]])
+tableOrga.push([1,14,15,[5,"Horizon",30]])
+tableOrga.push([1,15,16,[]])
+tableOrga.push([1,16,1,[8.5,"Stratum",30]])
+tableOrga.push([1,17,2,[]])
+tableOrga.push([1,18,3,[8.5,"Horizon",30]])
+tableOrga.push([1,19,4,[]])
+tableOrga.push([1,20,5,[8.5,"Stratum",30]])
+tableOrga.push([1,21,6,[]])
+tableOrga.push([1,22,7,[8.5,"Horizon",30]])
+tableOrga.push([1,23,8,[]])
+tableOrga.push([1,24,9,[8.5,"Stratum",30]])
+tableOrga.push([1,25,10,[]])
+tableOrga.push([1,26,11,[8.5,"Horizon",30]])
+tableOrga.push([1,27,12,[]])
+tableOrga.push([1,28,13,[8.5,"Stratum",30]])
+tableOrga.push([1,29,14,[]])
+tableOrga.push([1,30,15,[8.5,"Horizon",30]])
+tableOrga.push([1,31,16,[]])
+
+tableOrga.push([2,0,17,[5,"Stratum",30]])
+tableOrga.push([2,1,18,[]])
+tableOrga.push([2,2,19,[5,"Horizon",30]])
+tableOrga.push([2,3,20,[]])
+tableOrga.push([2,4,21,[5,"Stratum",30]])
+tableOrga.push([2,5,22,[]])
+tableOrga.push([2,6,23,[5,"Horizon",30]])
+tableOrga.push([2,7,24,[]])
 
 console.log(tableTasks);
 console.log(tableGraph);
@@ -2853,58 +3036,70 @@ function questionIsAnswered(){
 	else if(currentTasks[4]== "Correct Baseline"){
 		answerForRecordTable.push("Expected result was :");
 		for(let g in tableGraph){
-			if(tableGraph[g].isAnswer){
+			if(tableGraph[g].isAnswer && (!tableGraph[g].interact)){
 				answerForRecordTable.push(tableGraph[g].name+ " basecut = "+tableGraph[g].basecut);
 			}
 		}
 		answerForRecordTable.push("User Answered :");
 		for(let g in tableGraph){
-			if(tableGraph[g].name == "Model"){
+			if(tableGraph[g].name == "Model" || (tableGraph[g].isAnswer && tableGraph[g].interact)){
 				answerForRecordTable.push(tableGraph[g].name+ " basecut = "+tableGraph[g].basecut);
+			}
+		}
+	}
+
+	else if(currentTasks[4]== "twin search"){
+		answerForRecordTable.push("Expected result was :");
+		let name = new Array();
+		for(let g in tableGraph){
+			if(tableGraph[g].isAnswer){
+				name.push(tableGraph[g].name);
+			}
+		}
+		answerForRecordTable.push("graphs named : " + name[0] + " or "+ name[1]);
+		answerForRecordTable.push("User Answered :");
+		for(let g in tableGraph){
+			if(tableGraph[g].answerButton[0].checked){
+				answerForRecordTable.push("graphs named : " + tableGraph[g].name);
 			}
 		}
 	}
 	if(answerForRecordTable.length!=4)
 		answerForRecordTable.push("User failed");
 	eventRecordTable.push(answerForRecordTable);
+	eventRecordTable.push([("Expe End number "+startEndCounter),"stop pressed" , tableGraph[0].baselineType, timerLength]);
 }
-/*
-idée pour l'expé :
-test Same "alternatif" :
-    - on à 28 graphs != (distracteur).
-    - on prend un des 29 graph à partir de lui on génère 4 "faux jumeaux". et 1 de ces faux jumeaux sera notre cible.
-    - on garde le même "jeu" de 29 graphs d'une question à l'autre, mais on change juste le graphs d'origine pour les jumeaux
-    - les modifs faites aux jumeaux ne doivent pas dépasser une "bande" de hauteur, et 5% de la longueur puis symétrie.
-    - durant cette phase aucune interactions possible.
-    - une fois que le "cobaye" à selectionner le graphs qu'il pense être le bon. Tous les distracteurs se grisent ne
-        laissant que la cible et le "modèle". Là le cobaye doit modifier la baseline du modèle pour qu'au final elle soit
-        le plus possible au même endroit que sur la cible.
-    - 4 éléments à mesurer.
-        - le temps pour trouver le jumeau du modèle.
-        - le jumeau selectionné par le cobaye.
-        - le temps pour mettre la baseline au bon endroit.
-        - le taux de différence entre les deux baseline.*/
 
-        //////////////////////////////////////////////////
+        	//////////////////////////////////////////////////
             //              Expe timer gesture              //
             //////////////////////////////////////////////////
 let finished = false;
     $("#timerStartButton").on('click', function(){
         if(!finished){
             if(timerStart==null){
-            	if(isExpe != 2)
+            	if(isExpe != 2){
             		isExpe = 2;
+            		htmlChange();
+            	}
             	let end = taskChange(id,startEndCounter)
             	if(!end){
             		finished = true;
             		refreshGraphsDisplaying();
             		$(".questionZone").append("<span class='questionSentence'> L EXPE EST FINIE MERCI BEAUCOUP ! </span>");
+            		$("#expeEnd").css("display","block");
+            		$("#timerStartButton").css("display","none");
+            		$("#timerEndButton").css("display","none");
             	}
             	else{
             		timerStart = new Date();
 	                eventRecordTable.push([("Expe Begin number "+startEndCounter),"start pressed" , "no value",0]);
 	                timerLength = null;
 	                ws.send("start");
+	                $("#timerStartButton").css("display","none");
+	                if(currentTasks[4]=="twin search" || currentTasks[4]=="SAME alternat")
+	                	$("#timerEndButton").css("display","none");
+	                else
+	                	$("#timerEndButton").css("display","block");
 	                $("#myTable").css("opacity","1.0");
 	            }
             }
@@ -2920,7 +3115,7 @@ let finished = false;
                 timerLength = new Date() - timerStart;
                 //adding the answer in the tab
                 questionIsAnswered();
-                eventRecordTable.push([("Expe End number "+startEndCounter),"stop pressed" , "no value", timerLength]);                timerStart = null;
+                timerStart = null;
                 console.log(eventRecordTable);
                 if(startEndCounter>0)
                     ws.send("number");
@@ -2928,6 +3123,8 @@ let finished = false;
                 eventRecordTable = new Array();
                 startEndCounter++;
                 $("#myTable").css("opacity","0.0");
+                $("#timerStartButton").css("display","block");
+                $("#timerEndButton").css("display","none");
             }
             else{
                 console.log("il faut commencer le test avant de vouloir le finir");
@@ -2944,6 +3141,7 @@ let finished = false;
         }
 
     })
+    $("#expeEnd").css("display","none");
 });
 
 let id = -1;

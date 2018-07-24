@@ -7,8 +7,51 @@ q = q.slice(q.indexOf("file=")+5);
 console.log(q)
 $(function(){
     console.log("hello")
+
+    let $but0 = $("<button>filtre Horizon</button>");
+    $but0.on("click", function(){
+        $(".newEntrie").css("display","none");
+        $(".foldUnfold").css("display","none");
+        $(".baseline").css("display","none");
+        $(".ZOOM").css("display","none");
+        $(".initHeight").css("display","none");
+        $(".answer").css("display","none");
+        $(".question").css("display","none");
+        $(".endEntrieHorizon").css("display","none");
+        $(".endEntrieStratum").css("display","table");
+    });
+    $("#nav").append($but0);
+
+    let $but1 = $("<button>filtre Stratum</button>");
+    $but1.on("click", function(){
+        $(".newEntrie").css("display","none");
+        $(".foldUnfold").css("display","none");
+        $(".baseline").css("display","none");
+        $(".ZOOM").css("display","none");
+        $(".initHeight").css("display","none");
+        $(".answer").css("display","none");
+        $(".question").css("display","none");
+        $(".endEntrieHorizon").css("display","table");
+        $(".endEntrieStratum").css("display","none");
+    });
+    $("#nav").append($but1);
+
+    let $but2 = $("<button>filtre reset</button>");
+    $but2.on("click", function(){
+        $(".newEntrie").css("display","table");
+        $(".foldUnfold").css("display","table");
+        $(".baseline").css("display","table");
+        $(".ZOOM").css("display","table");
+        $(".initHeight").css("display","table");
+        $(".answer").css("display","table");
+        $(".question").css("display","table");
+        $(".endEntrieHorizon").css("display","table");
+        $(".endEntrieStratum").css("display","table");
+    });
+    $("#nav").append($but2);
+
     $.ajax({
-        url:"expe/expe0.json",
+        url:"expeTest/expe2.json",
         async:false,
         error:function(data){
             console.log(data);
@@ -21,6 +64,12 @@ $(function(){
                     let $txt = $("<tr>")
                     if(data[tab][line][1] == "start pressed" || data[tab][line][1] == "stop pressed")
                         $txt = $("<tr class='newEntrie'>")
+                    if(data[tab][line][1] == "stop pressed"){
+                        if(data[tab][line][2] == "Stratum")
+                            $txt = $("<tr class='endEntrieStratum'>");
+                        else if(data[tab][line][2] == "Horizon")
+                            $txt = $("<tr class='endEntrieHorizon'>");
+                    }
                     if(data[tab][line][0].slice(-11) == "Fold/Unfold")
                         $txt = $("<tr class='foldUnfold'>")
                     if(data[tab][line][0].slice(-8) == "baseline")
