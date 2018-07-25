@@ -8,33 +8,49 @@ console.log(q)
 $(function(){
     console.log("hello")
 
-    let $but0 = $("<button>filtre Horizon</button>");
+    let $but0 = $("<button>filtre Stratum</button>");
     $but0.on("click", function(){
         $(".newEntrie").css("display","none");
         $(".foldUnfold").css("display","none");
         $(".baseline").css("display","none");
         $(".ZOOM").css("display","none");
         $(".initHeight").css("display","none");
-        $(".answer").css("display","none");
+        $(".answerBaseline").css("display","none");
+        $(".answerTwinSearch").css("display","none");
         $(".question").css("display","none");
         $(".endEntrieHorizon").css("display","none");
-        $(".endEntrieStratum").css("display","table");
+        $(".endEntrieStratum").css("display","block");
     });
     $("#nav").append($but0);
 
-    let $but1 = $("<button>filtre Stratum</button>");
+    let $but1 = $("<button>filtre Horizon</button>");
     $but1.on("click", function(){
         $(".newEntrie").css("display","none");
         $(".foldUnfold").css("display","none");
         $(".baseline").css("display","none");
         $(".ZOOM").css("display","none");
         $(".initHeight").css("display","none");
-        $(".answer").css("display","none");
+        $(".answerBaseline").css("display","none");
+        $(".answerTwinSearch").css("display","none");
         $(".question").css("display","none");
-        $(".endEntrieHorizon").css("display","table");
+        $(".endEntrieHorizon").css("display","block");
         $(".endEntrieStratum").css("display","none");
     });
     $("#nav").append($but1);
+
+    let $but3 = $("<button>filtre Questions baseline</button>");
+    $but3.on("click", function(){
+        $(".answerBaseline").css("display","table");
+        $(".question").css("display","table");
+    });
+    $("#nav").append($but3);
+
+    let $but4 = $("<button>filtre Questions twin search</button>");
+    $but4.on("click", function(){
+        $(".answerTwinSearch").css("display","table");
+        $(".question").css("display","table");
+    });
+    $("#nav").append($but4);
 
     let $but2 = $("<button>filtre reset</button>");
     $but2.on("click", function(){
@@ -51,7 +67,7 @@ $(function(){
     $("#nav").append($but2);
 
     $.ajax({
-        url:"expeTest/expe2.json",
+        url:"expeTest/expe0.json",
         async:false,
         error:function(data){
             console.log(data);
@@ -70,6 +86,8 @@ $(function(){
                         else if(data[tab][line][2] == "Horizon")
                             $txt = $("<tr class='endEntrieHorizon'>");
                     }
+                    if(data[tab][line][0] == "User giveUp")
+                        $txt = $("<tr class='answerTwinSearch'>")
                     if(data[tab][line][0].slice(-11) == "Fold/Unfold")
                         $txt = $("<tr class='foldUnfold'>")
                     if(data[tab][line][0].slice(-8) == "baseline")
@@ -78,8 +96,12 @@ $(function(){
                         $txt = $("<tr class='ZOOM'>")
                     if(data[tab][line][0].slice(-10) == "initHeight")
                         $txt = $("<tr class='initHeight'>")
-                    if(data[tab][line][0] == "Expected result was :")
-                        $txt = $("<tr class='answer'>")
+                    if(data[tab][line][0] == "Expected result was :"){
+                        if(data[tab][line][3].slice(-10) == "difference")
+                            $txt = $("<tr class='answerBaseline'>");
+                        else
+                            $txt = $("<tr class='answerTwinSearch'>");
+                    }
                     if(data[tab][line][0] == "new question")
                         $txt = $("<tr class='question'>")
                     $("#myTable").find('tbody')

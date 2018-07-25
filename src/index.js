@@ -17,20 +17,21 @@ function htmlChange(){
 		$(".header").remove();
 		$("#myTable").find('tbody')
 		    .append($('<tr class = "header">')
-		    	.append($('<th style="background-color:#0f0"><span class="lab">Name</span>&nbsp;<span class ="adjuster">-</span></th>'))
-		    	.append($('<th>Graph</th>'))
-		    	.append($('<th style="background-color:#0f0"><span class="lab">Answer</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    	.append($('<th style="background-color:#777"><span class="lab">Name</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    	.append($('<th style="background-color:#777">Graph</th>'))
+		    	.append($('<th style="background-color:#777"><span class="lab">Answer1</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    	.append($('<th style="background-color:#777"><span class="lab">Answer2</span>&nbsp;<span class ="adjuster">-</span></th>'))
 		    );
 	}
 	else if(isExpe==1){
 		$(".header").remove();
 		$("#myTable").find('tbody')
 		    .append($('<tr class = "header">')
-		    	.append($('<th style="background-color:#0f0"><span class="lab">Name</span>&nbsp;<span class ="adjuster">-</span></th>'))
-		    	.append($('<th style="background-color:#0f0"><span class="lab">Status</span>&nbsp;<span class ="adjuster">-</span></th>'))
-		    	.append($('<th>Graph</th>'))
-		    	.append($('<th style="background-color:#0f0"><span class="lab">Baseline</span>&nbsp;<span class ="adjuster">-</span></th>'))
-		    	.append($('<th style="background-color:#0f0"><span class="lab">ZOOM</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    	.append($('<th style="background-color:#777"><span class="lab">Name</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    	.append($('<th style="background-color:#777"><span class="lab">Status</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    	.append($('<th style="background-color:#777">Graph</th>'))
+		    	.append($('<th style="background-color:#777"><span class="lab">Baseline</span>&nbsp;<span class ="adjuster">-</span></th>'))
+		    	.append($('<th style="background-color:#777"><span class="lab">ZOOM</span>&nbsp;<span class ="adjuster">-</span></th>'))
 		    );
 	}
 }
@@ -70,7 +71,7 @@ htmlChange();
 		    } else{
 				theth.children('.lab').css('display', 'inline')
 				theth.children('.adjuster').html('&nbsp;-&nbsp;')
-				theth.css('background-color', '#0f0');
+				theth.css('background-color', '#777');
 				theth.css('width', '');
 				theth.css('max-width', '');
 		    }
@@ -138,6 +139,8 @@ const canvasWidth = 1700;
 
 let timerStart = null;
 let timerLength = null;
+let colorChanger = null;
+
 
 let dragGraph = null;
 let dragStart = null;
@@ -226,6 +229,8 @@ $(function(){
       this.pedestal = 0
       this.ZOOMStable = false
 
+      this.coloring = false
+
       this.isAnswer = false
       this.interact = true
 
@@ -239,8 +244,10 @@ $(function(){
 	    this.can.grey = false;
 	    $(this.can).addClass("IG");
 
-	  //Answer button generation
-	  this.answerButton = $("<input type = 'radio' name = 'answerButton'																																																											 id='"+this.name+"answerButton"+"'>")
+	  //Answers buttons generation
+	  this.answerRadioButton = $("<input type = 'radio' name = 'answerRadioButton' class='graphRadioButton' id='"+this.name+"answerRadioButton"+"'>")
+	  this.answerConfirmationButton = $("<button type='button' class='graphConfirmationButton' id='"+this.name+"answerConfirmationButton"+"'>Confirmer</button>")
+
 
 	  //rangesliders generation
 	  this.sliderBaseline = $("<input class='sliderBaseline' type='range' step='0.01'>");
@@ -612,26 +619,50 @@ $(function(){
 	        if(this.basecut <= lvlValue){
 	          if(copy[g].level == this.maxlvl){
 	            for(let k=0; k<this.initHeight; k++){
-	              imgData.data[4*k+0]=heatScale[5][0];
-	              imgData.data[4*k+1]=heatScale[5][1];
-	              imgData.data[4*k+2]=heatScale[5][2];
-	              imgData.data[4*k+3]=255;
+	            	if(this.coloring){
+						imgData.data[4*k+0]=heatScale[5][0];
+		                imgData.data[4*k+1]=heatScale[5][1];
+		                imgData.data[4*k+2]=heatScale[5][2];
+		                imgData.data[4*k+3]=255;
+	            	}
+	            	else{
+	            		imgData.data[4*k+0]=heatScale[220][0];
+		                imgData.data[4*k+1]=heatScale[220][1];
+		                imgData.data[4*k+2]=heatScale[220][2];
+		                imgData.data[4*k+3]=255;
+	            	}
 	            }
 	          }
 	          else if(copy[g].level == this.minlvl){
 	            for(let k=0; k<this.initHeight+1; k++){
-	              imgData.data[4*k+0]=heatScale[220][0];
-	              imgData.data[4*k+1]=heatScale[220][1];
-	              imgData.data[4*k+2]=heatScale[220][2];
-	              imgData.data[4*k+3]=255;
+	            	if(this.coloring){
+	            		imgData.data[4*k+0]=heatScale[220][0];
+	                	imgData.data[4*k+1]=heatScale[220][1];
+	                	imgData.data[4*k+2]=heatScale[220][2];
+	                	imgData.data[4*k+3]=255;
+	            	}
+	            	else{
+	            	    imgData.data[4*k+0]=heatScale[5][0];
+	              	    imgData.data[4*k+1]=heatScale[5][1];
+	              	    imgData.data[4*k+2]=heatScale[5][2];
+	              	    imgData.data[4*k+3]=255;
+	            	}
 	            }
 	          }
 	          else{
 	            for(let k=0; k<this.initHeight; k++){
-	              imgData.data[4*k+0]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
-	              imgData.data[4*k+1]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
-	              imgData.data[4*k+2]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
-	              imgData.data[4*k+3]=255;
+	            	if(this.coloring){
+	            		imgData.data[4*k+0]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
+		                imgData.data[4*k+1]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
+		                imgData.data[4*k+2]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
+		                imgData.data[4*k+3]=255;
+	            	}
+	            	else{
+		            	imgData.data[4*k+0]=heatScale[5+((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
+		                imgData.data[4*k+1]=heatScale[5+((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
+		                imgData.data[4*k+2]=heatScale[5+((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
+		                imgData.data[4*k+3]=255;
+	            	}
 	            }
 	          }
 	        }
@@ -639,26 +670,50 @@ $(function(){
 	        else if(this.basecut >= nextlvlValue){
 	          if(copy[g].level == this.maxlvl){
 	            for(let k=0; k<this.initHeight; k++){
-	              imgData.data[4*k+0]=btcScale[240][0];
-	              imgData.data[4*k+1]=btcScale[240][1];
-	              imgData.data[4*k+2]=btcScale[240][2];
-	              imgData.data[4*k+3]=255;
+	            	//if(this.coloring){
+						imgData.data[4*k+0]=btcScale[240][0];
+		                imgData.data[4*k+1]=btcScale[240][1];
+		                imgData.data[4*k+2]=btcScale[240][2];
+		                imgData.data[4*k+3]=255;
+	            	/*}
+	            	else{
+	            		imgData.data[4*k+0]=btcScale[5][0];
+		                imgData.data[4*k+1]=btcScale[5][1];
+		                imgData.data[4*k+2]=btcScale[5][2];
+		                imgData.data[4*k+3]=255;
+	            	}*/
 	            }
 	          }
 	          else if(copy[g].level == this.minlvl){
 	            for(let k=0; k<this.initHeight; k++){
-	              imgData.data[4*k+0]=btcScale[5][0];
-	              imgData.data[4*k+1]=btcScale[5][1];
-	              imgData.data[4*k+2]=btcScale[5][2];
-	              imgData.data[4*k+3]=255;
+	            	//if(this.coloring){
+	            		imgData.data[4*k+0]=btcScale[5][0];
+		                imgData.data[4*k+1]=btcScale[5][1];
+		                imgData.data[4*k+2]=btcScale[5][2];
+		                imgData.data[4*k+3]=255;
+	            	/*}
+	            	else{
+	            		imgData.data[4*k+0]=btcScale[240][0];
+		                imgData.data[4*k+1]=btcScale[240][1];
+		                imgData.data[4*k+2]=btcScale[240][2];
+		                imgData.data[4*k+3]=255;
+	            	}*/
 	            }
 	          }
 	          else{
 	            for(let k=0; k<this.initHeight; k++){
-	              imgData.data[4*k+0]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
-	              imgData.data[4*k+1]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
-	              imgData.data[4*k+2]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
-	              imgData.data[4*k+3]=255;
+	            	//if(this.coloring){
+	            		imgData.data[4*k+0]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
+			            imgData.data[4*k+1]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
+			            imgData.data[4*k+2]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
+			            imgData.data[4*k+3]=255;
+	            	/*}
+	            	else{
+	            		imgData.data[4*k+0]=btcScale[240-((copy[g].level-1)*(Math.floor(240/this.scaleYpos)))][0];
+		                imgData.data[4*k+1]=btcScale[240-((copy[g].level-1)*(Math.floor(240/this.scaleYpos)))][1];
+		                imgData.data[4*k+2]=btcScale[240-((copy[g].level-1)*(Math.floor(240/this.scaleYpos)))][2];
+		                imgData.data[4*k+3]=255;
+	            	}*/
 	            }
 	          }
 	        }
@@ -668,16 +723,33 @@ $(function(){
 	            for(let k=0; k<this.initHeight; k++){
 	              let pixelValue = lvlValue + k*((nextlvlValue-lvlValue)/this.initHeight);
 	              if(pixelValue<=this.basecut){
-	                imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[240][0];
-	                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[240][1];
-	                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[240][2];
-	                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	              	//if(this.coloring){
+						imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[240][0];
+		                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[240][1];
+		                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[240][2];
+		                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	            	/*}
+	            	else{
+	            		imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[5][0];
+		                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[5][1];
+		                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[5][2];
+		                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	            	}*/
+
 	              }
 	              else{
-	                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[5][0];
-	                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[5][1];
-	                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[5][2];
-	                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	              	if(this.coloring){
+	              		imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[5][0];
+		                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[5][1];
+		                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[5][2];
+		                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	            	}
+	            	else{
+	            		imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[220][0];
+		                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[220][1];
+		                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[220][2];
+		                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	            	}
 	              }
 	            }
 	          }
@@ -685,16 +757,32 @@ $(function(){
 	            for(let k=0; k<this.initHeight; k++){
 	              let pixelValue = lvlValue + k*((nextlvlValue-lvlValue)/this.initHeight);
 	              if(pixelValue<=this.basecut){
-	                imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[5][0];
-	                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[5][1];
-	                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[5][2];
-	                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	              	//if(this.coloring){
+	              		imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[5][0];
+		                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[5][1];
+		                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[5][2];
+		                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	            	/*}
+	            	else{
+	            		imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[240][0];
+		                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[240][1];
+		                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[240][2];
+		                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	            	}*/
 	              }
 	              else{
-	                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[220][0];
-	                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[220][1];
-	                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[220][2];
-	                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	              	if(this.coloring){
+						imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[220][0];
+		                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[220][1];
+		                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[220][2];
+		                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	            	}
+	            	else{
+	            		imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[5][0];
+		                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[5][1];
+		                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[5][2];
+		                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	            	}
 	              }
 	            }
 	          }
@@ -702,16 +790,32 @@ $(function(){
 	            for(let k=0; k<this.initHeight; k++){
 	              let pixelValue = lvlValue + k*((nextlvlValue-lvlValue)/this.initHeight);
 	              if(pixelValue<=this.basecut){
-	                imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
-	                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
-	                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
-	                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	              	//if(this.coloring){
+	              		imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
+		                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
+		                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
+		                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	            	/*}
+	            	else{
+	            		imgData.data[4*((this.initHeight-1)-k)+0]=btcScale[240-((copy[g].level-1)*(Math.floor(240/this.scaleYpos)))][0];
+		                imgData.data[4*((this.initHeight-1)-k)+1]=btcScale[240-((copy[g].level-1)*(Math.floor(240/this.scaleYpos)))][1];
+		                imgData.data[4*((this.initHeight-1)-k)+2]=btcScale[240-((copy[g].level-1)*(Math.floor(240/this.scaleYpos)))][2];
+		                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	            	}*/
 	              }
 	              else{
-	                imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
-	                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
-	                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
-	                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	              	if(this.coloring){
+						imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
+		                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
+		                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[220-((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
+		                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	            	}
+	            	else{
+	            		imgData.data[4*((this.initHeight-1)-k)+0]=heatScale[5+((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][0];
+		                imgData.data[4*((this.initHeight-1)-k)+1]=heatScale[5+((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][1];
+		                imgData.data[4*((this.initHeight-1)-k)+2]=heatScale[5+((copy[g].level-1)*(Math.floor(220/this.scaleYpos)))][2];
+		                imgData.data[4*((this.initHeight-1)-k)+3]=255;
+	            	}
 	              }
 	            }
 	          }
@@ -2219,14 +2323,14 @@ $(function(){
                     });
              });
 
-             //interaction of the answer button
-             this.answerButton.on("click", function(eventData){
+             //interaction of the answers buttons
+             this.answerRadioButton.on("click", function(eventData){
              	if(currentTasks[4] == "SAME alternat" || currentTasks[4] == "twin search"){
              		if(!finished){
 			            if(timerStart!=null){
 			                timerLength = new Date() - timerStart;
 			                //adding the answer in the tab
-			                questionIsAnswered();
+			                questionIsAnswered(false);
 			                timerStart = null;
 			                console.log(eventRecordTable);
 			                if(startEndCounter>0)
@@ -2234,6 +2338,8 @@ $(function(){
 			                ws.send(JSON.stringify(eventRecordTable));
 			                eventRecordTable = new Array();
 			                startEndCounter++;
+			                clearTimeout(colorChanger)
+				 			$("body").css("background","#fff");
 
 			                let end = taskChange(id,startEndCounter)
 							timerStart = new Date();
@@ -2241,17 +2347,38 @@ $(function(){
 			                eventRecordTable.push([("Expe Begin number "+startEndCounter),"start pressed" , "no value",0]);
 			                timerLength = null;
 			                ws.send("start");
-			                $("#timerEndButton").css("display","block");
+			                $("#timerEndButton").css("display","none");
+			                $(".graphConfirmationButton").css("display","block");
+			                $(".graphRadioButton").css("display","none");
 			            }
 			        }
              	}
-             })
+             });
 
+             this.answerConfirmationButton.on("click", function(eventData){
+             	if(!finished){
+			            if(timerStart!=null){
+			                timerLength = new Date() - timerStart;
+			                //adding the answer in the tab
+			                questionIsAnswered(false);
+			                timerStart = null;
+			                console.log(eventRecordTable);
+			                if(startEndCounter>0)
+			                    ws.send("number");
+			                ws.send(JSON.stringify(eventRecordTable));
+			                eventRecordTable = new Array();
+			                startEndCounter++;
+			                $("#timerEndButton").css("display","none");
+			                $("#timerStartButton").css("display","block");
+			                $(".graphRadioButton").css("display","block");
+			                $("#myTable").css("opacity","0.0");
+			            }
+			        }
+             });
 	  	}
 
 
 		//adding different elements to the HTML
-
 		if(isExpe==2){
 			$("#myTable").find('tbody')
 			    .append($('<tr class = "addedLine">')
@@ -2260,7 +2387,9 @@ $(function(){
 			        ).append($('<td>')
 			            .append($(this.can))
 			        ).append($('<td>')
-			            .append($(this.answerButton))
+			            .append($(this.answerRadioButton))
+			        ).append($('<td>')
+			            .append($(this.answerConfirmationButton))
 			        )
 
 			    );
@@ -2653,13 +2782,10 @@ $(function(){
 	test4.init();
 	test3.initListener();
 	test4.initListener();
-
-
-  test4.init();
-
 	test3.draw(true);
-	test4.draw(true);
+	test4.draw(true);*/
 
+/*
 	var parseTest1Hor = graphFromCSV("data/AAPL.csv", ZOOM, "Horizon", initHeight);
 	var parseTest1Str = graphFromCSV("data/AAPL.csv", ZOOM, "Stratum", initHeight);
 	var parseTest2Hor = graphFromCSV("data/AMZN.csv", ZOOM, "Horizon", initHeight);
@@ -2693,7 +2819,7 @@ function generateIntTab(stop, maxInt){
 }
 
 function shuffleTab(tab){
-  let rng = new RNG(25);
+  let rng = new RNG(currentTasks[0]);
 
 	let res = new Array();
 	let copy = new Array();
@@ -2761,7 +2887,7 @@ function graphGenTaskSameAltCo(ZOOM, BaseLineType, initHeight, tableint, answerI
 function graphGenTasTwinSearchCi(ZOOM, BaseLineType, initHeight, tableint, answerInd){
 	let tableResult = new Array();
 	let done = 0;
-	let rng = new RNG(20);
+	let rng = new RNG(currentTasks[0]);
 	//crating graphs from table of integer
 	for(let i in tableint){
 		tableint[i] = tableint[i]+1;
@@ -2857,8 +2983,8 @@ function newQuestionGeneration(taskLine, OrgaLine){
 				}
 			}
 		}
-		$(".questionZone").append("<span class='questionSentence'> Essayez de changer la basecut du graph 'Model' ci dessus, "
-		 						  +"afin qu'il soit le plus ressemblant possible au deuxième graph non grisé</span>");
+		$(".questionZone").append("<span class='questionSentence'> Essayez de changer la baseline de la deuxieme courbe non grisé (la plus basse), "
+		 						  +"afin qu'elle soit la plus ressemblante possible à la première courbe non grisé (la plus haute)</span>");
 	}
 	else if(taskLine[4] == "twin search"){
 		console.log("question is twin search");
@@ -2867,8 +2993,8 @@ function newQuestionGeneration(taskLine, OrgaLine){
 		for(let g in tableGraph){
 			tableGraph[g].interact=false;
 		}
-		$(".questionZone").append("<span class='questionSentence'> Parmis les graph au dessus, deux d'entre eux sont identique lesquels ?"
-								+" (il suffit d'en selectionner 1 des deux) ci dessus </span>");
+		$(".questionZone").append("<span class='questionSentence'> Parmis les courbes ci-dessus, deux d'entre elles sont identiques lesquels ?"
+								+" (il suffit d'en selectionner une des deux)</span>");
 	}
 }
 
@@ -2877,156 +3003,292 @@ var currentOrgaLine;
 
 var tableTasks = new Array();
 tableTasks.push(["id","graphs to use", "informations", "good answer", "test type", "graphs value", "differences"]);
-tableTasks.push([1,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37, 177]
-				,"which is took as base",10,"SAME alternat",[],0]);
-tableTasks.push([2,[],"linked to the task 1",10,"Correct Baseline",[],0]);
-tableTasks.push([3,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37, 177]
-				,"which is took as base",117,"SAME alternat",[],0]);
-tableTasks.push([4,[],"linked to the task 3",117,"Correct Baseline",[],0]);
-tableTasks.push([5,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37, 177]
-				,"which is took as base",149,"SAME alternat",[],0]);
-tableTasks.push([6,[],"linked to the task 1",149,"Correct Baseline",[],0]);
-tableTasks.push([7,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37, 177]
-				,"which is took as base",70,"SAME alternat",[],0]);
-tableTasks.push([8,[],"linked to the task 3",70,"Correct Baseline",[],0]);
-tableTasks.push([9,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
-				,"which is took as base",175,"SAME alternat",[],0]);
-tableTasks.push([10,[],"linked to the task 5",175,"Correct Baseline",[],0]);
-tableTasks.push([11,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
-				,"which is took as base",47,"SAME alternat",[],0]);
-tableTasks.push([12,[],"linked to the task 7",47,"Correct Baseline",[],0]);
-tableTasks.push([13,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
-				,"which is took as base",30,"SAME alternat",[],0]);
-tableTasks.push([14,[],"linked to the task 5",30,"Correct Baseline",[],0]);
-tableTasks.push([15,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57, 72]
-				,"which is took as base",98,"SAME alternat",[],0]);
-tableTasks.push([16,[],"linked to the task 7",98,"Correct Baseline",[],0]);
-tableTasks.push([17,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
+tableTasks.push([1,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
 				,"which is took as base", 10, "twin search",[],0])
-tableTasks.push([18,[],"linked to the task 17",10,"Correct Baseline",[],0]);
-tableTasks.push([19,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
+tableTasks.push([2,[],"linked to the task 1",10,"Correct Baseline",[],0]);
+tableTasks.push([3,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
 				,"which is took as base", 117, "twin search",[],0])
-tableTasks.push([20,[],"linked to the task 19",117,"Correct Baseline",[],0]);
-tableTasks.push([21,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
+tableTasks.push([4,[],"linked to the task 3",117,"Correct Baseline",[],0]);
+tableTasks.push([5,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
 				,"which is took as base", 149, "twin search",[],0])
-tableTasks.push([22,[],"linked to the task 21",149,"Correct Baseline",[],0]);
-tableTasks.push([23,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
+tableTasks.push([6,[],"linked to the task 5",149,"Correct Baseline",[],0]);
+tableTasks.push([7,[168, 99, 10, 104, 79, 128, 39, 114, 52, 40, 150, 175, 144, 117, 169, 101, 165, 149, 28, 16, 70, 83, 29, 133, 5, 136, 156, 103, 146, 122, 37]
 				,"which is took as base", 70, "twin search",[],0])
-tableTasks.push([24,[],"linked to the task 23",70,"Correct Baseline",[],0]);
-tableTasks.push([25,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57]
+tableTasks.push([8,[],"linked to the task 7",70,"Correct Baseline",[],0]);
+tableTasks.push([9,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57]
 				,"which is took as base",175,"twin search",[],0]);
-tableTasks.push([26,[],"linked to the task 25",175,"Correct Baseline",[],0]);
-tableTasks.push([27,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57]
+tableTasks.push([10,[],"linked to the task 9",175,"Correct Baseline",[],0]);
+tableTasks.push([11,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57]
 				,"which is took as base",47,"twin search",[],0]);
-tableTasks.push([28,[],"linked to the task 27",47,"Correct Baseline",[],0]);
-tableTasks.push([29,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57]
+tableTasks.push([12,[],"linked to the task 11",47,"Correct Baseline",[],0]);
+tableTasks.push([13,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57]
 				,"which is took as base",30,"twin search",[],0]);
-tableTasks.push([30,[],"linked to the task 29",30,"Correct Baseline",[],0]);
-tableTasks.push([31,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57]
+tableTasks.push([14,[],"linked to the task 13",30,"Correct Baseline",[],0]);
+tableTasks.push([15,[95, 24, 120, 32, 175, 69, 30, 147, 105, 81, 13, 28, 31, 40, 66, 165, 149, 146, 79, 47, 138, 51, 164, 48, 98, 133, 108, 45, 55, 90, 57]
 				,"which is took as base",98,"twin search",[],0]);
-tableTasks.push([32,[],"linked to the task 31",98,"Correct Baseline",[],0]);
+tableTasks.push([16,[],"linked to the task 15",98,"Correct Baseline",[],0]);
 
 var tableOrga = new Array();
 //information is a tab of param for the graph génération
-tableOrga.push(["userID","question number","taskNumber","informations"])
 tableOrga.push([0,0,1,[5,"Stratum",30]])
 tableOrga.push([0,1,2,[]])
-//tableOrga.push([0,2,3,[5,"Horizon",30]])
-//tableOrga.push([0,3,4,[]])
-tableOrga.push([0,2,5,[5,"Stratum",30]])
-tableOrga.push([0,3,6,[]])
-//tableOrga.push([0,6,7,[5,"Horizon",30]])
-//tableOrga.push([0,7,8,[]])
-tableOrga.push([0,4,9,[5,"Stratum",30]])
-tableOrga.push([0,5,10,[]])
-//tableOrga.push([0,10,11,[5,"Horizon",30]])
-//tableOrga.push([0,11,12,[]])
-tableOrga.push([0,6,13,[5,"Stratum",30]])
-tableOrga.push([0,7,14,[]])
-//tableOrga.push([0,14,15,[5,"Horizon",30]])
-//tableOrga.push([0,15,16,[]])
-tableOrga.push([0,8,1,[10,"Stratum",30]])
-tableOrga.push([0,9,2,[]])
-//tableOrga.push([0,18,3,[8.5,"Horizon",30]])
-//tableOrga.push([0,19,4,[]])
-tableOrga.push([0,10,5,[10,"Stratum",30]])
-tableOrga.push([0,11,6,[]])
-//tableOrga.push([0,22,7,[8.5,"Horizon",30]])
-//tableOrga.push([0,23,8,[]])
-tableOrga.push([0,12,9,[10,"Stratum",30]])
-tableOrga.push([0,13,10,[]])
-//tableOrga.push([0,26,11,[8.5,"Horizon",30]])
-//tableOrga.push([0,27,12,[]])
-tableOrga.push([0,14,13,[10,"Stratum",30]])
-tableOrga.push([0,15,14,[]])
-//tableOrga.push([0,30,15,[8.5,"Horizon",30]])
-//tableOrga.push([0,31,16,[]])
+tableOrga.push([0,2,3,[5,"Stratum",30]])
+tableOrga.push([0,3,4,[]])
+tableOrga.push([0,4,5,[5,"Stratum",30]])
+tableOrga.push([0,5,6,[]])
+tableOrga.push([0,6,7,[5,"Stratum",30]])
+tableOrga.push([0,7,8,[]])
+tableOrga.push([0,8,9,[5,"Stratum",30]])
+tableOrga.push([0,9,10,[]])
+tableOrga.push([0,10,11,[5,"Stratum",30]])
+tableOrga.push([0,11,12,[]])
+tableOrga.push([0,12,13,[5,"Stratum",30]])
+tableOrga.push([0,13,14,[]])
+tableOrga.push([0,14,15,[5,"Stratum",30]])
+tableOrga.push([0,15,16,[]])
+tableOrga.push([0,16,1,[5,"Horizon",30]])
+tableOrga.push([0,17,2,[]])
+tableOrga.push([0,18,3,[5,"Horizon",30]])
+tableOrga.push([0,19,4,[]])
+tableOrga.push([0,20,5,[5,"Horizon",30]])
+tableOrga.push([0,21,6,[]])
+tableOrga.push([0,22,7,[5,"Horizon",30]])
+tableOrga.push([0,23,8,[]])
+tableOrga.push([0,24,9,[5,"Horizon",30]])
+tableOrga.push([0,25,10,[]])
+tableOrga.push([0,26,11,[5,"Horizon",30]])
+tableOrga.push([0,27,12,[]])
+tableOrga.push([0,28,13,[5,"Horizon",30]])
+tableOrga.push([0,29,14,[]])
+tableOrga.push([0,30,15,[5,"Horizon",30]])
+tableOrga.push([0,31,16,[]])
+tableOrga.push([0,32,1,[10,"Stratum",30]])
+tableOrga.push([0,33,2,[]])
+tableOrga.push([0,34,3,[10,"Stratum",30]])
+tableOrga.push([0,35,4,[]])
+tableOrga.push([0,36,5,[10,"Stratum",30]])
+tableOrga.push([0,37,6,[]])
+tableOrga.push([0,38,7,[10,"Stratum",30]])
+tableOrga.push([0,39,8,[]])
+tableOrga.push([0,40,9,[10,"Stratum",30]])
+tableOrga.push([0,41,10,[]])
+tableOrga.push([0,42,11,[10,"Stratum",30]])
+tableOrga.push([0,43,12,[]])
+tableOrga.push([0,44,13,[10,"Stratum",30]])
+tableOrga.push([0,45,14,[]])
+tableOrga.push([0,46,15,[10,"Stratum",30]])
+tableOrga.push([0,47,16,[]])
+tableOrga.push([0,48,1,[10,"Horizon",30]])
+tableOrga.push([0,49,2,[]])
+tableOrga.push([0,50,3,[10,"Horizon",30]])
+tableOrga.push([0,51,4,[]])
+tableOrga.push([0,52,5,[10,"Horizon",30]])
+tableOrga.push([0,53,6,[]])
+tableOrga.push([0,54,7,[10,"Horizon",30]])
+tableOrga.push([0,55,8,[]])
+tableOrga.push([0,56,9,[10,"Horizon",30]])
+tableOrga.push([0,57,10,[]])
+tableOrga.push([0,58,11,[10,"Horizon",30]])
+tableOrga.push([0,59,12,[]])
+tableOrga.push([0,60,13,[10,"Horizon",30]])
+tableOrga.push([0,61,14,[]])
+tableOrga.push([0,62,15,[10,"Horizon",30]])
+tableOrga.push([0,63,16,[]])
 
-tableOrga.push([1,0,1,[5,"Stratum",30]])
+tableOrga.push([1,0,1,[5,"Horizon",30]])
 tableOrga.push([1,1,2,[]])
 tableOrga.push([1,2,3,[5,"Horizon",30]])
 tableOrga.push([1,3,4,[]])
-tableOrga.push([1,4,5,[5,"Stratum",30]])
+tableOrga.push([1,4,5,[5,"Horizon",30]])
 tableOrga.push([1,5,6,[]])
 tableOrga.push([1,6,7,[5,"Horizon",30]])
 tableOrga.push([1,7,8,[]])
-tableOrga.push([1,8,9,[5,"Stratum",30]])
+tableOrga.push([1,8,9,[5,"Horizon",30]])
 tableOrga.push([1,9,10,[]])
 tableOrga.push([1,10,11,[5,"Horizon",30]])
 tableOrga.push([1,11,12,[]])
-tableOrga.push([1,12,13,[5,"Stratum",30]])
+tableOrga.push([1,12,13,[5,"Horizon",30]])
 tableOrga.push([1,13,14,[]])
 tableOrga.push([1,14,15,[5,"Horizon",30]])
 tableOrga.push([1,15,16,[]])
-tableOrga.push([1,16,1,[8.5,"Stratum",30]])
+tableOrga.push([1,16,1,[5,"Stratum",30]])
 tableOrga.push([1,17,2,[]])
-tableOrga.push([1,18,3,[8.5,"Horizon",30]])
+tableOrga.push([1,18,3,[5,"Stratum",30]])
 tableOrga.push([1,19,4,[]])
-tableOrga.push([1,20,5,[8.5,"Stratum",30]])
+tableOrga.push([1,20,5,[5,"Stratum",30]])
 tableOrga.push([1,21,6,[]])
-tableOrga.push([1,22,7,[8.5,"Horizon",30]])
+tableOrga.push([1,22,7,[5,"Stratum",30]])
 tableOrga.push([1,23,8,[]])
-tableOrga.push([1,24,9,[8.5,"Stratum",30]])
+tableOrga.push([1,24,9,[5,"Stratum",30]])
 tableOrga.push([1,25,10,[]])
-tableOrga.push([1,26,11,[8.5,"Horizon",30]])
+tableOrga.push([1,26,11,[5,"Stratum",30]])
 tableOrga.push([1,27,12,[]])
-tableOrga.push([1,28,13,[8.5,"Stratum",30]])
+tableOrga.push([1,28,13,[5,"Stratum",30]])
 tableOrga.push([1,29,14,[]])
-tableOrga.push([1,30,15,[8.5,"Horizon",30]])
+tableOrga.push([1,30,15,[5,"Stratum",30]])
 tableOrga.push([1,31,16,[]])
+tableOrga.push([1,32,1,[10,"Horizon",30]])
+tableOrga.push([1,33,2,[]])
+tableOrga.push([1,34,3,[10,"Horizon",30]])
+tableOrga.push([1,35,4,[]])
+tableOrga.push([1,36,5,[10,"Horizon",30]])
+tableOrga.push([1,37,6,[]])
+tableOrga.push([1,38,7,[10,"Horizon",30]])
+tableOrga.push([1,39,8,[]])
+tableOrga.push([1,40,9,[10,"Horizon",30]])
+tableOrga.push([1,41,10,[]])
+tableOrga.push([1,42,11,[10,"Horizon",30]])
+tableOrga.push([1,43,12,[]])
+tableOrga.push([1,44,13,[10,"Horizon",30]])
+tableOrga.push([1,45,14,[]])
+tableOrga.push([1,46,15,[10,"Horizon",30]])
+tableOrga.push([1,47,16,[]])
+tableOrga.push([1,48,1,[10,"Stratum",30]])
+tableOrga.push([1,49,2,[]])
+tableOrga.push([1,50,3,[10,"Stratum",30]])
+tableOrga.push([1,51,4,[]])
+tableOrga.push([1,52,5,[10,"Stratum",30]])
+tableOrga.push([1,53,6,[]])
+tableOrga.push([1,54,7,[10,"Stratum",30]])
+tableOrga.push([1,55,8,[]])
+tableOrga.push([1,56,9,[10,"Stratum",30]])
+tableOrga.push([1,57,10,[]])
+tableOrga.push([1,58,11,[10,"Stratum",30]])
+tableOrga.push([1,59,12,[]])
+tableOrga.push([1,60,13,[10,"Stratum",30]])
+tableOrga.push([1,61,14,[]])
+tableOrga.push([1,62,15,[10,"Stratum",30]])
+tableOrga.push([1,63,16,[]])
 
-tableOrga.push([2,0,17,[5,"Stratum",30]])
-tableOrga.push([2,1,18,[]])
-tableOrga.push([2,2,19,[5,"Horizon",30]])
-tableOrga.push([2,3,20,[]])
-tableOrga.push([2,4,21,[5,"Stratum",30]])
-tableOrga.push([2,5,22,[]])
-tableOrga.push([2,6,23,[5,"Horizon",30]])
-tableOrga.push([2,7,24,[]])
-tableOrga.push([2,8,25,[5,"Stratum",30]])
-tableOrga.push([2,9,26,[]])
-tableOrga.push([2,10,27,[5,"Horizon",30]])
-tableOrga.push([2,11,28,[]])
-tableOrga.push([2,12,29,[5,"Stratum",30]])
-tableOrga.push([2,13,30,[]])
-tableOrga.push([2,14,31,[5,"Horizon",30]])
-tableOrga.push([2,15,32,[]])
-tableOrga.push([2,16,17,[10,"Stratum",30]])
-tableOrga.push([2,17,18,[]])
-tableOrga.push([2,18,19,[10,"Horizon",30]])
-tableOrga.push([2,19,20,[]])
-tableOrga.push([2,20,21,[10,"Stratum",30]])
-tableOrga.push([2,21,22,[]])
-tableOrga.push([2,22,23,[10,"Horizon",30]])
-tableOrga.push([2,23,24,[]])
-tableOrga.push([2,24,25,[10,"Stratum",30]])
-tableOrga.push([2,25,26,[]])
-tableOrga.push([2,26,27,[10,"Horizon",30]])
-tableOrga.push([2,27,28,[]])
-tableOrga.push([2,28,29,[10,"Stratum",30]])
-tableOrga.push([2,29,30,[]])
-tableOrga.push([2,30,31,[10,"Horizon",30]])
-tableOrga.push([2,31,32,[]])
+tableOrga.push([2,0,1,[10,"Stratum",30]])
+tableOrga.push([2,1,2,[]])
+tableOrga.push([2,2,3,[10,"Stratum",30]])
+tableOrga.push([2,3,4,[]])
+tableOrga.push([2,4,5,[10,"Stratum",30]])
+tableOrga.push([2,5,6,[]])
+tableOrga.push([2,6,7,[10,"Stratum",30]])
+tableOrga.push([2,7,8,[]])
+tableOrga.push([2,8,9,[10,"Stratum",30]])
+tableOrga.push([2,9,10,[]])
+tableOrga.push([2,10,11,[10,"Stratum",30]])
+tableOrga.push([2,11,12,[]])
+tableOrga.push([2,12,13,[10,"Stratum",30]])
+tableOrga.push([2,13,14,[]])
+tableOrga.push([2,14,15,[10,"Stratum",30]])
+tableOrga.push([2,15,16,[]])
+tableOrga.push([2,16,1,[10,"Horizon",30]])
+tableOrga.push([2,17,2,[]])
+tableOrga.push([2,18,3,[10,"Horizon",30]])
+tableOrga.push([2,19,4,[]])
+tableOrga.push([2,20,5,[10,"Horizon",30]])
+tableOrga.push([2,21,6,[]])
+tableOrga.push([2,22,7,[10,"Horizon",30]])
+tableOrga.push([2,23,8,[]])
+tableOrga.push([2,24,9,[10,"Horizon",30]])
+tableOrga.push([2,25,10,[]])
+tableOrga.push([2,26,11,[10,"Horizon",30]])
+tableOrga.push([2,27,12,[]])
+tableOrga.push([2,28,13,[10,"Horizon",30]])
+tableOrga.push([2,29,14,[]])
+tableOrga.push([2,30,15,[10,"Horizon",30]])
+tableOrga.push([2,31,16,[]])
+tableOrga.push([2,32,1,[5,"Stratum",30]])
+tableOrga.push([2,33,2,[]])
+tableOrga.push([2,34,3,[5,"Stratum",30]])
+tableOrga.push([2,35,4,[]])
+tableOrga.push([2,36,5,[5,"Stratum",30]])
+tableOrga.push([2,37,6,[]])
+tableOrga.push([2,38,7,[5,"Stratum",30]])
+tableOrga.push([2,39,8,[]])
+tableOrga.push([2,40,9,[5,"Stratum",30]])
+tableOrga.push([2,41,10,[]])
+tableOrga.push([2,42,11,[5,"Stratum",30]])
+tableOrga.push([2,43,12,[]])
+tableOrga.push([2,44,13,[5,"Stratum",30]])
+tableOrga.push([2,45,14,[]])
+tableOrga.push([2,46,15,[5,"Stratum",30]])
+tableOrga.push([2,47,16,[]])
+tableOrga.push([2,48,1,[5,"Horizon",30]])
+tableOrga.push([2,49,2,[]])
+tableOrga.push([2,50,3,[5,"Horizon",30]])
+tableOrga.push([2,51,4,[]])
+tableOrga.push([2,52,5,[5,"Horizon",30]])
+tableOrga.push([2,53,6,[]])
+tableOrga.push([2,54,7,[5,"Horizon",30]])
+tableOrga.push([2,55,8,[]])
+tableOrga.push([2,56,9,[5,"Horizon",30]])
+tableOrga.push([2,57,10,[]])
+tableOrga.push([2,58,11,[5,"Horizon",30]])
+tableOrga.push([2,59,12,[]])
+tableOrga.push([2,60,13,[5,"Horizon",30]])
+tableOrga.push([2,61,14,[]])
+tableOrga.push([2,62,15,[5,"Horizon",30]])
+tableOrga.push([2,63,16,[]])
+
+tableOrga.push([3,0,1,[10,"Horizon",30]])
+tableOrga.push([3,1,2,[]])
+tableOrga.push([3,2,3,[10,"Horizon",30]])
+tableOrga.push([3,3,4,[]])
+tableOrga.push([3,4,5,[10,"Horizon",30]])
+tableOrga.push([3,5,6,[]])
+tableOrga.push([3,6,7,[10,"Horizon",30]])
+tableOrga.push([3,7,8,[]])
+tableOrga.push([3,8,9,[10,"Horizon",30]])
+tableOrga.push([3,9,10,[]])
+tableOrga.push([3,10,11,[10,"Horizon",30]])
+tableOrga.push([3,11,12,[]])
+tableOrga.push([3,12,13,[10,"Horizon",30]])
+tableOrga.push([3,13,14,[]])
+tableOrga.push([3,14,15,[10,"Horizon",30]])
+tableOrga.push([3,15,16,[]])
+tableOrga.push([3,16,1,[10,"Stratum",30]])
+tableOrga.push([3,17,2,[]])
+tableOrga.push([3,18,3,[10,"Stratum",30]])
+tableOrga.push([3,19,4,[]])
+tableOrga.push([3,20,5,[10,"Stratum",30]])
+tableOrga.push([3,21,6,[]])
+tableOrga.push([3,22,7,[10,"Stratum",30]])
+tableOrga.push([3,23,8,[]])
+tableOrga.push([3,24,9,[10,"Stratum",30]])
+tableOrga.push([3,25,10,[]])
+tableOrga.push([3,26,11,[10,"Stratum",30]])
+tableOrga.push([3,27,12,[]])
+tableOrga.push([3,28,13,[10,"Stratum",30]])
+tableOrga.push([3,29,14,[]])
+tableOrga.push([3,30,15,[10,"Stratum",30]])
+tableOrga.push([3,31,16,[]])
+tableOrga.push([3,32,1,[5,"Horizon",30]])
+tableOrga.push([3,33,2,[]])
+tableOrga.push([3,34,3,[5,"Horizon",30]])
+tableOrga.push([3,35,4,[]])
+tableOrga.push([3,36,5,[5,"Horizon",30]])
+tableOrga.push([3,37,6,[]])
+tableOrga.push([3,38,7,[5,"Horizon",30]])
+tableOrga.push([3,39,8,[]])
+tableOrga.push([3,40,9,[5,"Horizon",30]])
+tableOrga.push([3,41,10,[]])
+tableOrga.push([3,42,11,[5,"Horizon",30]])
+tableOrga.push([3,43,12,[]])
+tableOrga.push([3,44,13,[5,"Horizon",30]])
+tableOrga.push([3,45,14,[]])
+tableOrga.push([3,46,15,[5,"Horizon",30]])
+tableOrga.push([3,47,16,[]])
+tableOrga.push([3,48,1,[5,"Stratum",30]])
+tableOrga.push([3,49,2,[]])
+tableOrga.push([3,50,3,[5,"Stratum",30]])
+tableOrga.push([3,51,4,[]])
+tableOrga.push([3,52,5,[5,"Stratum",30]])
+tableOrga.push([3,53,6,[]])
+tableOrga.push([3,54,7,[5,"Stratum",30]])
+tableOrga.push([3,55,8,[]])
+tableOrga.push([3,56,9,[5,"Stratum",30]])
+tableOrga.push([3,57,10,[]])
+tableOrga.push([3,58,11,[5,"Stratum",30]])
+tableOrga.push([3,59,12,[]])
+tableOrga.push([3,60,13,[5,"Stratum",30]])
+tableOrga.push([3,61,14,[]])
+tableOrga.push([3,62,15,[5,"Stratum",30]])
+tableOrga.push([3,63,16,[]])
 
 console.log(tableTasks);
 console.log(tableGraph);
@@ -3052,56 +3314,62 @@ function taskChange(userID, questionNumber){
 	return false;
 }
 
-function questionIsAnswered(){
+function questionIsAnswered(giveUp){
 	let answerForRecordTable = new Array();
-	if(currentTasks[4]== "SAME alternat"){
-		answerForRecordTable.push("Expected result was :");
-		for(let g in tableGraph){
-			if(tableGraph[g].isAnswer){
-				answerForRecordTable.push("graphs named : " + tableGraph[g].name);
+	if(!giveUp){
+		if(currentTasks[4]== "SAME alternat"){
+			answerForRecordTable.push("Expected result was :");
+			for(let g in tableGraph){
+				if(tableGraph[g].isAnswer){
+					answerForRecordTable.push("graphs named : " + tableGraph[g].name);
+				}
+			}
+			answerForRecordTable.push("User Answered :");
+			for(let g in tableGraph){
+				if(tableGraph[g].answerRadioButton[0].checked){
+					answerForRecordTable.push("graphs named : " + tableGraph[g].name);
+				}
 			}
 		}
-		answerForRecordTable.push("User Answered :");
-		for(let g in tableGraph){
-			if(tableGraph[g].answerButton[0].checked){
-				answerForRecordTable.push("graphs named : " + tableGraph[g].name);
-			}
-		}
-	}
 
-	else if(currentTasks[4]== "Correct Baseline"){
-		answerForRecordTable.push("Expected result was :");
-		for(let g in tableGraph){
-			if(tableGraph[g].isAnswer && (!tableGraph[g].interact)){
-				answerForRecordTable.push(tableGraph[g].name+ " basecut = "+tableGraph[g].basecut);
+		else if(currentTasks[4]== "Correct Baseline"){
+			answerForRecordTable.push("Expected result was :");
+			let base1, base2;
+			for(let g in tableGraph){
+				if(tableGraph[g].isAnswer && (!tableGraph[g].interact)){
+					answerForRecordTable.push(tableGraph[g].name+ " basecut = "+tableGraph[g].basecut);
+					base1 = tableGraph[g].basecut
+				}
 			}
-		}
-		answerForRecordTable.push("User Answered :");
-		for(let g in tableGraph){
-			if(tableGraph[g].name == "Model" || (tableGraph[g].isAnswer && tableGraph[g].interact)){
-				answerForRecordTable.push(tableGraph[g].name+ " basecut = "+tableGraph[g].basecut);
+			for(let g in tableGraph){
+				if(tableGraph[g].name == "Model" || (tableGraph[g].isAnswer && tableGraph[g].interact)){
+					answerForRecordTable.push("User Answered :" +tableGraph[g].name+ " basecut = "+tableGraph[g].basecut);
+					base2 = tableGraph[g].basecut
+				}
 			}
+			let diff = Math.abs(base1-base2);
+			answerForRecordTable.push("difference : "+diff);
 		}
-	}
 
-	else if(currentTasks[4]== "twin search"){
-		answerForRecordTable.push("Expected result was :");
-		let name = new Array();
-		for(let g in tableGraph){
-			if(tableGraph[g].isAnswer){
-				name.push(tableGraph[g].name);
+		else if(currentTasks[4]== "twin search"){
+			answerForRecordTable.push("Expected result was :");
+			let name = new Array();
+			for(let g in tableGraph){
+				if(tableGraph[g].isAnswer){
+					name.push(tableGraph[g].name);
+				}
 			}
-		}
-		answerForRecordTable.push("graphs named : " + name[0] + " or "+ name[1]);
-		answerForRecordTable.push("User Answered :");
-		for(let g in tableGraph){
-			if(tableGraph[g].answerButton[0].checked){
-				answerForRecordTable.push("graphs named : " + tableGraph[g].name);
+			answerForRecordTable.push("graphs named : " + name[0] + " or "+ name[1]);
+			answerForRecordTable.push("User Answered :");
+			for(let g in tableGraph){
+				if(tableGraph[g].answerRadioButton[0].checked){
+					answerForRecordTable.push("graphs named : " + tableGraph[g].name);
+				}
 			}
 		}
 	}
-	if(answerForRecordTable.length!=4)
-		answerForRecordTable.push("User failed");
+	if(giveUp || answerForRecordTable.length!=4)
+		answerForRecordTable.push("User giveUp");
 	eventRecordTable.push(answerForRecordTable);
 	eventRecordTable.push([("Expe End number "+startEndCounter),"stop pressed" , tableGraph[0].baselineType, timerLength]);
 }
@@ -3127,16 +3395,20 @@ let finished = false;
             		$("#timerEndButton").css("display","none");
             	}
             	else{
+            		colorChanger =setTimeout(function(){
+            		  $("body").css("background","#f88");
+            		}, 30000);
             		timerStart = new Date();
 	                eventRecordTable.push([("Expe Begin number "+startEndCounter),"start pressed" , "no value",0]);
 	                timerLength = null;
 	                ws.send("start");
 	                $("#timerStartButton").css("display","none");
 	                if(currentTasks[4]=="twin search" || currentTasks[4]=="SAME alternat")
-	                	$("#timerEndButton").css("display","none");
-	                else
 	                	$("#timerEndButton").css("display","block");
+	                else
+	                	$("#timerEndButton").css("display","none");
 	                $("#myTable").css("opacity","1.0");
+	                $(".graphConfirmationButton").css("display","none");
 	            }
             }
             else{
@@ -3150,7 +3422,7 @@ let finished = false;
             if(timerStart!=null){
                 timerLength = new Date() - timerStart;
                 //adding the answer in the tab
-                questionIsAnswered();
+                questionIsAnswered(true);
                 timerStart = null;
                 console.log(eventRecordTable);
                 if(startEndCounter>0)
@@ -3158,9 +3430,22 @@ let finished = false;
                 ws.send(JSON.stringify(eventRecordTable));
                 eventRecordTable = new Array();
                 startEndCounter++;
-                $("#myTable").css("opacity","0.0");
-                $("#timerStartButton").css("display","block");
+
+                let end = taskChange(id,startEndCounter)
+				timerStart = new Date();
+				clearTimeout(colorChanger)
+				 $("body").css("background","#fff");
+				
+
+                eventRecordTable.push([("Expe Begin number "+startEndCounter),"start pressed" , "no value",0]);
+                timerLength = null;
+                ws.send("start");
+
+                $("#myTable").css("opacity","1.0");
+                $("#timerStartButton").css("display","none");
                 $("#timerEndButton").css("display","none");
+                $(".graphConfirmationButton").css("display","block");
+                $(".graphRadioButton").css("display","none");
             }
             else{
                 console.log("il faut commencer le test avant de vouloir le finir");
