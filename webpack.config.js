@@ -15,9 +15,8 @@ const PATHS = {
 };
 
 const options = {
-  /*host:'129.175.157.111',
-  port:'1666'*/
-  host:'localhost',
+  host:'129.175.157.111',
+  //host:'localhost',
   port:'1666'
 };
 
