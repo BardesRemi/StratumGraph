@@ -2994,8 +2994,9 @@ function newQuestionGeneration(taskLine, OrgaLine){
         for(let g in tableGraph){
             tableGraph[g].interact=false;
         }
-        $(".questionZone").append("<span class='questionSentence'> Parmis les courbes ci-dessus, deux d'entre elles sont identiques lesquels ?"
-                                +" (il suffit d'en selectionner une des deux)</span>");
+        $(".questionZone").append("<span class='questionSentence'> Balayer le tableau de courbes ci-dessus, de haut en bas."
+                +" deux courbes sont identiques et cote à cote, lesquelles ? (il suffit d'en selectionner une des deux)"+
+                " Si vous arrivez en bas sans rien trouver, appuyer sur le bouton abandonner</span>");
     }
 }
 
@@ -3006,7 +3007,7 @@ let tab1 = generateIntTab(31,181);
 
 var tableTasks = new Array();
 tableTasks.push(["id","graphs to use", "informations", "good answer", "test type", "graphs value", "differences"]);
-tableTasks.push([1, tab1//[42, 14, 114, 97, 66, 169, 174, 153, 40, 81, 58, 87, 112, 43, 126, 7, 159, 77, 52, 95, 120, 176, 88, 47, 175, 116, 134, 50, 26, 132, 62]
+tableTasks.push([1,[42, 14, 114, 97, 66, 169, 174, 153, 40, 81, 58, 87, 112, 43, 126, 7, 159, 77, 52, 95, 120, 176, 88, 47, 175, 116, 134, 50, 26, 132, 62]
                 ,"which is took as base", 14, "twin search",[],0])
 tableTasks.push([2,[],"linked to the task 1",14,"Correct Baseline",[],0]);
 tableTasks.push([3,[42, 14, 114, 97, 66, 169, 174, 153, 40, 81, 58, 87, 112, 43, 126, 7, 159, 77, 52, 95, 120, 176, 88, 47, 175, 116, 134, 50, 26, 132, 62]

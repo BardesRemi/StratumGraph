@@ -2994,8 +2994,9 @@ function newQuestionGeneration(taskLine, OrgaLine){
 		for(let g in tableGraph){
 			tableGraph[g].interact=false;
 		}
-		$(".questionZone").append("<span class='questionSentence'> Parmis les courbes ci-dessus, deux d'entre elles sont identiques lesquels ?"
-								+" (il suffit d'en selectionner une des deux)</span>");
+		$(".questionZone").append("<span class='questionSentence'> Balayer le tableau de courbes ci-dessus, de haut en bas."
+								+" deux courbes sont identiques et cote à cote, lesquelles ? (il suffit d'en selectionner une des deux)"+
+								" Si vous arrivez en bas sans rien trouver, appuyer sur le bouton abandonner</span>");
 	}
 }
 
@@ -3094,7 +3095,7 @@ tableOrga.push([0,59,12,[]])
 tableOrga.push([0,60,13,[10,"Horizon",30]])
 tableOrga.push([0,61,14,[]])
 tableOrga.push([0,62,15,[10,"Horizon",30]])
-tableOrga.push([0,63,16,[]])
+tableOrga.push([0,63,16,[]])*/
 
 tableOrga.push([1,0,1,[5,"Horizon",30]])
 tableOrga.push([1,1,2,[]])
