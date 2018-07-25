@@ -9,6 +9,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const PATHS = {
   app: path.join(__dirname, 'src'),
+  training: path.join(__dirname, 'src/training/'),
   app2: path.join(__dirname, 'src/table/'),
   images:path.join(__dirname,'src/assets/'),
   build: path.join(__dirname, 'docs')
@@ -77,7 +78,8 @@ wsServer.on('connection', function (myws, req){
 module.exports = {
   entry: {
     app: PATHS.app,
-    table: './src/table.js'
+    table: './src/table.js',
+    training: './src/training.js'
   },
   output: {
     path: PATHS.build,
@@ -153,6 +155,13 @@ module.exports = {
       chunks: ['app'],
       template: 'src/index.html',
       filename: 'index.html'
+    }),
+
+    new HtmlWebpackPlugin({
+      inject: 'body',
+      chunks: ['training'],
+      template: 'src/training.html',
+      filename: 'training.html'
     }),
 
     /*new htmlPlugin({
