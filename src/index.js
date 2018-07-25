@@ -33,6 +33,7 @@ function htmlChange(){
 		    	.append($('<th style="background-color:#777"><span class="lab">Baseline</span>&nbsp;<span class ="adjuster">-</span></th>'))
 		    	.append($('<th style="background-color:#777"><span class="lab">ZOOM</span>&nbsp;<span class ="adjuster">-</span></th>'))
 		    );
+		$("#timerEndButton").css("display","none");
 	}
 }
 
