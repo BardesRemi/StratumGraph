@@ -3007,7 +3007,7 @@ let tab1 = generateIntTab(31,181);
 
 var tableTasks = new Array();
 tableTasks.push(["id","graphs to use", "informations", "good answer", "test type", "graphs value", "differences"]);
-tableTasks.push([1,[42, 14, 114, 97, 66, 169, 174, 153, 40, 81, 58, 87, 112, 43, 126, 7, 159, 77, 52, 95, 120, 176, 88, 47, 175, 116, 134, 50, 26, 132, 62]
+tableTasks.push([1,tab1
                 ,"which is took as base", 14, "twin search",[],0])
 tableTasks.push([2,[],"linked to the task 1",14,"Correct Baseline",[],0]);
 tableTasks.push([3,[42, 14, 114, 97, 66, 169, 174, 153, 40, 81, 58, 87, 112, 43, 126, 7, 159, 77, 52, 95, 120, 176, 88, 47, 175, 116, 134, 50, 26, 132, 62]
