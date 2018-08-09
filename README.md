@@ -9,7 +9,7 @@ https://bardesremi.github.io/StratumGraph/Presentation_Drag&Drop_3Step.png
 
 ---------------------------------------------
 
-# Setting the project.
+# Setting the project
 
 NEEDED : Node.js
 
