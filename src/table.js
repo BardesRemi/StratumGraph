@@ -67,7 +67,7 @@ $(function(){
     $("#nav").append($but2);
 
     $.ajax({
-        url:"expeFinale/Groupe1/expe0.json",
+        url:"expeFinale/Groupe2/expe3.json",
         async:false,
         error:function(data){
             console.log(data);
