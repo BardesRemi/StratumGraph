@@ -10,6 +10,7 @@ q = q.slice(q.indexOf("/?")+2,q.indexOf("="));
 let isExpe = 0
 
 
+    //Change the shape of the html to fit with the question / expe resentation if necessary
 
 
 function htmlChange(){
@@ -81,6 +82,9 @@ htmlChange();
 	        //////////////////////////////////////////////////
 	        //                     Init                     //
 	        //////////////////////////////////////////////////
+
+            //Beginning the interaction between client and the server, getting an id and creating a log file
+
 let ws = new WebSocket ('ws://129.175.157.111:9000');
 //let ws = new WebSocket ('ws://localhost:9000');
 ws.onmessage = function(msg){
@@ -98,6 +102,8 @@ ws.onmessage = function(msg){
 ws.onopen = function(){
     ws.send('coucou');
 }
+
+//setting an RNG with a seed system, in aim to have a similar RNG for every questions of the expe
 
 function RNG(seed) {
   // LCG using GCC's constants
@@ -127,7 +133,7 @@ RNG.prototype.choice = function(array) {
 }
 
 
-
+// Some global var usefull for the rest of the code
 
 let startEndCounter = 0;
 
@@ -250,28 +256,12 @@ $(function(){
 	  this.answerConfirmationButton = $("<button type='button' class='graphConfirmationButton' id='"+this.name+"answerConfirmationButton"+"'>Confirmer</button>")
 
 
-	  //rangesliders generation
+	  //rangesliders generation && buttons generation
 	  this.sliderBaseline = $("<input class='sliderBaseline' type='range' step='0.01'>");
-	  /*document.createElement('input');
-	  	this.sliderBaseline.classes = 'slider';
-	  	this.sliderBaseline.type = 'range';
-	  	this.sliderBaseline.step = 3/20;*/
 
 	  this.sliderZOOM = $("<input class='sliderZOOM' type='range' min='1.0' max='"+maxZOOM+"' step='0.01'>");
-	  	/*this.sliderZOOM.class = 'slider';
-	  	this.sliderZOOM.type = 'range';
-	  	this.sliderZOOM.min  = 1.0;
-	  	this.sliderZOOM.max  = maxZOOM;
-	  	this.sliderZOOM.value = this.ZOOM;
-	  	this.sliderZOOM.step = 3/20;*/
 
 	  this.sliderInitHeight = $("<input class='sliderInitHeight' type='range' min='10.0' max='"+maxHeight+"' step='1'>");
-	  	/*this.sliderInitHeight.class = 'slider';
-	  	this.sliderInitHeight.type = 'range';
-	  	this.sliderInitHeight.min  = 10.0;
-	  	this.sliderInitHeight.max  = 50.0;
-	  	this.sliderInitHeight.step = 1;*/
-
 	  this.sliderPedestal = $("<input class='sliderInitHeight' type='range' min='0.0' max='100.0' step='1'>");
 
 	  this.statusButton = $("<button class='superbutton' type='button'>fold / unfold</button>");
@@ -320,6 +310,8 @@ $(function(){
 	    }
 	    return 0;
 	  }
+
+      //generate all normalized points of polygons that represent a folded graphics
 
 	  this.computePolygons = function(basecut,optim,mul,min,max,timeSkip){
 	    // no positive polygon when basecut is so high
@@ -604,6 +596,7 @@ $(function(){
 	  }
 
 	  //associate a texture for each polygon depending on there level, and the baseline
+      //some part of the code still commented, because we're not sure about which "order" of color use.
 	  this.setColor = function(poly){
 	    let copy = poly;
 	    let forkValue = this.maxs - this.baselvl;
@@ -1463,6 +1456,8 @@ $(function(){
 	    this.polsfill = null;
 	  }
 
+      //those 5 new functions must be called when an iteraction change the corresponding value, keep everything up to date.
+
       this.changeBaseline = function(newValue, eventKind){
         this.basecut = newValue;
         if(timerStart != null)
@@ -1550,6 +1545,8 @@ $(function(){
         this.draw();
       }
 
+      //Lauch the selected animation for this graph
+
       this.FoldUnfold = function(eventKind){
         let changes= "";
         let me = this;
@@ -1619,6 +1616,8 @@ $(function(){
             eventRecordTable.push([(this.name+" switch shadow"), eventKind, newValue, (new Date()-timerStart)]);
         this.draw();
       }
+
+        //set every listener of this graph.
 
 		this.initListener = function(){
 
@@ -2459,6 +2458,7 @@ $(function(){
 		first column must be a date (with the right format)
 		Last column must be the data
 		"parsing" session can be change for
+        return a single graph
 	*/
 	function graphFromCSV(filePath, ZOOM, BaseLineType, initHeight){
 		let parseResult = new Object({
@@ -2550,7 +2550,9 @@ $(function(){
     /*The CSV File must be in this shape :
         first line "dates"
         each lines after the first one : data
-        the 2 first column are the "name" of the line. */
+        the 2 first column are the "name" of the line. 
+        return all the choosen graph (those who are target with @param tableint)
+    */
 
     function graphsFromCSVTable(filePath, ZOOM, BaseLineType, initHeight, tableint){
         let tableResult = new Array();
@@ -2626,81 +2628,12 @@ $(function(){
         return tableResult;
     }
 
-
-    function graphsFromCSVTable(filePath, ZOOM, BaseLineType, initHeight, tableint){
-        let tableResult = new Array();
-        let timeB;
-        let timeE;
-        let timetable = new Array();
-        let vals;
-        let lines;
-
-        $.ajax({
-            url:filePath,
-            async:false,
-            success:function(data){
-                lines = data.split(/\r?\n|\r/);
-                vals = lines[0].split(',');
-                for(let d in vals){
-                    if(d<2)
-                        continue;
-                    else{
-                        let split = vals[d].split('/');
-                        let date = split[1]+"-"+split[0]+"-"+split[2];
-                        if(d==2)
-                            timeB = new Date(date);
-                        else if(d==vals.length-1)
-                            timeE = new Date(date);
-                        timetable.push(new Date(date));
-                    }
-                }
-            }
-        });
-        for(let i in timetable){
-            timetable[i] = timetable[i] - timeB;
-            timetable[i] = timetable[i]/(timeE-timeB);
-        }
-
-        for(let i in tableint){
-            let parseResult = new Object({
-                name : 'pouet',
-                timeBegin : timeB,
-                timeEnd : timeE,
-                time : timetable,
-                valueMax : 0,
-                valueMin : 1000000,
-                value : new Array()
-            })
-            vals = lines[tableint[parseInt(i)]+1].split(',');
-            for(let d in vals){
-                if(d<2)
-                    parseResult.name = vals[d];
-                else{
-                    let val = parseFloat(vals[d]);
-                    parseResult.value.push(val);
-                }
-            }
-
-            for(let i in parseResult.value){
-                if(parseResult.value[i] > parseResult.valueMax)
-                    parseResult.valueMax = parseResult.value[i];
-                else if(parseResult.value[i] < parseResult.valueMin)
-                    parseResult.valueMin = parseResult.value[i];
-            }
-            let finalResult = new Graph((parseResult.valueMax+parseResult.valueMin)/2, ZOOM, 1,
-                                 parseResult.value, parseResult.time, BaseLineType, 0, parseResult.time.length-1,
-                                 initHeight, parseResult.name);
-            tableResult.push(finalResult);
-        }
-        for(let i in tableResult){
-            tableResult[i].init();
-            tableResult[i].initListener();
-            tableResult[i].draw(true);
-        }
-        console.log("done");
-        return tableResult;
-    }
-
+    /*The CSV File must be in this shape :
+        first line "dates"
+        each lines after the first one : data
+        the 2 first column are the "name" of the line. 
+        return a table that contains every data usefull for creating graphs, provided by the file
+    */
 
     function tableDataFromCSVTable(filePath){
 
