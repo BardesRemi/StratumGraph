@@ -1,4 +1,4 @@
-# StratumGraph
+#StratumGraph
 New shape for horizon graph, more stable with three tones pseudo coloring.
 
 this is the link that leads to a static version of the project :
@@ -9,7 +9,7 @@ https://bardesremi.github.io/StratumGraph/Presentation_Drag&Drop_3Step.png
 
 ---------------------------------------------
 
-# Setting the project
+#Setting the project
 
 NEEDED : Node.js
 
@@ -28,7 +28,7 @@ where PORT and HOST are the "port" and the "host" respectively choose in the web
 
 ---------------------------------------------
 
-# Informations about code files :
+#Informations about code files :
 
 In the src folder you'll find :
 	- index (.js / . hmtl / .css) which are the primary files.
