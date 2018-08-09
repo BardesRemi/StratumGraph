@@ -31,8 +31,8 @@ where PORT and HOST are the "port" and the "host" respectively choose in the web
 # Informations about code files :
 
 In the src folder you'll find :
-	- index (.js / . hmtl / .css) which are the primary files.
-	- training (.js / . hmtl / .css) which are basically a copy of index, where all server interactions are off (can work without a server).
-	(launch it by adding "/training.html?expe=1" to the url)
-	- table (.js / . hmtl / .css) which is a way for displaying logs.
-	(launch it by adding "/table.html?file=expe" to the url)
+ - index (.js / . hmtl / .css) which are the primary files.
+ - training (.js / . hmtl / .css) which are basically a copy of index, where all server interactions are off (can work without a server).
+(launch it by adding "/training.html?expe=1" to the url)
+- table (.js / . hmtl / .css) which is a way for displaying logs.
+(launch it by adding "/table.html?file=expe" to the url)
