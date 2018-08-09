@@ -2777,16 +2777,16 @@ $(function(){
 	test1.draw(true);
 	test2.draw(true);
 
-	/*var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, "third");
+	var test3 = new Graph(BASELINE, ZOOM, 1, data, time, "Horizon", 0, 255, initHeight, "third");
 	var test4 = new Graph(BASELINE, ZOOM, 1, data, time, "Stratum", 0, 255, initHeight, "fourth");
 	test3.init();
 	test4.init();
 	test3.initListener();
 	test4.initListener();
 	test3.draw(true);
-	test4.draw(true);*/
+	test4.draw(true);
 
-/*
+
 	var parseTest1Hor = graphFromCSV("data/AAPL.csv", ZOOM, "Horizon", initHeight);
 	var parseTest1Str = graphFromCSV("data/AAPL.csv", ZOOM, "Stratum", initHeight);
 	var parseTest2Hor = graphFromCSV("data/AMZN.csv", ZOOM, "Horizon", initHeight);
@@ -2798,7 +2798,7 @@ $(function(){
 
     var tabletestSG = graphsFromCSVTable("data/finance_data_used.csv", ZOOM, "Stratum", initHeight, [4,5,6,7,8]);
     var tabletestHG = graphsFromCSVTable("data/finance_data_used.csv", ZOOM, "Horizon", initHeight, [4,5,6,7,8]);
-    console.log(tableGraph);*/
+    console.log(tableGraph);
 
             //////////////////////////////////////////////////
             //             	   Expe only use                //
